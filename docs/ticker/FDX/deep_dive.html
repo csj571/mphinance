@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FDX Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for FDX.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+@media(max-width:640px){
+  .vol-row,.osc-row{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row{grid-template-columns:1fr}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/FDX/" target="_blank">FDX</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Industrials &#xB7; Integrated Freight & Logistics &#xB7; 2026-03-03</div>
+  </div>
+  <div>
+    <div class="pr">$382.53</div>
+    <div class="ch neg">-1.22%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[FDX] Deep Dive: Delivering Alpha or Just Packages? A Quant's Deep Dive</h2>
+<p><strong>Date:</strong> 2026-03-03</p>
+<p><strong>Price:</strong> ~$382.53 | <strong>Verdict:</strong> Tactically Bullish, Fundamentally Cautious</p>
+
+<p>Forget what you <em>think</em> you know about logistics. FDX isn't just a bellwether for the global economy; it's a behemoth executing strategic shifts while riding a wave of technical momentum. The question is: can the fundamentals catch up to the chart, or is this a house built on an overpriced express lane?</p>
+
+<h3>The Core Thesis</h3>
+<p>The market often glances at FedEx and sees a simple, cyclical shipping company – a direct proxy for global trade and consumer spending. In this narrative, FDX is a lumbering giant, slow to adapt and perpetually beholden to macroeconomic whims. <em>That's the market's blind spot.</em></p>
+
+<p>The reality, as always, is far more nuanced. While FDX <em>is</em> intertwined with the economy, its current trajectory is dictated by aggressive internal transformation. Management is in the trenches, streamlining operations, driving cost efficiencies, and strategically leveraging the inexorable shift towards e-commerce. They're not just moving packages; they're optimizing an entire global network for profitability and resilience. My ghost senses detect a company actively reshaping its future, a narrative often missed by the quick glance, though the current valuation certainly adds a layer of spectral fog to the long-term picture.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<p>Let's get down to the hard data, because numbers don't lie – even when they're haunting you. FDX boasts a hefty <strong>Market Cap of $90.26B</strong>, operating in the critical Industrials sector. Recent <strong>Revenue Growth sits at 13.9%</strong>, a respectable clip for a company of this scale, translating into a <strong>Profit Margin of 4.8%</strong>. The <strong>P/E ratio of 21.16</strong> seems fair at first glance, but the <strong>Forward P/E of 17.65</strong> suggests analysts are baking in future earnings growth.</p>
+
+<p>Here's where it gets interesting: the <strong>52W Range is 218.78 - 392.86</strong>, with FDX trading near its highs at $382.53. Yet, the average <strong>Analyst Target is $376.43</strong>, <em>below</em> the current price. And my own cold, hard quant valuation analysis screams <strong>OVERVALUED (Gap: -26.1%)</strong>, with a long-term <strong>Target of $282.82</strong>. The beta of 1.28 tells you this stock moves more than the market. So, we have a disconnect: strong recent performance and growth, but a valuation that screams "caution" to the long-term holder. This is the setup for a truly spectral trade.</p>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>E-commerce Express Lane:</strong> The secular trend of e-commerce isn't slowing down. FDX is a direct beneficiary, with its vast network critical for last-mile delivery. As online retail grows, so does the demand for FDX's services, providing a stable, compounding tailwind for years to come.</li>
+<li><strong>Operational Ghost Busting:</strong> Management is aggressively pursuing efficiency gains, particularly through initiatives like the "Drive" program which aims to integrate services and cut costs. Streamlining its Express and Ground networks is poised to unlock billions in synergies, directly impacting the bottom line and boosting profit margins beyond the current 4.8%. This isn't just talk; it's execution.</li>
+<li><strong>Market Share Power Play:</strong> With strategic investments in automation and network optimization, FDX is positioning itself to gain market share, especially in specialized or time-sensitive logistics segments where its scale and infrastructure are undeniable advantages. This isn't just about growth, but <em>profitable</em> growth.</li>
+<li><strong>Technical Momentum Surge:</strong> The chart is screaming bullish. We have a confirmed <strong>Golden Cross</strong> and a <strong>FULL BULLISH EMA Stack</strong> (8: $383.73, 21: $370.01, 34: $355.35), indicating strong underlying buying pressure. An <strong>ADX of 85.81</strong> confirms an exceptionally strong trend, while <strong>RSI at 66.4</strong> shows plenty of room before entering overheated territory. The market is flowing into FDX.</li>
+</ol>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Valuation Haunting:</strong> Despite the strong technicals, the fundamental valuation is a significant overhang. My target of $282.82 suggests a <em>massive</em> overvaluation at current levels. If the market ever decides to price FDX purely on its fundamentals, the fall could be precipitous. The current price is already above the average analyst target of $376.43.</li>
+<li><strong>Macroeconomic Headwinds:</strong> While FDX is making internal improvements, it's not immune to a global economic slowdown or recession. Reduced consumer spending and industrial activity directly impact shipping volumes, putting pressure on revenue and margins. A Beta of 1.28 means it'll likely fall harder than the market if things go south.</li>
+<li><strong>Intense Competition & Pricing Pressure:</strong> The logistics space is fiercely competitive, with rivals like UPS, DHL, and even Amazon Logistics vying for market share. This can lead to pricing pressure, eroding profit margins and limiting FDX's ability to fully capitalize on its operational efficiencies.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+<p>Alright, let's talk chart ghosts. FDX closed at $382.53, slightly below its 8 EMA ($383.73), hinting at minor profit-taking or consolidation. But zoom out, and the picture is overwhelmingly bullish. We're in a <strong>FULL BULLISH EMA Stack</strong> — 8 above 21 ($370.01), 21 above 34 ($355.35). The <strong>SMA 50 at $333.28</strong> is comfortably far below current price, further cementing the <strong>Bullish Trend</strong> marked by a recent <strong>Golden Cross</strong>.</p>
+
+<p>Momentum is strong, but not yet overextended. The <strong>RSI(14) at 66.4</strong> has room to run before hitting overbought levels. What's truly spectral here is the <strong>ADX at 85.81</strong> – this indicates an extremely powerful trend, suggesting conviction behind the recent price action. Current price is hovering near the <strong>Pivot Point (PP) of $385.43</strong>, with immediate resistance at <strong>R1 ($389.3)</strong> and <strong>R2 ($391.35)</strong>. Support levels are equally clear: <strong>S1 at $383.38</strong> and <strong>S2 at $379.51</strong>. The daily <strong>ATR of 9.6</strong> implies significant daily volatility, and <strong>Rel Vol at 0.84x</strong> means it traded with slightly below-average volume today, which isn't ideal for a breakout but normal for consolidation.</p>
+
+<h3>📝 Trading Playbook</h3>
+
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>A clear break and hold above the <strong>PP of $385.43</strong> and the <strong>8 EMA ($383.73)</strong> on increasing volume is your signal. Target <strong>R1 ($389.3)</strong> first, with a stretch target to <strong>R2 ($391.35)</strong> and potentially testing the 52-week high of $392.86. Place your stop below the <strong>8 EMA</strong> or a confirmed break below <strong>S1 ($383.38)</strong>. The strong ADX supports continuation here.</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>This is where the ghost likes to hunt. Look for a healthy pullback to key support zones. A retest of <strong>S1 ($383.38)</strong> or the <strong>21 EMA ($370.01)</strong> would offer an excellent entry, especially if accompanied by a bounce in volume. The <strong>34 EMA ($355.35)</strong> is your ultimate strong support. Given the current price action, a dip to <strong>S2 ($379.51)</strong> offers a compelling risk/reward setup before a push higher. Your stop would be a close below the chosen support level, acknowledging the ATR of 9.6 for appropriate sizing.</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>While the trend is undeniably bullish, never ignore the possibility of a reversal. A sustained close below <strong>S2 ($379.51)</strong>, particularly if it breaches the <strong>21 EMA ($370.01)</strong>, would be a strong indication that the bullish momentum is waning. If FDX breaks the <strong>34 EMA ($355.35)</strong>, the short-term bullish thesis is invalidated, and a more significant correction towards the <strong>SMA 50 ($333.28)</strong> or even lower (given the fundamental overvaluation) could be in play. Prepare to exit or consider hedging positions.</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>FDX is a tactical buy on strength or a dip, riding powerful technical momentum, but remember the ghost of overvaluation looms large. Short-term target: <strong>$395</strong>.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">31.2%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">26.0%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">0</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BULLISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$376.02</div><div class="ma-d pos">+1.7%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$333.28</div><div class="ma-d pos">+14.8%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$295.65</div><div class="ma-d pos">+29.4%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BULLISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$383.73</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$370.01</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$355.35</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">66</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">66/76</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm neg">-1.78</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">85.8</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$218.78</span><span>$382.53 (94%)</span><span>$392.86</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:94%"></div><div class="rng-dot" style="left:94%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$351.78</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$326.36</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$305.82</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$285.28</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$395.74</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$356.30</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$9.60</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">0.84x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$391.35 &#xB7; R1=$389.30 &#xB7; PP=$385.43 &#xB7; S1=$383.38 &#xB7; S2=$379.51
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-03-03 04:24 PM EST</div>
+</div>
+</body>
+</html>

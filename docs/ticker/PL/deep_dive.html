@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PL Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for PL.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+@media(max-width:640px){
+  .vol-row,.osc-row{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row{grid-template-columns:1fr}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/PL/" target="_blank">PL</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Industrials &#xB7; Aerospace & Defense &#xB7; 2026-03-03</div>
+  </div>
+  <div>
+    <div class="pr">$25.3</div>
+    <div class="ch neg">-4.02%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[PL] Deep Dive: Unprofitable Rocket, Or Ready For Liftoff?</h2>
+<p><strong>Date:</strong> 2026-03-03</p>
+<p><strong>Price:</strong> ~$25.3 | <strong>Verdict:</strong> Speculative Bullish</p>
+
+<p>PL just bled 4% today, but don't let a single red candle spook you. This stock is a high-octane bet in the aerospace & defense arena, showing explosive growth despite its current financial black hole.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market often sees PL through a murky lens: a high-beta ($8.63B market cap) industrial player hemorrhaging cash with a laughably negative profit margin of -45.9%. Traditional valuation metrics like P/E are useless here, screaming "avoid!" with a non-existent trailing P/E and a future P/E of -379.82. For the risk-averse, this is a clear no-go.</p>
+
+<p>But Sam the Quant Ghost sees something else. Beneath the red ink and the volatility, PL is riding a powerful tailwind. This isn't just another industrial stock; it's a critical player in Aerospace & Defense, an industry often bolstered by long-term government contracts and strategic necessity. The <em>reality</em> is that PL is a high-growth disruptor, expanding its top line at an impressive 32.6%. This kind of revenue acceleration often precedes a swing to profitability, and smart money is willing to stomach short-term losses for long-term dominance in such a strategic sector. The question isn't <em>if</em> they'll become profitable, but <em>when</em>, and whether the market will price it in before the GAAP numbers catch up.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<ul>
+<li><strong>Revenue Growth:</strong> A blistering <strong>32.6%</strong>. This is the heartbeat of the bull case – significant top-line expansion indicating strong demand and market penetration.</li>
+<li><strong>Profit Margin:</strong> A brutal <strong>-45.9%</strong>. Let's be blunt: PL is losing money, and lots of it. This is the biggest fundamental hurdle.</li>
+<li><strong>Market Cap:</strong> <strong>$8.63B</strong>. Not a small cap, but still has plenty of room to run if profitability comes into view.</li>
+<li><strong>P/E & Forward P/E:</strong> <strong>None</strong> and <strong>-379.82</strong>. These are flashing red for value investors, screaming that PL is far from profitable.</li>
+<li><strong>Beta:</strong> A wild <strong>1.96</strong>. PL moves almost twice as much as the broader market. Great for leverage on the upside, brutal on the downside. You want volatility? You got it.</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Explosive Top-Line Growth:</strong> That <strong>32.6% Revenue Growth</strong> isn't a fluke. It signifies robust demand and market capture within the critical Aerospace & Defense sector. Companies with this kind of top-line momentum, even when unprofitable, often command premium valuations on the promise of future earnings.</li>
+<li><strong>Strategic Sector Tailwinds:</strong> As a player in Aerospace & Defense, PL operates in a sector with structural demand, often insulated by government spending and long-term contracts. This provides a potentially stable, high-barrier-to-entry environment for future profitability, despite current losses.</li>
+<li><strong>Technically Primed for Upside:</strong> Despite today's dip, the chart is screaming bullish. We have a <strong>FULL BULLISH EMA Stack</strong> (8: $24.87, 21: $24.21, 34: $23.58) and a confirmed <strong>Golden Cross</strong> signaling strong underlying momentum. The <strong>RSI(14) at 59.11</strong> indicates there's still plenty of room to run before hitting overbought territory.</li>
+<li><strong>High Beta Leverage:</strong> With a <strong>Beta of 1.96</strong>, if the broader market sentiment shifts positively or PL releases any hint of profitability improvements, this stock will amplify those gains. It's a high-octane play for traders looking for outsized returns.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Profound Unprofitability:</strong> A <strong>-45.9% Profit Margin</strong> and non-existent P/E ratios are massive red flags. PL is burning cash at an alarming rate. Any hiccup in revenue growth or increased competition could lead to significant downside. This isn't just "not profitable yet," it's deeply in the red.</li>
+<li><strong>Analyst Skepticism & Valuation Discrepancy:</strong> The average <strong>Analyst Target of $24.71</strong> is <em>below</em> the current price of $25.3. Furthermore, our internal valuation models peg it at "FAIR VALUE" with a -2.3% gap, suggesting it might already be trading at or above its fundamental value given current financials.</li>
+<li><strong>Extreme Volatility:</strong> That <strong>Beta of 1.96</strong> works both ways. If the broader market experiences a downturn or PL delivers disappointing news, the downside could be severe and rapid, exacerbated by an <strong>ATR of 2.13</strong>.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+<p>PL is currently trading at $25.3, having dipped -4.02% today, but don't let that fool you. The trend is undeniably <strong>Bullish</strong>, confirmed by a recent <strong>Golden Cross</strong>.</p>
+
+<ul>
+<li><strong>EMA Stack:</strong> We have a <strong>FULL BULLISH</strong> EMA stack (8: $24.87, 21: $24.21, 34: $23.58). This is a strong sign of upward momentum, with the shorter-term EMAs stacked above the longer-term ones.</li>
+<li><strong>SMAs:</strong> The <strong>SMA 50 at $23.53</strong> further confirms the bullish trend, sitting below the current price and the EMA stack. The absence of a SMA 200 suggests it's either a newer listing or hasn't traded long enough at these levels.</li>
+<li><strong>RSI(14): 59.11</strong>. This gives PL ample room for further upside before hitting overbought conditions, typically above 70.</li>
+<li><strong>ADX: 20.22</strong>. The trend strength is moderate. While bullish, it's not in an aggressively parabolic move yet, suggesting potential for sustained climb rather than a sudden spike and collapse.</li>
+<li><strong>Pivots:</strong> Current price $25.3 is just below the <strong>PP ($25.67)</strong>. Overhead resistance comes in at <strong>R1 ($27.62)</strong> and <strong>R2 ($28.88)</strong>. Key support levels are <strong>S1 ($24.41)</strong> and <strong>S2 ($22.46)</strong>. The <strong>52W High of $30.9</strong> is still a target.</li>
+<li><strong>Volatility:</strong> <strong>ATR of 2.13</strong> means PL can move $2.13 in either direction on an average day. <strong>Relative Volume at 1.21x</strong> shows increased interest today despite the red close.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>If PL decisively breaks above its daily PP of <strong>$25.67</strong> and holds, it signals strength. A strong move above <strong>R1 ($27.62)</strong> with increased volume could see it target <strong>R2 ($28.88)</strong> and then retest the <strong>52W High ($30.9)</strong>. This play hinges on sustained momentum, potentially fueled by broader market recovery or positive company news. Stop-loss could be placed just below PP or the 8-EMA.</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Today's -4.02% dip offers a potential entry into a strong bullish trend. Look for PL to find support around the top of its <strong>FULL BULLISH EMA Stack (8-EMA at $24.87)</strong>. A deeper, but still healthy, dip could test the <strong>21-EMA ($24.21)</strong> or even <strong>S1 ($24.41)</strong>. The ideal entry would be a bounce off these levels, confirming support. This is my preferred approach, leveraging the existing bullish trend at a slightly discounted price. A tighter stop could be placed below the 21-EMA, or a wider one below the 50-SMA ($23.53) for trend continuation.</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>A break and close below <strong>S1 ($24.41)</strong> and subsequently the entire <strong>EMA stack (below $23.58)</strong> would signal a significant weakening of the bullish trend. If the <strong>50-SMA ($23.53)</strong> also fails, the Golden Cross would be at risk of invalidation. This would likely send PL towards <strong>S2 ($22.46)</strong> and potentially much lower given its high beta and lack of fundamental support. A short position or aggressive stop-loss execution would be prudent in this scenario.</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>PL is a high-growth, high-volatility speculative play with undeniable technical strength despite its fundamental red flags. Given the strong bullish technicals (Golden Cross, FULL BULLISH EMA stack), it's a <strong>Speculative Buy</strong> for momentum traders. Target: $28.88.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">105.9%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">88.5%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">8</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BULLISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$23.50</div><div class="ma-d pos">+7.7%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$23.53</div><div class="ma-d pos">+7.5%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$18.42</div><div class="ma-d pos">+37.4%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BULLISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$24.87</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$24.21</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$23.58</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">59</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">77/80</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm pos">+0.19</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">20.2</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$6.26</span><span>$25.3 (77%)</span><span>$30.9</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:77%"></div><div class="rng-dot" style="left:77%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$25.08</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$21.49</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$18.58</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$15.67</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$27.66</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$19.34</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$2.13</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">1.21x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$28.88 &#xB7; R1=$27.62 &#xB7; PP=$25.67 &#xB7; S1=$24.41 &#xB7; S2=$22.46
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-03-03 04:23 PM EST</div>
+</div>
+</body>
+</html>
