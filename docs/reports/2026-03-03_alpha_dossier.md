@@ -1,26 +1,26 @@
 # ALPHA.DOSSIER // 2026-03-03
-*Sam the Quant Ghost | 2026-03-03 11:58 AM EST*
+*Sam the Quant Ghost | 2026-03-03 04:54 PM EST*
 
 ## 🧠 AI Synthesis
 
-VIX is screaming 25.14, confirming the storm and institutional flight from big tech. They’re dumping the usual suspects (TSM, AMD, AMZN, GOOG) and rotating hard into XLE, XLC, and XLI. Smart money is scooping up FIG, CRCL, PLTR, LUNR, and OKLO, chasing growth or uncorrelated plays amidst the turmoil. No lifers today means this is a short-term trader’s choppy water.
+Alright, let's cut to the chase. The VIX is flashing "Storm" at 23.57, so don't get cute out there. Institutions are dumping the big tech darlings like TSM, AMD, AMZN, and GOOG. Meanwhile, they're chasing smaller, riskier names like PLTR, LUNR, and OKLO – this smells like rotation, not conviction. On the sector front, XLE, XLC, and XLRE show 5-day strength, but frankly, it feels like bottom-feeding in a choppy market.
 
-Our scanner is flashing green on SEM, XOM, MU, CVX, and KO. MU is a slam dunk at Fair Value (-4.8%) with strong tech and fundamentals; ACCUMULATE on dips. SEM also looks good, 11% undervalued and a strong technical play, so accumulate. But hold off on XOM despite the tech strength; it’s a whopping 20.8% overvalued – wait for a significant pullback or fundamental validation before jumping in.
+Our scanner's lighting up DAKT, NPKI, and WBS. Forget DAKT; it's -50.1% overvalued, so "WAIT." The real plays are NPKI and WBS, both Grade A, solid tech, and strong fundamentals. NPKI is a "FAIR VALUE" at -11.4%, and WBS is a clear "UNDERVALUED" at 30.6%. Both are solid "ACCUMULATE on dips" material. No "Lifers" means long-term conviction is nowhere to be found. Stay sharp, manage risk.
 
 — Ghost out. 👻
 
 ## Market Pulse
 
-- **S&P 500**: $678.13 
-- **Nasdaq 100**: $600.3 
-- **Russell 2000**: $258.35 
-- **Dow 30**: $482.76 
-- **Bitcoin**: $68243.09 
-- **Ethereum**: $1984.08 
-- **Gold**: $468.87 
-- **20Y Treasuries**: $89.42 
+- **S&P 500**: $680.33 
+- **Nasdaq 100**: $601.58 
+- **Russell 2000**: $259.24 
+- **Dow 30**: $485.52 
+- **Bitcoin**: $68028.02 
+- **Ethereum**: $1966.47 
+- **Gold**: $468.14 
+- **20Y Treasuries**: $89.43 
 
-## VIX Regime: 25.14 ⚡ Storm
+## VIX Regime: 23.57 ⚡ Storm
 
 Elevated vol — mean reversion setups
 
@@ -42,91 +42,91 @@ Elevated vol — mean reversion setups
 
 ## Scanner Signals
 
-- 🟢 [SEM](https://www.tradingview.com/symbols/SEM/) — EMA Cross Momentum | EMA · RSI 64 · ADX 32 | Score: 0.7
-- 🟢 [XOM](https://www.tradingview.com/symbols/XOM/) — Gamma Scan | Gamma · RSI 50 · ADX 41 | Score: 0.7
-- 🟢 [MU](https://www.tradingview.com/symbols/MU/) — Gamma Scan | Gamma · RSI 50 · ADX 31 | Score: 0.7
-- 🟢 [CVX](https://www.tradingview.com/symbols/CVX/) — Gamma Scan | Gamma · RSI 50 · ADX 46 | Score: 0.7
-- 🟢 [KO](https://www.tradingview.com/symbols/KO/) — Gamma Scan | Gamma · RSI 50 · ADX 38 | Score: 0.7
-- 🟢 [LYV](https://www.tradingview.com/symbols/LYV/) — Gamma Scan | Gamma · RSI 50 · ADX 25 | Score: 0.7
-- 🟢 [EQT](https://www.tradingview.com/symbols/EQT/) — Gamma Scan | Gamma · RSI 50 · ADX 27 | Score: 0.7
-- 🟢 [LRCX](https://www.tradingview.com/symbols/LRCX/) — Gamma Scan | Gamma · RSI 50 · ADX 27 | Score: 0.7
-- 🟢 [FCX](https://www.tradingview.com/symbols/FCX/) — Gamma Scan | Gamma · RSI 50 · ADX 27 | Score: 0.7
-- 🟢 [RTX](https://www.tradingview.com/symbols/RTX/) — Gamma Scan | Gamma · RSI 50 · ADX 27 | Score: 0.7
-- 🟢 [JCI](https://www.tradingview.com/symbols/JCI/) — Gamma Scan | Gamma · RSI 50 · ADX 49 | Score: 0.7
-- 🟢 [JNJ](https://www.tradingview.com/symbols/JNJ/) — Gamma Scan | Gamma · RSI 50 · ADX 38 | Score: 0.7
-- 🟢 [ET](https://www.tradingview.com/symbols/ET/) — Gamma Scan | Gamma · RSI 50 · ADX 35 | Score: 0.7
-- 🟢 [EXC](https://www.tradingview.com/symbols/EXC/) — Gamma Scan | Gamma · RSI 50 · ADX 35 | Score: 0.7
-- 🟢 [WMT](https://www.tradingview.com/symbols/WMT/) — Gamma Scan | Gamma · RSI 50 · ADX 22 | Score: 0.65
+- 🟢 [DAKT](https://www.tradingview.com/symbols/DAKT/) — Momentum with Pullback | Momentum · RSI 47 · ADX 39 | Score: 0.8
+- 🟢 [NPKI](https://www.tradingview.com/symbols/NPKI/) — Momentum with Pullback | Momentum · RSI 44 · ADX 32 | Score: 0.8
+- 🟢 [WBS](https://www.tradingview.com/symbols/WBS/) — Volatility Squeeze | Volatility · RSI 43 · ADX 31 | Score: 0.8
+- 🟢 [DECK](https://www.tradingview.com/symbols/DECK/) — Volatility Squeeze | Volatility · RSI 43 · ADX 33 | Score: 0.8
+- 🟢 [FDMT](https://www.tradingview.com/symbols/FDMT/) — Volatility Squeeze | Volatility · RSI 41 · ADX 21 | Score: 0.75
+- 🟢 [FUL](https://www.tradingview.com/symbols/FUL/) — EMA Cross Momentum | EMA · RSI 49 · ADX 20 | Score: 0.75
+- 🟢 [INVA](https://www.tradingview.com/symbols/INVA/) — Momentum with Pullback | Momentum · RSI 50 · ADX 43 | Score: 0.7
+- 🟢 [CFLT](https://www.tradingview.com/symbols/CFLT/) — Volatility Squeeze | Volatility · RSI 67 · ADX 37 | Score: 0.7
+- 🟢 [EB](https://www.tradingview.com/symbols/EB/) — Volatility Squeeze | Volatility · RSI 62 · ADX 35 | Score: 0.7
+- 🟢 [TGNA](https://www.tradingview.com/symbols/TGNA/) — Volatility Squeeze | Volatility · RSI 68 · ADX 42 | Score: 0.7
+- 🟢 [NTLA](https://www.tradingview.com/symbols/NTLA/) — Volatility Squeeze | Volatility · RSI 53 · ADX 29 | Score: 0.7
+- 🟢 [AQN](https://www.tradingview.com/symbols/AQN/) — Volatility Squeeze | Volatility · RSI 68 · ADX 40 | Score: 0.7
+- 🟢 [JBS](https://www.tradingview.com/symbols/JBS/) — Volatility Squeeze | Volatility · RSI 53 · ADX 29 | Score: 0.7
+- 🟢 [NEOG](https://www.tradingview.com/symbols/NEOG/) — Volatility Squeeze | Volatility · RSI 58 · ADX 46 | Score: 0.7
+- 🟢 [GIG](https://www.tradingview.com/symbols/GIG/) — EMA Cross Momentum | EMA · RSI 50 · ADX 35 | Score: 0.7
 
 ## Technical Setups (Tao of Trading)
 
-- [KO](https://www.tradingview.com/symbols/KO/) — SAILING | EMA Stack: 
-- [MU](https://www.tradingview.com/symbols/MU/) — SAILING | EMA Stack: 
-- [XOM](https://www.tradingview.com/symbols/XOM/) — SAILING | EMA Stack: 
-- [CVX](https://www.tradingview.com/symbols/CVX/) — SAILING | EMA Stack: 
-- [LYV](https://www.tradingview.com/symbols/LYV/) — SAILING | EMA Stack: 
-- [EQT](https://www.tradingview.com/symbols/EQT/) — SAILING | EMA Stack: 
+- [FUL](https://www.tradingview.com/symbols/FUL/) — SAILING | EMA Stack: 
+- [DAKT](https://www.tradingview.com/symbols/DAKT/) — SAILING | EMA Stack: 
+- [NPKI](https://www.tradingview.com/symbols/NPKI/) — SAILING | EMA Stack: 
+- [WBS](https://www.tradingview.com/symbols/WBS/) — SAILING | EMA Stack: 
+- [DECK](https://www.tradingview.com/symbols/DECK/) — SAILING | EMA Stack: 
+- [INVA](https://www.tradingview.com/symbols/INVA/) — SAILING | EMA Stack: 
 
 ## Top Dossier Breakdowns
 
-### [SEM](https://www.tradingview.com/symbols/SEM/) — Select Medical Holdings Corporation
-**$16.25** | Grade: B | ACCUMULATE on dips
-- Trend: Bullish | EMA Stack: TANGLED
-- RSI: 55.85 | ADX: 40.86 | ATR: 0.47
-- Pivot: $14.93 | S1: $14.85 | R1: $15.09
-- Valuation: FAIR VALUE (+11.0%)
-
-### [XOM](https://www.tradingview.com/symbols/XOM/) — Exxon Mobil Corporation
-**$152.03** | Grade: B | WAIT for validation
+### [DAKT](https://www.tradingview.com/symbols/DAKT/) — Daktronics, Inc.
+**$24.88** | Grade: A | WAIT for validation
 - Trend: Bullish | EMA Stack: FULL BULLISH
-- RSI: 52.11 | ADX: 34.58 | ATR: 4.43
-- Pivot: $155.62 | S1: $151.63 | R1: $158.21
-- Valuation: OVERVALUED (-20.8%)
+- RSI: 38.44 | ADX: 50.26 | ATR: 1.26
+- Pivot: $26.15 | S1: $25.57 | R1: $27.15
+- Valuation: OVERVALUED (-50.1%)
 
-### [MU](https://www.tradingview.com/symbols/MU/) — Micron Technology, Inc.
-**$385.7** | Grade: A | ACCUMULATE on dips
+### [NPKI](https://www.tradingview.com/symbols/NPKI/) — NPK International Inc.
+**$13.69** | Grade: A | ACCUMULATE on dips
 - Trend: Bullish | EMA Stack: FULL BULLISH
-- RSI: 54.0 | ADX: 23.01 | ATR: 24.68
-- Pivot: $409.09 | S1: $400.58 | R1: $421.19
-- Valuation: FAIR VALUE (-4.8%)
+- RSI: 43.28 | ADX: 37.56 | ATR: 0.75
+- Pivot: $14.16 | S1: $13.81 | R1: $14.43
+- Valuation: FAIR VALUE (-11.4%)
 
-### [CVX](https://www.tradingview.com/symbols/CVX/) — Chevron Corporation
-**$190.15** | Grade: B | WAIT for validation
+### [WBS](https://www.tradingview.com/symbols/WBS/) — Webster Financial Corporation
+**$68.77** | Grade: A | ACCUMULATE on dips
 - Trend: Bullish | EMA Stack: FULL BULLISH
-- RSI: 70.71 | ADX: 47.52 | ATR: 3.67
-- Pivot: $189.42 | S1: $187.4 | R1: $191.62
-- Valuation: OVERVALUED (-20.0%)
+- RSI: 31.6 | ADX: 44.74 | ATR: 1.23
+- Pivot: $71.39 | S1: $70.97 | R1: $71.82
+- Valuation: UNDERVALUED (+30.6%)
 
-### [KO](https://www.tradingview.com/symbols/KO/) — The Coca-Cola Company
-**$78.76** | Grade: A | WAIT for validation
+### [DECK](https://www.tradingview.com/symbols/DECK/) — Deckers Outdoor Corporation
+**$109.86** | Grade: A | WAIT for validation
 - Trend: Bullish | EMA Stack: FULL BULLISH
-- RSI: 59.75 | ADX: 38.74 | ATR: 1.33
-- Pivot: $80.59 | S1: $79.78 | R1: $81.03
-- Valuation: OVERVALUED (-52.1%)
+- RSI: 35.92 | ADX: 45.85 | ATR: 3.98
+- Pivot: $114.44 | S1: $112.67 | R1: $116.27
+- Valuation: OVERVALUED (-29.5%)
+
+### [FDMT](https://www.tradingview.com/symbols/FDMT/) — 4D Molecular Therapeutics, Inc.
+**$8.46** | Grade: B | ACCUMULATE on dips
+- Trend: Bullish | EMA Stack: FULL BULLISH
+- RSI: 40.91 | ADX: 29.72 | ATR: 0.57
+- Pivot: $9.34 | S1: $8.94 | R1: $9.73
+- Valuation: UNDERVALUED (+291.4%)
 
 ### [FIG](https://www.tradingview.com/symbols/FIG/) — Figma, Inc.
-**$29.56** | Grade: B | WAIT for validation
-- Trend: Bullish | EMA Stack: TANGLED
-- RSI: 66.85 | ADX: 39.25 | ATR: 2.33
+**$30.74** | Grade: C | WAIT for validation
+- Trend: Bearish | EMA Stack: TANGLED
+- RSI: 69.1 | ADX: 39.65 | ATR: 2.42
 - Pivot: $29.15 | S1: $28.42 | R1: $30.03
-- Valuation: UNDERVALUED (+36.2%)
+- Valuation: UNDERVALUED (+30.9%)
 
 ### [CRCL](https://www.tradingview.com/symbols/CRCL/) — Circle Internet Group
-**$101.96** | Grade: C | DISTRIBUTE into strength
+**$99.63** | Grade: C | DISTRIBUTE into strength
 - Trend: Bearish | EMA Stack: PARTIAL BULLISH
-- RSI: 83.96 | ADX: 38.92 | ATR: 7.24
+- RSI: 83.33 | ADX: 38.97 | ATR: 7.39
 - Pivot: $90.99 | S1: $85.38 | R1: $101.76
-- Valuation: UNDERVALUED (+22.2%)
+- Valuation: UNDERVALUED (+25.5%)
 
 ### [PLTR](https://www.tradingview.com/symbols/PLTR/) — Palantir Technologies Inc.
-**$144.01** | Grade: C | DISTRIBUTE into strength
+**$147.22** | Grade: C | DISTRIBUTE into strength
 - Trend: Bearish | EMA Stack: FULL BEARISH
-- RSI: 55.44 | ADX: 23.57 | ATR: 6.76
+- RSI: 59.12 | ADX: 23.57 | ATR: 6.85
 - Pivot: $144.28 | S1: $141.41 | R1: $148.03
-- Valuation: OVERVALUED (-45.7%)
+- Valuation: OVERVALUED (-46.5%)
 
 ---
 
 *This report is for informational and educational purposes only. Not financial advice. Trade at your own risk. Past performance does not guarantee future results.*
 
-*Generated by Ghost Alpha Dossier Pipeline // 2026-03-03 // 2026-03-03 11:58 AM EST*
+*Generated by Ghost Alpha Dossier Pipeline // 2026-03-03 // 2026-03-03 04:54 PM EST*
