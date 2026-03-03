@@ -125,7 +125,8 @@ def _run_mphinance_strategies() -> list[dict]:
 
 
 def _update_index_page():
-    """Scan docs/reports/ and docs/watchlist/ and regenerate the docs/index.html archive page."""
+    """Scan docs/reports/ and docs/ticker/ and regenerate the docs/index.html archive page."""
+    from datetime import datetime as _dt
     docs_dir = OUTPUT_DIR.parent  # docs/
     reports_dir = OUTPUT_DIR       # docs/reports/
     watchlist_dir = docs_dir / "ticker"
@@ -147,11 +148,13 @@ def _update_index_page():
                 dd = ticker_folder / "deep_dive.md"
                 if dd.exists():
                     ticker = ticker_folder.name
+                    mtime = _dt.fromtimestamp(dd.stat().st_mtime).strftime("%Y-%m-%d")
                     watchlist.append({
                         "ticker": ticker,
                         "html_path": f"ticker/{ticker}/deep_dive.html",
                         "md_path": f"ticker/{ticker}/deep_dive.md",
                         "json_path": f"ticker/{ticker}/deep_dive.json",
+                        "date": mtime,
                     })
 
     index_html = f"""<!DOCTYPE html>
@@ -246,8 +249,9 @@ def _update_index_page():
 """
         for w in watchlist:
             index_html += f"""                <div class="report-link bg-black/40 border border-gray-800 rounded px-4 py-3 flex items-center justify-between">
-                    <div>
+                    <div class="flex items-center gap-3">
                         <a href="{w['html_path']}" class="text-neon-amber font-bold text-sm hover:text-white transition-colors">{w['ticker']}</a>
+                        <span class="text-[9px] text-gray-600">{w['date']}</span>
                     </div>
                     <div class="flex gap-2">
                         <a href="https://www.tradingview.com/symbols/{w['ticker']}/" target="_blank" class="text-[9px] text-gray-400 border border-gray-700 px-1.5 py-0.5 rounded hover:text-neon-blue hover:border-neon-blue/30 transition-colors">TV</a>
