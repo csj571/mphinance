@@ -1,167 +1,282 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONDS Deep Dive | ALPHA.DOSSIER</title>
-    <meta name="description" content="Full deep-dive analysis for ONDS — thesis, technicals, bull/bear case, trading playbook.">
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { 'mono': ['"JetBrains Mono"', 'monospace'], 'tech': ['"Share Tech Mono"', 'monospace'] },
-                    colors: { 'neon-green': '#00ff41', 'neon-red': '#ff3e3e', 'neon-blue': '#00f3ff', 'neon-amber': '#ffb000', 'hud-black': '#0a0a0a' }
-                }
-            }
-        }
-    </script>
-    <style>
-        body { background-color: #050505; color: #e0e0e0; font-family: 'JetBrains Mono', monospace;
-            background-image: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.25) 50%),
-            linear-gradient(90deg, rgba(255,0,0,0.06), rgba(0,255,0,0.02), rgba(0,0,255,0.06));
-            background-size: 100% 2px, 3px 100%; }
-        .hud-panel { background: rgba(10,10,10,0.8); border: 1px solid #333; box-shadow: 0 0 10px rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
-        .content h2 { font-size: 1.5rem; font-weight: 900; color: #fff; margin: 2rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #333;
-            font-family: 'Share Tech Mono', monospace; text-transform: uppercase; letter-spacing: 0.05em; }
-        .content h3 { font-size: 1.1rem; font-weight: 700; color: #ffb000; margin: 1.5rem 0 0.75rem; letter-spacing: 0.03em; }
-        .content p { color: #c0c0c0; line-height: 1.8; margin: 0.5rem 0; font-size: 0.85rem; }
-        .content strong { color: #ffffff; }
-        .content em { color: #00f3ff; font-style: normal; }
-        .content ul, .content ol { margin: 0.5rem 0 0.5rem 1.5rem; color: #c0c0c0; font-size: 0.85rem; line-height: 2; }
-        .content li { margin: 0.3rem 0; }
-        .content hr { border: none; border-top: 1px solid #333; margin: 2rem 0; }
-        .content table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.8rem; }
-        .content td { padding: 0.5rem 0.75rem; border: 1px solid #333; color: #c0c0c0; }
-        .content tr:first-child td { font-weight: bold; color: #888; background: rgba(255,255,255,0.03); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ONDS Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for ONDS.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+@media(max-width:640px){
+  .vol-row,.osc-row{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row{grid-template-columns:1fr}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
 </head>
-<body class="min-h-screen p-4 md:p-8">
-    <div class="max-w-4xl mx-auto space-y-6">
+<body>
+<div class="w">
 
-        <!-- NAV BAR -->
-        <div class="flex justify-between items-center">
-            <a href="../../index.html" class="font-tech text-neon-green text-sm tracking-widest hover:text-white transition-colors">← ALPHA://HUD</a>
-            <div class="flex gap-3">
-                <a href="deep_dive.md" download class="px-2 py-1 bg-gray-800 text-[10px] text-gray-400 border border-gray-700 hover:text-white hover:border-gray-500 transition-colors uppercase font-mono rounded">↓ RAW MD</a>
-                <a href="deep_dive.json" class="px-2 py-1 bg-gray-800 text-[10px] text-gray-400 border border-gray-700 hover:text-white hover:border-gray-500 transition-colors uppercase font-mono rounded">↓ JSON</a>
-            </div>
-        </div>
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
 
-        <!-- HEADER -->
-        <div class="hud-panel p-6 rounded-sm border-l-4 border-neon-amber">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-2xl md:text-3xl font-black font-tech tracking-widest text-white">
-                        <a href="https://www.tradingview.com/symbols/ONDS/" target="_blank" class="hover:text-neon-blue transition-colors">ONDS</a>
-                        <span class="text-neon-amber ml-2">DEEP.DIVE</span>
-                    </h1>
-                    <p class="text-[10px] text-gray-500 uppercase tracking-[0.3em] mt-1">
-                        Technology · Communication Equipment
-                    </p>
-                </div>
-                <div class="text-right space-y-1">
-                    <div class="text-2xl font-bold font-mono text-white">$10.4</div>
-                    <div class="text-neon-red text-sm font-mono">-2.48%</div>
-                </div>
-            </div>
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
 
-            <!-- Quick Stats Bar -->
-            <div class="flex flex-wrap gap-4 mt-4 pt-3 border-t border-gray-800 text-[10px] font-mono">
-                <span class="text-gray-500">MCAP <span class="text-white">$4.68B</span></span>
-                <span class="text-gray-500">EMA <span class="text-neon-green">TANGLED</span></span>
-                <span class="text-gray-500">RSI <span class="text-white">55.72</span></span>
-                <span class="text-gray-500">ADX <span class="text-white">21.53</span></span>
-                <span class="text-gray-500">TV <span class="text-neon-blue">N/A</span></span>
-                <span class="text-gray-500">VAL <span class="text-neon-green">UNDERVALUED</span></span>
-            </div>
-        </div>
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/ONDS/" target="_blank">ONDS</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Technology &#xB7; Communication Equipment &#xB7; 2026-03-03</div>
+  </div>
+  <div>
+    <div class="pr">$10.14</div>
+    <div class="ch neg">-4.97%</div>
+  </div>
+</div>
 
-        <!-- CONTENT -->
-        <div class="hud-panel p-6 md:p-8 rounded-sm content">
-            <h2>[ONDS] Deep Dive: The High-Wire Act – Growth or Bust?</h2>
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[ONDS] Deep Dive: The Unprofitable Growth Rocket Ready for Liftoff</h2>
+
 <p><strong>Date:</strong> 2026-03-03</p>
-<p><strong>Price:</strong> ~$10.4 | <strong>Verdict:</strong> Speculative Buy</p>
+<p><strong>Price:</strong> ~$10.14 | <strong>Verdict:</strong> Long-Term Bullish</p>
 
-<p>ONDS is putting on a show, folks. With growth numbers that scream "rocket ship" and margins that whisper "black hole," this isn't for the faint of heart. But for the brave, the data suggests potential.</p>
+<p>Forget the daily noise – ONDS is a high-octane growth story trading at a discount, demanding your attention despite its current bleeding. This isn't your grandma's value stock; it's a speculative rocket with massive upside.</p>
 
 <h3>The Core Thesis</h3>
-<p>The market often sees ONDS as a wild card, a high-beta (2.58) gamble with no P/E and a profit margin so negative (-172.5%) it looks like a typo. Traders might glance at the chart's tangled EMAs and the day's -2.48% dip on lower volume (Rel Vol: 0.88x), shrug, and move on. They see a money pit in the volatile Communications Equipment sector, burning cash faster than a crypto mining rig in a heatwave.</p>
 
-<p>But look deeper, and a different story emerges. This isn't just "some tech stock" – this is a company sporting a jaw-dropping 582.0% revenue growth. That's not a typo, that's explosive expansion. Despite the current red on the bottom line, analysts peg it as "UNDERVALUED" by a whopping 76.6% with an $18.38 target. The market is clearly missing something significant in its current valuation of $10.4.</p>
+<p>The market, in its infinite wisdom, sees ONDS for what it is <em>today</em>: a technology company in the Communication Equipment sector hemorrhaging cash with a profit margin of -172.5%. It's unprofitable, the P/E is non-existent, and the forward P/E is still deep in the red at -112.67. Short-term price action, with the stock down nearly 5% today and short-term EMAs tangled above current price, reinforces this narrative of indecision and weakness. For many, this screams "stay away."</p>
 
-<p>This isn't about current profitability; it's about future potential. It's a bet on operating leverage kicking in, on scaling solutions into massive demand, and on a nascent bullish trend (Golden Cross) signaling a potential shift in momentum from its 52W low of $4.9. The risk is immense, but the upside, according to the data, is equally compelling.</p>
+<p>But step into Sam's ghost-lab, and you'll see a different reality. ONDS is not just growing; it's <em>exploding</em> with a mind-boggling 582.0% revenue growth rate. This isn't just growth; it's a land-grab, a testament to its market penetration and product adoption in a critical technology sector. This aggressive expansion, even at the cost of current profitability, is exactly what high-growth plays do in their early stages. The market is myopically focused on the present losses, completely missing the forest for the trees – a massively undervalued company with an 81.2% valuation gap to its fair value target of $18.38.</p>
+
+<p>This isn't just my ghostly opinion; analysts concur, pegging a target of $18.38, a cool 81.2% upside from current levels. ONDS is sacrificing short-term profits for long-term dominance, a strategy often seen in disruptive tech firms. The question isn't <em>if</em> they'll become profitable, but <em>when</em> their explosive growth translates into sustainable earnings. The long-term technical trend, marked by a bullish Golden Cross, further supports the narrative that the big money is betting on this transformation.</p>
 
 <h3>📊 The Numbers You Need</h3>
-<p>Let's cut to the chase, because numbers don't lie – they just sometimes tell a complex story:</p>
 
+<p>ONDS is a beast of contradictions:</p>
 <ul>
-<li><strong>Revenue Growth:</strong> A staggering 582.0%. This isn't just growth; it's a hyper-growth explosion. ONDS is clearly capturing market share or riding a massive wave of demand in the Technology/Communication Equipment sector.</li>
-<li><strong>Profit Margin:</strong> A brutal -172.5%. This is the elephant in the room. For every dollar in revenue, they're losing significant money. This implies heavy investment, aggressive spending, or severe operational inefficiencies that need to be addressed pronto.</li>
-<li><strong>Market Cap:</strong> $4.68B. Not a micro-cap, suggesting some institutional eyes are already on it, but plenty of room to run if the story plays out.</li>
-</ul>
-<p><em>   <strong>P/E & Forward P/E:</strong> None & -115.61. This confirms our thesis – you're not buying earnings, you're buying </em>potential* earnings. The negative forward P/E underscores the market's skepticism about near-term profitability.</p>
-<ul>
-<li><strong>Analyst Target:</strong> $18.38. This is 76.6% above current price, signaling strong conviction from the pros that ONDS is undervalued given its trajectory.</li>
+<li><strong>Revenue Growth:</strong> A staggering <strong>582.0%</strong>. This is the number that should slap you awake. It means they're acquiring customers, expanding market share, and making serious inroads.</li>
+<li><strong>Profit Margin:</strong> A brutal <strong>-172.5%</strong>. This is the other side of the coin – extreme investment into that growth, leading to significant losses.</li>
+<li><strong>P/E & Forward P/E:</strong> <strong>None</strong> and <strong>-112.67</strong>, respectively. This just confirms profitability is a future event, not a current reality. The negative forward P/E suggests analysts expect losses to continue, albeit potentially less severe over time.</li>
+<li><strong>Market Cap:</strong> <strong>$4.56B</strong>. This isn't a micro-cap; it's a mid-cap company executing a hyper-growth strategy.</li>
 </ul>
 
 <h3>🚀 The Bull Case</h3>
-<p>The Ghost has seen enough to conjure up some serious upside potential here:</p>
 
 <ol>
-<li><strong>Hyper-Growth Dominance:</strong> 582.0% revenue growth is almost unheard of for a company of this market cap. It suggests ONDS is either disrupting its industry or successfully capturing a burgeoning market. If this growth can be sustained even moderately, operating leverage <em>will</em> eventually kick in, turning those terrifying red margins into glorious black.</li>
-<li><strong>Massive Undervaluation:</strong> The "UNDERVALUED (Gap: 76.6%)" tag with an Analyst Target of $18.38 isn't just a suggestion; it's a quantitative screaming match. The market's current $10.4 valuation is seemingly failing to properly price in the future potential implied by its top-line expansion.</li>
-<li><strong>Emerging Technical Strength (Golden Cross):</strong> Despite the immediate price action and tangled EMAs ($10.37-$10.45), the "Bullish (Golden Cross)" trend indicator is a powerful signal. It implies that a significant shift in long-term momentum is underway, suggesting that demand is starting to outweigh supply. This underpins the re-rating potential.</li>
-<li><strong>Beta & Volatility for the Win:</strong> A Beta of 2.58 means ONDS will move hard in either direction. If the bull case plays out, this volatility acts as a turbocharger, propelling the stock higher much faster than the broader market. The ATR of $1.09 confirms this stock likes to move.</li>
+<li><strong>Hyper-Growth & Market Penetration:</strong> That <strong>582.0% revenue growth</strong> isn't just a number; it's a signal of strong product-market fit and aggressive expansion in the Communication Equipment sector. This kind of top-line expansion suggests they're either dominating a niche or rapidly capturing market share in a larger segment. The larger they get, the easier it will be to eventually scale to profitability.</li>
+<li><strong>Massive Undervaluation:</strong> With a valuation showing an <strong>81.2% gap</strong> and an analyst target of <strong>$18.38</strong>, the market is clearly underpricing future potential. Smart money often accumulates high-growth, unprofitable companies when they're undervalued, anticipating a future inflection point for profitability.</li>
+<li><strong>Long-Term Trend Strength (Golden Cross):</strong> Despite short-term choppiness, the presence of a <strong>Golden Cross</strong> indicates that the 50-day SMA has crossed above the 200-day SMA, a classic long-term bullish signal. This suggests institutional buying and a fundamental shift in the broader trend, often preceding significant upward moves.</li>
+<li><strong>High Beta Play:</strong> With a <strong>Beta of 2.58</strong>, ONDS is highly volatile. While this adds risk, in a bullish market environment or sector-specific tailwinds, this stock can significantly outperform. For traders with a higher risk tolerance, this volatility presents amplified return potential on the upside.</li>
 </ul>
 
 <h3>⚠️ The Bear Case: Risks</h3>
-<p>No quant report is complete without staring the demons in the eye:</p>
 
 <ol>
-<li><strong>The Profitability Abyss:</strong> A -172.5% profit margin is a significant, undeniable red flag. ONDS is bleeding cash. The big question is: can they manage this burn rate? Without clear signs of margin improvement or a path to profitability, this stock could face severe liquidity issues, leading to dilutive financing or debt, which would crush shareholder value.</li>
-<li><strong>Execution Risk is Paramount:</strong> Turning explosive revenue growth into sustainable, profitable operations is easier said than done. The Communication Equipment sector is competitive, requiring constant innovation and efficient supply chain management. Any stumble in execution or slowdown in growth, and the market will re-price ONDS brutally.</li>
-<li><strong>High Volatility & Market Sensitivity:</strong> With a Beta of 2.58, ONDS is a high-octane performer but also a high-risk one. In a broader market downturn, ONDS could fall much harder and faster than its peers, unwinding years of speculative gains in weeks. The "Golden Cross" provides hope, but only if the broader market cooperates.</li>
+<li><strong>Persistent Unprofitability & Cash Burn:</strong> A <strong>-172.5% profit margin</strong> is not sustainable forever. The company is burning through capital. If they fail to achieve profitability within a reasonable timeframe, or if external funding dries up, it could lead to dilution or solvency issues.</li>
+<li><strong>Extreme Volatility & Beta:</strong> A <strong>Beta of 2.58</strong> means ONDS can swing wildly. A general market downturn or sector-specific headwinds could see this stock plummet much faster and harder than the broader market, making it a high-risk hold.</li>
+<li><strong>Competitive Landscape & Execution Risk:</strong> The Communication Equipment sector is competitive. Sustaining such high growth requires flawless execution, continued innovation, and effective management of costs. Any misstep could jeopardize its path to profitability. The low ADX (21.53) also indicates a weak trend, meaning it could easily reverse if the underlying narrative falters.</li>
 </ol>
 
 <h3>📉 The Technicals</h3>
-<p>The charts tell a story of a stock in a crucial battleground phase.</p>
 
+<p>ONDS currently sits at ~$10.14, having pulled back ~5% today. The short-term picture is murky:</p>
+<p><em>   <strong>EMA Stack:</strong> The 8, 21, and 34 EMAs are <strong>TANGLED</strong> at $10.31, $10.40, and $10.43 respectively. The price is </em>below* all of them, indicating short-term resistance and a lack of clear momentum.</p>
 <ul>
-<li><strong>EMA Stack:</strong> Currently "TANGLED" (8: $10.37, 21: $10.42, 34: $10.45). This indicates a period of consolidation, indecision, or tight range trading. The price is currently right smack in the middle of these short-term averages.</li>
-<li><strong>SMAs:</strong> SMA 50 at $10.84, while the SMA 200 is "None." The missing 200-SMA either suggests a relatively new listing or a prolonged downtrend that's recently reversed, making the "Golden Cross" even more significant as a turning point.</li>
-<li><strong>Trend:</strong> "Bullish (Golden Cross)." This is the critical signal. Despite the tangled short-term EMAs, a longer-term bullish cross has occurred, indicating that the overall trend is shifting upwards.</li>
-<li><strong>RSI(14):</strong> 55.72. Neutral, leaning slightly bullish. It's got plenty of room to run before becoming overbought, and not oversold, suggesting a balanced sentiment for now.</li>
-<li><strong>ADX:</strong> 21.53. Modest trend strength. The trend is present, but not yet powerfully directional, aligning with the tangled EMAs.</li>
-<li><strong>Pivots:</strong> Current price ($10.4) sits between the Pivot Point ($11.13) and Support 1 ($9.84). We've got clear levels to watch. Resistance is at R1=$11.96 and R2=$13.25. Support is at S1=$9.84 and S2=$9.01.</li>
-<li><strong>ATR:</strong> 1.09. ONDS moves about $1.09 daily, confirming its high volatility.</li>
-<li><strong>Rel Vol:</strong> 0.88x. Today's -2.48% dip occurred on slightly below-average volume, suggesting the selling pressure isn't overly strong or conviction is low.</li>
+<li><strong>SMA 50:</strong> At $10.84, the 50-day SMA is also above the current price, acting as another significant resistance level that needs to be cleared for a sustained move higher.</li>
+<li><strong>Trend:</strong> Despite the short-term tangles, the overarching <strong>Bullish (Golden Cross)</strong> signal is key. This implies that while the stock is consolidating or pulling back, the long-term trend remains upward.</li>
+<li><strong>RSI(14):</strong> A neutral <strong>53.48</strong>. Not overbought, not oversold – plenty of room for a move in either direction.</li>
+<li><strong>ADX:</strong> A weak <strong>21.53</strong>, confirms the "TANGLED" EMAs and current indecision. The trend is not strong in either direction at this moment.</li>
+<li><strong>Pivots:</strong> Current price is sitting just above <strong>S1 ($9.84)</strong> and below the <strong>PP ($11.13)</strong>. Key resistance levels are <strong>R1 ($11.96)</strong> and <strong>R2 ($13.25)</strong>.</li>
+<li><strong>ATR:</strong> <strong>$1.09</strong>, highlights the daily volatility.</li>
+<li><strong>Rel Vol:</strong> <strong>1.03x</strong>, volume is slightly above average, not signaling a major breakout or breakdown yet.</li>
 </ul>
 
 <h3>📝 Trading Playbook</h3>
 
+<p>ONDS is a swing trader's dream and a long-term investor's patient bet. Given the volatility (Beta 2.58) and high ATR, disciplined entries and exits are paramount.</p>
+
 <p><strong>Scenario A — The Breakout (Bullish):</strong></p>
-<p>If ONDS can decisively break above the Pivot Point ($11.13) with increasing volume, and subsequently clear R1 ($11.96), it signals bulls are taking control. The next target becomes R2 ($13.25), and beyond that, a run towards the analyst target of $18.38 becomes a real possibility. Watch for EMAs to fan out upwards as confirmation.</p>
+<p>Price clears the tangled EMAs and the SMA 50. Look for a strong close above <strong>$10.84 (SMA 50)</strong>, ideally with increasing volume (Rel Vol > 1.5x). A confirmed break above the <strong>PP ($11.13)</strong> and then <strong>R1 ($11.96)</strong> would signal momentum returning. Target <strong>R2 ($13.25)</strong>, with potential for expansion towards the 52W high of $15.28 and beyond.</p>
 
 <p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
-<p>Given the "undervalued" status and the Golden Cross, our preferred strategy is to buy dips into key support levels. Look for a strong bounce off S1 ($9.84) or, for a more aggressive entry, S2 ($9.01). A bullish candle formation at these levels on good volume, with RSI turning up from potentially oversold conditions, would be a strong buy signal. This offers a better risk/reward entry.</p>
+<p>Given the current short-term weakness and the overarching Golden Cross, dips into key support offer the best risk/reward. Look for a bounce off <strong>S1 ($9.84)</strong>, or ideally, a deeper dip to <strong>S2 ($9.01)</strong>. These levels offer strong entry points, using S2 as a hard stop for the S1 bounce, or slightly below S2 for a deeper entry. This allows participation in the long-term trend at a discounted price, closer to the 52W low of $4.9 while aiming for the $18.38 target.</p>
 
 <p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
-<p>If ONDS decisively breaks below S2 ($9.01) with strong selling volume, the bullish thesis is compromised. This would suggest the market is focusing solely on the negative profitability and the Golden Cross signal has failed to hold. At this point, cutting losses or even considering a short (if you're brave enough) is prudent, as further downside to new 52W lows could be in play.</p>
+<p>A clear break and sustained trading <em>below</em> <strong>S2 ($9.01)</strong> would invalidate the short-term bullish outlook and suggest the current weakness is deepening. This would imply the Golden Cross might be losing its conviction or the fundamental thesis is cracking. Consider exiting or hedging positions, as the next major support might be much lower, potentially towards the 52W low.</p>
 
 <h3>🏁 Final Verdict</h3>
-<p>ONDS is a high-growth, high-risk play. It's a speculative buy for traders willing to bet on massive revenue growth eventually translating to profitability, with a target of $18.38.</p>
 
-<p>— Ghost out. 👻</p>
-        </div>
+<p>ONDS is an unprofitable growth monster, currently a coiled spring, offering substantial upside as its explosive revenue growth eventually translates to profit. Price target: $18.38.</p>
 
-        <!-- FOOTER -->
-        <div class="text-center py-4 space-y-1">
-            <div class="text-[9px] text-gray-700 font-mono uppercase tracking-widest">
-                Ghost Alpha Dossier // Watchlist Deep Dive // 2026-03-03 01:13 PM EST
-            </div>
-        </div>
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">127.3%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">117.5%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">1</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
     </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">TANGLED</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$10.08</div><div class="ma-d pos">+0.6%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$10.84</div><div class="ma-d neg">-6.5%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$9.28</div><div class="ma-d pos">+9.3%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">TANGLED</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$10.31</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$10.40</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$10.43</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">53</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">39/46</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm pos">+0.05</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">21.5</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$4.9</span><span>$10.14 (50%)</span><span>$15.28</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:50%"></div><div class="rng-dot" style="left:50%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$12.83</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$11.31</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$10.09</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$8.87</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$12.36</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$7.80</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$1.09</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">1.03x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$13.25 &#xB7; R1=$11.96 &#xB7; PP=$11.13 &#xB7; S1=$9.84 &#xB7; S2=$9.01
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-03-03 03:10 PM EST</div>
+</div>
 </body>
 </html>

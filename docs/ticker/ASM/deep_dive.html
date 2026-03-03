@@ -1,152 +1,273 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASM Deep Dive | ALPHA.DOSSIER</title>
-    <meta name="description" content="Full deep-dive analysis for ASM — thesis, technicals, bull/bear case, trading playbook.">
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { 'mono': ['"JetBrains Mono"', 'monospace'], 'tech': ['"Share Tech Mono"', 'monospace'] },
-                    colors: { 'neon-green': '#00ff41', 'neon-red': '#ff3e3e', 'neon-blue': '#00f3ff', 'neon-amber': '#ffb000', 'hud-black': '#0a0a0a' }
-                }
-            }
-        }
-    </script>
-    <style>
-        body { background-color: #050505; color: #e0e0e0; font-family: 'JetBrains Mono', monospace;
-            background-image: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.25) 50%),
-            linear-gradient(90deg, rgba(255,0,0,0.06), rgba(0,255,0,0.02), rgba(0,0,255,0.06));
-            background-size: 100% 2px, 3px 100%; }
-        .hud-panel { background: rgba(10,10,10,0.8); border: 1px solid #333; box-shadow: 0 0 10px rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
-        .content h2 { font-size: 1.5rem; font-weight: 900; color: #fff; margin: 2rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #333;
-            font-family: 'Share Tech Mono', monospace; text-transform: uppercase; letter-spacing: 0.05em; }
-        .content h3 { font-size: 1.1rem; font-weight: 700; color: #ffb000; margin: 1.5rem 0 0.75rem; letter-spacing: 0.03em; }
-        .content p { color: #c0c0c0; line-height: 1.8; margin: 0.5rem 0; font-size: 0.85rem; }
-        .content strong { color: #ffffff; }
-        .content em { color: #00f3ff; font-style: normal; }
-        .content ul, .content ol { margin: 0.5rem 0 0.5rem 1.5rem; color: #c0c0c0; font-size: 0.85rem; line-height: 2; }
-        .content li { margin: 0.3rem 0; }
-        .content hr { border: none; border-top: 1px solid #333; margin: 2rem 0; }
-        .content table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.8rem; }
-        .content td { padding: 0.5rem 0.75rem; border: 1px solid #333; color: #c0c0c0; }
-        .content tr:first-child td { font-weight: bold; color: #888; background: rgba(255,255,255,0.03); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASM Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for ASM.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+@media(max-width:640px){
+  .vol-row,.osc-row{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row{grid-template-columns:1fr}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
 </head>
-<body class="min-h-screen p-4 md:p-8">
-    <div class="max-w-4xl mx-auto space-y-6">
+<body>
+<div class="w">
 
-        <!-- NAV BAR -->
-        <div class="flex justify-between items-center">
-            <a href="../../index.html" class="font-tech text-neon-green text-sm tracking-widest hover:text-white transition-colors">← ALPHA://HUD</a>
-            <div class="flex gap-3">
-                <a href="deep_dive.md" download class="px-2 py-1 bg-gray-800 text-[10px] text-gray-400 border border-gray-700 hover:text-white hover:border-gray-500 transition-colors uppercase font-mono rounded">↓ RAW MD</a>
-                <a href="deep_dive.json" class="px-2 py-1 bg-gray-800 text-[10px] text-gray-400 border border-gray-700 hover:text-white hover:border-gray-500 transition-colors uppercase font-mono rounded">↓ JSON</a>
-            </div>
-        </div>
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
 
-        <!-- HEADER -->
-        <div class="hud-panel p-6 rounded-sm border-l-4 border-neon-amber">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-2xl md:text-3xl font-black font-tech tracking-widest text-white">
-                        <a href="https://www.tradingview.com/symbols/ASM/" target="_blank" class="hover:text-neon-blue transition-colors">ASM</a>
-                        <span class="text-neon-amber ml-2">DEEP.DIVE</span>
-                    </h1>
-                    <p class="text-[10px] text-gray-500 uppercase tracking-[0.3em] mt-1">
-                        Basic Materials · Other Precious Metals & Mining
-                    </p>
-                </div>
-                <div class="text-right space-y-1">
-                    <div class="text-2xl font-bold font-mono text-white">$8.35</div>
-                    <div class="text-neon-red text-sm font-mono">-11.26%</div>
-                </div>
-            </div>
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
 
-            <!-- Quick Stats Bar -->
-            <div class="flex flex-wrap gap-4 mt-4 pt-3 border-t border-gray-800 text-[10px] font-mono">
-                <span class="text-gray-500">MCAP <span class="text-white">$1.31B</span></span>
-                <span class="text-gray-500">EMA <span class="text-neon-green">TANGLED</span></span>
-                <span class="text-gray-500">RSI <span class="text-white">31.76</span></span>
-                <span class="text-gray-500">ADX <span class="text-white">29.85</span></span>
-                <span class="text-gray-500">TV <span class="text-neon-blue">N/A</span></span>
-                <span class="text-gray-500">VAL <span class="text-neon-red">OVERVALUED</span></span>
-            </div>
-        </div>
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/ASM/" target="_blank">ASM</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Basic Materials &#xB7; Other Precious Metals & Mining &#xB7; 2026-03-03</div>
+  </div>
+  <div>
+    <div class="pr">$8.4</div>
+    <div class="ch neg">-10.68%</div>
+  </div>
+</div>
 
-        <!-- CONTENT -->
-        <div class="hud-panel p-6 md:p-8 rounded-sm content">
-            <h2>[ASM] Deep Dive: Rare Earth Riches or a Rocky Road Ahead?</h2>
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[ASM] Deep Dive: The Metal Maelstrom — Volatility Meets Untapped Value?</h2>
 <p><strong>Date:</strong> 2026-03-03</p>
-<p><strong>Price:</strong> ~$8.35 | <strong>Verdict:</strong> Speculative Accumulation</p>
+<p><strong>Price:</strong> ~$8.4 | <strong>Verdict:</strong> Monitor for Entry</p>
 
-<p>ASM just got smacked down 11.26% today, but don't let the red scare you away from this Basic Materials play just yet. We're digging deep to see if this rare earth miner is a future powerhouse or a value trap.</p>
+<p>ASM just took a nasty spill, shedding over 10% today. But don't let the red scare you off just yet; sometimes, the market's panic is a quant ghost's playground.</p>
 
 <h3>The Core Thesis</h3>
-<p>The market sees ASM through rose-tinted glasses, captivated by the promise of rare earth minerals fueling the green revolution and defense tech. With a scorching 44.0% revenue growth and a fat 24.7% profit margin, it's easy to get swept up in the narrative of a high-growth company in a critical sector. The "Golden Cross" on its chart whispers long-term bullish potential, painting a picture of an inevitable rise.</p>
+<p>The market is currently wrestling with ASM, dumping shares today amidst short-term technical uncertainty and a clear "OVERVALUED" tag from models. On the surface, it looks like a losing bet. But look beneath the surface: this isn't just another speculative rock play. ASM boasts staggering revenue growth and solid profit margins that contradict the immediate bearish sentiment, indicating a strong underlying business getting caught in a sector-wide risk-off move or profit-taking.</p>
 
-<p>However, Sam the Quant Ghost isn't swayed by whispers alone. The reality is that much of this future potential is already baked into the current price, and then some. At a whopping 59.64 P/E (or a still demanding 21.97 forward P/E), ASM is officially stamped "OVERVALUED" by a cool 23.8%, with a fundamental target of just $6.36. This isn't just a premium; it's a significant disconnect between current market sentiment and a cold, hard valuation. We're talking high conviction in future earnings, and if that conviction wavers, the ride down could be brutal for a stock with a 2.72 Beta.</p>
+<p>The core reality is a rapidly expanding business currently trading at a premium, and today's pullback could be the market correcting its enthusiasm, creating a tactical entry point for those who believe in the long-term growth story. The battle is between robust fundamentals and a frothy valuation, with volatility acting as the ultimate arbiter.</p>
 
 <h3>📊 The Numbers You Need</h3>
-<p><em>   <strong>Revenue Growth (YoY):</strong> 44.0% — </em>Absolute fire. This is what keeps the dream alive.*</p>
-<p><em>   <strong>Profit Margin:</strong> 24.7% — </em>Solid profitability, not just growth for growth's sake.*</p>
-<p><em>   <strong>P/E (TTM):</strong> 59.64x — </em>Sticker shock. The market is pricing in aggressive future growth.*</p>
-<p><em>   <strong>Forward P/E:</strong> 21.97x — </em>Still requires substantial earnings growth to justify.*</p>
-<p><em>   <strong>Market Cap:</strong> $1.31B — </em>Small-cap agility, but also prone to wild swings.*</p>
-<p><em>   <strong>Beta:</strong> 2.72 — </em>Warning: this stock will amplify market moves. Not for the faint of heart.*</p>
-<p><em>   <strong>Analyst Target:</strong> $11.0 — </em>The Street sees upside, but remember our valuation target of $6.36.*</p>
+<p>ASM isn't just digging for gold; it's digging for profits, and the numbers show it.</p>
+
+<p><em>   <strong>Revenue Growth: 44.0%</strong> — This isn't just growth; it's </em>explosive* growth. For a basic materials company, this screams demand and effective execution.</p>
+<ul>
+<li><strong>Profit Margin: 24.7%</strong> — Solid. Nearly a quarter of every dollar in revenue makes it to the bottom line, indicating efficient operations and pricing power.</li>
+<li><strong>Market Cap: $1.32B</strong> — A relatively small-cap player, meaning it has room to run but also higher volatility.</li>
+<li><strong>P/E: 60.04</strong> — This is the market's current premium. Pricey, no doubt, reflecting high expectations for future growth.</li>
+<li><strong>Forward P/E: 22.12</strong> — This is the key. The massive drop from 60 to 22 suggests analysts expect earnings to more than double in the next year. If ASM hits those targets, today's P/E will look very different.</li>
+</ul>
 
 <h3>🚀 The Bull Case</h3>
 <ol>
-<li><strong>Critical Sector Demand:</strong> The global energy transition (EVs, wind turbines) and advanced technologies (magnets, defense) rely heavily on rare earth minerals. ASM is positioned in a supply-constrained, geopolitically sensitive market, ensuring structural demand tailwinds for years to come.</li>
-<li><strong>Explosive Growth & Profitability:</strong> With 44.0% revenue growth and a 24.7% profit margin, ASM is executing flawlessly on its operational front. If it can sustain anything close to this pace, it will eventually grow into its lofty valuation, making today's price look like a bargain.</li>
-<li><strong>Analyst Conviction:</strong> Despite the current overvaluation, the Street's consensus target of $11.0 suggests a belief in ASM's long-term potential, representing a significant 31% upside from the current $8.35. This external validation could attract further institutional interest.</li>
-<li><strong>Long-Term Technical Strength:</strong> The "Golden Cross" signals a significant long-term bullish trend. While recent action is choppy, this underlying signal indicates that the longer-term momentum favors the bulls.</li>
-</ol>
+<li><strong>Explosive Growth & Profitability:</strong> A staggering 44.0% revenue growth paired with a 24.7% profit margin isn't something you find every day in any sector, let alone basic materials. This indicates strong operational leverage and potential for continued expansion.</li>
+<li><strong>Anticipated Earnings Surge:</strong> The Forward P/E of 22.12, a significant discount to the current P/E of 60.04, signals that substantial earnings growth is priced in and expected by analysts. If ASM delivers, the current valuation concerns will quickly dissipate.</li>
+<li><strong>Positive Longer-Term Trend:</strong> Despite today's brutal sell-off, the stock still shows a "Bullish (Golden Cross)" trend on the longer-term charts. This suggests underlying institutional interest or a longer-term uptrend that might weather short-term volatility.</li>
+<li><strong>Analyst Conviction:</strong> The Analyst Target of $11.0 is a substantial 31% upside from today's close, providing a professional vote of confidence that current prices present an opportunity.</li>
+</ul>
 
 <h3>⚠️ The Bear Case: Risks</h3>
 <ol>
-<li><strong>Extreme Valuation Disconnect:</strong> The elephant in the room. ASM is "OVERVALUED" by 23.8% with a fundamental target of $6.36. Any slowdown in growth, project delays, or shift in sentiment could trigger a severe re-rating downwards. The current P/E of 59.64 is a premium you pay for perfection.</li>
-<li><strong>High Volatility (Beta 2.72):</strong> Today's 11.26% drop is a stark reminder. This stock swings wildly. While it offers amplified gains on the way up, it delivers amplified pain on the way down, making risk management paramount.</li>
-<li><strong>Commodity Price & Geopolitical Exposure:</strong> As a Basic Materials company, ASM's fortunes are tied to volatile commodity prices and the complex geopolitics of rare earth mining and supply chains. Unexpected tariffs, new discoveries, or political instability could rapidly impact its profitability.</li>
-</ol>
+<li><strong>Overvaluation & Valuation Gap:</strong> Our models indicate ASM is "OVERVALUED" with a target of $6.36, representing a -24.3% gap from the current price. This suggests that even with strong growth, the stock may have gotten ahead of itself.</li>
+<li><strong>Extreme Volatility (High Beta):</strong> With a Beta of 2.72, ASM is an absolute rocket. Any broader market downturn will hit ASM disproportionately hard, as evidenced by today's -10.68% move. This isn't for the faint of heart.</li>
+<li><strong>Short-Term Technical Breakdown:</strong> The price has broken below S2 ($8.6), the EMAs are "TANGLED" and above the current price ($9.09, $9.13, $8.81), and the stock is down over 10% in a single session. This signals immediate selling pressure and a lack of conviction in the short term.</li>
+</ul>
 
 <h3>📉 The Technicals</h3>
-<p>ASM just took a hit, with the price plummeting to ~$8.35, a solid -11.26% for the day. This puts it squarely below the psychological pivot point (PP) of $9.35 and even below S1 ($9.0) and S2 ($8.6).</p>
+<p>ASM's technical picture is a mixed bag, battling long-term bullish signals against short-term pain.</p>
 
-<p>The <strong>EMA Stack</strong> is currently <strong>TANGLED</strong> (8-EMA at $9.08, 21-EMA at $9.13, 34-EMA at $8.81), confirming the lack of clear short-term direction, despite the underlying "Golden Cross" which signals long-term bullishness. The price needs to reclaim these EMAs to signal a reversal.</p>
-
-<p>The <strong>RSI(14)</strong> is sitting at 31.76, hovering just above oversold territory (typically < 30). This suggests a potential bounce could be brewing if selling pressure wanes. However, the <strong>ADX</strong> at 29.85 indicates that while there's <em>some</em> trend strength, it's not a powerfully trending environment right now.</p>
-
-<p>Immediate support levels to watch are the <strong>SMA 50</strong> at $8.23. A break below this would be a major concern, potentially opening the door to the valuation target of $6.36 or lower. The current price is only marginally above the SMA 50. Relative Volume at 0.7x means today's drop happened on lower than average volume, which <em>could</em> be interpreted as less conviction in the sell-off, but it's still a significant move.</p>
+<ul>
+<li><strong>Current Price Action:</strong> At $8.4, the stock just suffered a brutal -10.68% decline today, breaking below crucial short-term support levels.</li>
+</ul>
+<p><em>   <strong>RSI(14): 32.08</strong> — Nearing oversold territory. While not </em>technically* oversold (below 30), it's close enough to suggest that a bounce or at least a temporary reprieve could be on the horizon.</p>
+<ul>
+<li><strong>EMA Stack:</strong> "TANGLED" (8: $9.09, 21: $9.13, 34: $8.81). This is critical. The price is significantly below all short-term EMAs, confirming short-term bearishness and indicating indecision or consolidation will be needed to reclaim momentum.</li>
+<li><strong>SMA 50: $8.23</strong> — The current price of $8.4 is just barely hanging above the 50-day Simple Moving Average. This is a critical line in the sand; a break below could signal further downside. (SMA 200: $None — likely a newer or less liquid issue for this data point).</li>
+<li><strong>Trend: Bullish (Golden Cross)</strong> — A longer-term bullish signal remains in play despite today's weakness. This suggests the recent dip might be a temporary correction within an overall uptrend.</li>
+<li><strong>Pivots:</strong> Current price ($8.4) is well below all pivot points, having sliced through S1 ($9.0) and even S2 ($8.6). This confirms strong selling pressure and a breakdown of established support. The immediate resistance levels are S2 at $8.6, S1 at $9.0, and the daily pivot point (PP) at $9.35.</li>
+</ul>
 
 <h3>📝 Trading Playbook</h3>
-
 <p><strong>Scenario A — The Breakout (Bullish):</strong></p>
-<p>A confirmed reclaim of the <strong>S2 ($8.6) and S1 ($9.0)</strong> levels on increasing volume would be the first sign of strength. The next critical level is the <strong>Pivot Point (PP) at $9.35</strong>. A sustained move above the PP and the tangled EMAs would target <strong>R1 ($9.75)</strong> and potentially <strong>R2 ($10.1)</strong>, putting the analyst target of <strong>$11.0</strong> back in play. Keep an eye on the RSI for confirming momentum above 50.</p>
+<p>If ASM reclaims short-term momentum, we need to see it firmly reclaim the $8.6 (S2) and then $9.0 (S1) levels. A breakout past the TANGLED EMAs (around $9.13) and the PP at $9.35 would confirm renewed bullish intent. Target R1 ($9.75), then R2 ($10.1). This indicates short covering and renewed buying interest.</p>
 
 <p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
-<p>Given the severe overvaluation, waiting for a deeper dip to derisk the entry is prudent. A bounce off the <strong>SMA 50 ($8.23)</strong> could offer a tactical entry for aggressive traders, targeting a quick relief rally back to the PP. However, a more conservative dip buy would target the fundamental valuation level of <strong>$6.36</strong>, or even the lower end of the 52W range at <strong>$4.0</strong>, should macro conditions or company-specific news trigger a larger capitulation. Look for RSI to bottom below 30 and turn up, confirming oversold conditions.</p>
+<p>Given the oversold RSI, the Golden Cross, and the approach to the SMA 50, today's plunge could be a tactical entry point. Look for signs of stabilization or a bounce near the SMA 50 at $8.23 or just below it. An ideal entry would be in the $8.00-$8.25 range, especially if volume picks up on an up day. Set a tight stop below the 52W low to manage risk.</p>
 
 <p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
-<p>If ASM fails to hold the <strong>SMA 50 ($8.23)</strong> and closes significantly below it, consider this a breakdown. The next major downside target is the valuation estimate of <strong>$6.36</strong>, which would represent a massive 23% drop from current levels. A stop-loss should be placed below confirmed breakdown of the SMA 50, or adjust position size to account for the extreme volatility (Beta 2.72). A break of $6.36 could put the 52-week low of $4.0 in focus.</p>
+<p>The bullish Golden Cross would be severely threatened if ASM breaks definitively below the SMA 50 ($8.23). A sustained close below $8.0 could signal further downside, potentially towards the valuation target of $6.36 or even the 52W low of $4.0. Consider initiating a hedge or cutting losses if this level fails to hold.</p>
 
 <h3>🏁 Final Verdict</h3>
-<p>ASM is a high-octane growth story trading at a premium. The current dip, while painful, offers a potential entry for the brave who believe in the rare earth narrative, but fundamental caution at $6.36 is paramount. <strong>Speculative Accumulation.</strong> Target upside: $11.0.</p>
+<p>ASM is a high-octane growth play undergoing a painful, yet potentially tactical, correction. While valuation models flash red, the fundamental growth and forward earnings outlook paint a compelling picture for long-term believers. For the risk-tolerant trader, this dip presents a speculative entry opportunity if support holds. Target a rebound towards $10.1.</p>
 
-<p>— Ghost out. 👻</p>
-        </div>
+<p>— Ghost out. 👻</p></div></div>
 
-        <!-- FOOTER -->
-        <div class="text-center py-4 space-y-1">
-            <div class="text-[9px] text-gray-700 font-mono uppercase tracking-widest">
-                Ghost Alpha Dossier // Watchlist Deep Dive // 2026-03-03 01:22 PM EST
-            </div>
-        </div>
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">103.9%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">133.6%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val dim">N/A</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">N/A%</div></div>
     </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">TANGLED</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$9.51</div><div class="ma-d neg">-11.7%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$8.23</div><div class="ma-d pos">+2.1%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$6.70</div><div class="ma-d pos">+25.4%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">TANGLED</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$9.09</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$9.13</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$8.81</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">32</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">15/36</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm neg">-0.18</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">29.9</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$4.0</span><span>$8.4 (55%)</span><span>$11.99</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:55%"></div><div class="rng-dot" style="left:55%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$10.10</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$8.94</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$8.00</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$7.05</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$11.33</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$7.69</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$0.82</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">0.82x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$10.10 &#xB7; R1=$9.75 &#xB7; PP=$9.35 &#xB7; S1=$9.00 &#xB7; S2=$8.60
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-03-03 03:08 PM EST</div>
+</div>
 </body>
 </html>

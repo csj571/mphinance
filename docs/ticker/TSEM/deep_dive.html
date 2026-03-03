@@ -1,153 +1,275 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TSEM Deep Dive | ALPHA.DOSSIER</title>
-    <meta name="description" content="Full deep-dive analysis for TSEM — thesis, technicals, bull/bear case, trading playbook.">
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { 'mono': ['"JetBrains Mono"', 'monospace'], 'tech': ['"Share Tech Mono"', 'monospace'] },
-                    colors: { 'neon-green': '#00ff41', 'neon-red': '#ff3e3e', 'neon-blue': '#00f3ff', 'neon-amber': '#ffb000', 'hud-black': '#0a0a0a' }
-                }
-            }
-        }
-    </script>
-    <style>
-        body { background-color: #050505; color: #e0e0e0; font-family: 'JetBrains Mono', monospace;
-            background-image: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.25) 50%),
-            linear-gradient(90deg, rgba(255,0,0,0.06), rgba(0,255,0,0.02), rgba(0,0,255,0.06));
-            background-size: 100% 2px, 3px 100%; }
-        .hud-panel { background: rgba(10,10,10,0.8); border: 1px solid #333; box-shadow: 0 0 10px rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
-        .content h2 { font-size: 1.5rem; font-weight: 900; color: #fff; margin: 2rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #333;
-            font-family: 'Share Tech Mono', monospace; text-transform: uppercase; letter-spacing: 0.05em; }
-        .content h3 { font-size: 1.1rem; font-weight: 700; color: #ffb000; margin: 1.5rem 0 0.75rem; letter-spacing: 0.03em; }
-        .content p { color: #c0c0c0; line-height: 1.8; margin: 0.5rem 0; font-size: 0.85rem; }
-        .content strong { color: #ffffff; }
-        .content em { color: #00f3ff; font-style: normal; }
-        .content ul, .content ol { margin: 0.5rem 0 0.5rem 1.5rem; color: #c0c0c0; font-size: 0.85rem; line-height: 2; }
-        .content li { margin: 0.3rem 0; }
-        .content hr { border: none; border-top: 1px solid #333; margin: 2rem 0; }
-        .content table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.8rem; }
-        .content td { padding: 0.5rem 0.75rem; border: 1px solid #333; color: #c0c0c0; }
-        .content tr:first-child td { font-weight: bold; color: #888; background: rgba(255,255,255,0.03); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSEM Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for TSEM.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+@media(max-width:640px){
+  .vol-row,.osc-row{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row{grid-template-columns:1fr}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
 </head>
-<body class="min-h-screen p-4 md:p-8">
-    <div class="max-w-4xl mx-auto space-y-6">
+<body>
+<div class="w">
 
-        <!-- NAV BAR -->
-        <div class="flex justify-between items-center">
-            <a href="../../index.html" class="font-tech text-neon-green text-sm tracking-widest hover:text-white transition-colors">← ALPHA://HUD</a>
-            <div class="flex gap-3">
-                <a href="deep_dive.md" download class="px-2 py-1 bg-gray-800 text-[10px] text-gray-400 border border-gray-700 hover:text-white hover:border-gray-500 transition-colors uppercase font-mono rounded">↓ RAW MD</a>
-                <a href="deep_dive.json" class="px-2 py-1 bg-gray-800 text-[10px] text-gray-400 border border-gray-700 hover:text-white hover:border-gray-500 transition-colors uppercase font-mono rounded">↓ JSON</a>
-            </div>
-        </div>
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
 
-        <!-- HEADER -->
-        <div class="hud-panel p-6 rounded-sm border-l-4 border-neon-amber">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-2xl md:text-3xl font-black font-tech tracking-widest text-white">
-                        <a href="https://www.tradingview.com/symbols/TSEM/" target="_blank" class="hover:text-neon-blue transition-colors">TSEM</a>
-                        <span class="text-neon-amber ml-2">DEEP.DIVE</span>
-                    </h1>
-                    <p class="text-[10px] text-gray-500 uppercase tracking-[0.3em] mt-1">
-                        Technology · Semiconductors
-                    </p>
-                </div>
-                <div class="text-right space-y-1">
-                    <div class="text-2xl font-bold font-mono text-white">$131.51</div>
-                    <div class="text-neon-red text-sm font-mono">-5.11%</div>
-                </div>
-            </div>
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
 
-            <!-- Quick Stats Bar -->
-            <div class="flex flex-wrap gap-4 mt-4 pt-3 border-t border-gray-800 text-[10px] font-mono">
-                <span class="text-gray-500">MCAP <span class="text-white">$14.79B</span></span>
-                <span class="text-gray-500">EMA <span class="text-neon-green">FULL BULLISH</span></span>
-                <span class="text-gray-500">RSI <span class="text-white">43.81</span></span>
-                <span class="text-gray-500">ADX <span class="text-white">12.47</span></span>
-                <span class="text-gray-500">TV <span class="text-neon-blue">N/A</span></span>
-                <span class="text-gray-500">VAL <span class="text-neon-red">OVERVALUED</span></span>
-            </div>
-        </div>
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/TSEM/" target="_blank">TSEM</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Technology &#xB7; Semiconductors &#xB7; 2026-03-03</div>
+  </div>
+  <div>
+    <div class="pr">$127.21</div>
+    <div class="ch neg">-8.21%</div>
+  </div>
+</div>
 
-        <!-- CONTENT -->
-        <div class="hud-panel p-6 md:p-8 rounded-sm content">
-            <h2>[TSEM] Deep Dive: The Chip Ghost in the Machine – Is This Dip a Treat or a Trick?</h2>
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[TSEM] Deep Dive: Dissecting the Dip – A Quantum Opportunity?</h2>
 <p><strong>Date:</strong> 2026-03-03</p>
-<p><strong>Price:</strong> ~$131.51 | <strong>Verdict:</strong> Bullish (Dip Opportunity)</p>
+<p><strong>Price:</strong> ~$127.21 | <strong>Verdict:</strong> ACCUMULATE</p>
 
-<p>TSEM just took a ~5% haircut, dragging it back to a crucial technical juncture. For a stock that screams "growth," is this a fleeting correction or the start of something more sinister? Let's dig in.</p>
+<p>TSEM took a nasty tumble today, shedding over 8% in a single session. But don't let a red candle fool you; sometimes, a pullback is just the market clearing house for smarter money to step in.</p>
 
 <h3>The Core Thesis</h3>
-<p>The market often sees TSEM as a richly valued semiconductor darling, and a quick glance at its current P/E of 67.79 confirms that it's priced for perfection. Today’s ~5% drop likely has some traders hitting the panic button, focusing on the immediate overvaluation concerns where the internal model spits out a target of $73.15. Ouch.</p>
+<p>The market often sees a P/E ratio of 65.57 and recoils, especially on a day like today where TSEM slides over 8% to $127.21. For the casual observer, TSEM might look like an overvalued semiconductor play, particularly with some valuation models screaming "OVERVALUED" and suggesting a $73.15 fair value. This surface-level analysis misses the critical nuance of high-growth tech names.</p>
 
-<p>But reality, my friends, is often more nuanced than a single P/E ratio. The true story of TSEM whispers from its <em>forward</em> P/E of 27.44 – a staggering discount to its current earnings multiple. This isn't just a number; it's a loud declaration from the Street that TSEM is expected to unleash an absolute torrent of earnings growth in the coming year. When you pair that with an undeniably bullish technical setup, today's dip starts looking less like a red flag and more like a potential green light for the nimble-footed.</p>
+<p>The reality, from a quant's perspective, is more compelling. TSEM operates in the red-hot semiconductor space, a foundational pillar for AI, IoT, and advanced computing. Its revenue growth of 13.7% and healthy 14.1% profit margin aren't flukes; they reflect a business with underlying strength. The <em>key</em> differentiator is the forward P/E: a significantly lower 26.54. This drastic reduction implies analysts and institutions are forecasting substantial earnings growth, which fundamentally shifts the valuation narrative from "expensive today" to "reasonably priced for tomorrow's earnings." The current dip could very well be a gift for those looking beyond the immediate noise.</p>
 
 <h3>📊 The Numbers You Need</h3>
-<p>TSEM, operating in the crucial Technology/Semiconductor sector, is a $14.79 billion market cap player that's not just growing, but growing profitably.</p>
 <ul>
-<li><strong>Revenue Growth:</strong> A solid 13.7% year-over-year. In an industry where innovation is key, this shows TSEM is capturing market share or expanding its revenue base effectively.</li>
-<li><strong>Profit Margin:</strong> A healthy 14.1%. This isn't just top-line hype; TSEM is turning revenue into real profits, indicating operational efficiency and a strong business model.</li>
-</ul>
-<p><em>   <strong>P/E (Current):</strong> 67.79. Yes, it's high. The market is pricing in future potential </em>now*.</p>
-<ul>
-<li><strong>Forward P/E:</strong> 27.44. This is the crucial number. It implies a projected earnings growth rate that significantly de-rates the stock on a forward basis, making its "expensive" label quite relative.</li>
-<li><strong>Analyst Target:</strong> $159.29. Wall Street sees significant upside from current levels.</li>
-<li><strong>Internal Valuation Target:</strong> $73.15. This highlights the inherent risk if growth expectations aren't met or if the market decides to re-rate semiconductor multiples lower. The gap (-44.4%) is stark and must be respected.</li>
+<li><strong>Market Cap:</strong> A robust $14.30B, signaling a significant player in the semiconductor arena.</li>
+<li><strong>Growth & Profitability:</strong> Revenue Growth at 13.7% and a solid Profit Margin of 14.1% demonstrate efficient operations and demand for TSEM's offerings.</li>
+<li><strong>Valuation Nuance:</strong> Current P/E of 65.57 looks steep, but the Forward P/E of 26.54 is the number demanding attention. This dramatic drop signals strong anticipated earnings growth that traditional trailing P/E ratios fail to capture.</li>
+<li><strong>Analyst Conviction:</strong> The consensus analyst target stands at $159.29, representing a substantial ~25% upside from the current price, completely diverging from the $73.15 target from some valuation models. This divergence highlights a growth story that certain models struggle to price in.</li>
+<li><strong>52-Week Range:</strong> TSEM trades at $127.21, well off its 52-week high of $149.57 but also far from its low of $61.27. It's in a critical middle ground.</li>
 </ul>
 
 <h3>🚀 The Bull Case</h3>
 <ol>
-<li><strong>Explosive Forward Earnings Growth:</strong> The dramatic shift from a 67.79 P/E to a 27.44 Forward P/E is a billboard for expected earnings expansion. This isn't just incremental; it suggests TSEM is poised for a significant uplift in profitability, justifying current prices on future performance.</li>
-<li><strong>Sector Tailwind & Core Fundamentals:</strong> Semiconductors remain a foundational industry powering everything from AI to IoT. TSEM's strong 13.7% revenue growth and 14.1% profit margin indicate it's a high-quality player capitalizing on these secular trends.</li>
-<li><strong>Unshakeable Technical Strength (Despite the Dip):</strong> A "FULL BULLISH" EMA stack (8: $129.76, 21: $129.64, 34: $128.22) <em>and</em> a Golden Cross indicate robust underlying momentum. Today's ~5% dip, coupled with 0.71x relative volume, suggests a relatively weak pullback against a strong primary trend, potentially shaking out weak hands.</li>
-<li><strong>Significant Analyst Upside:</strong> With an average analyst target of $159.29, there’s a clear consensus from traditional institutions that TSEM has substantial room to run, providing a strong anchor for price appreciation.</li>
+<li><strong>Explosive Earnings Growth Baked-In:</strong> The colossal difference between current P/E (65.57) and Forward P/E (26.54) isn't an anomaly; it's a forecast. This implies TSEM is on the cusp of delivering significantly higher earnings, which will naturally compress its valuation multiples and drive the stock price higher.</li>
+<li><strong>Unrelenting Semiconductor Demand:</strong> As a technology sector powerhouse, semiconductors are the backbone of emerging technologies like AI, advanced cloud infrastructure, and the rapidly expanding IoT landscape. TSEM is a direct beneficiary of this secular growth trend, ensuring a strong demand pipeline for its products.</li>
+<li><strong>Institutional Confidence:</strong> The analyst target of $159.29 isn't just a number; it reflects a deep dive by professional money managers who see sustained catalysts and growth. This provides a strong psychological floor and potential roadmap for institutional buying.</li>
+<li><strong>Strategic Industry Positioning:</strong> With a healthy 14.1% profit margin and consistent 13.7% revenue growth, TSEM is not just riding industry waves; it's efficiently capitalizing on them, indicating a strong competitive position and effective management in a capital-intensive sector.</li>
 </ul>
 
 <h3>⚠️ The Bear Case: Risks</h3>
 <ol>
-<li><strong>Aggressive Valuation & Growth Dependency:</strong> The current P/E of 67.79 is undeniably high, and the internal valuation model pegs TSEM closer to $73.15. Any hiccup in revenue or earnings growth, or a broader sector de-rating, could lead to a sharp correction as the market adjusts its future expectations.</li>
-<li><strong>Cyclical Sector Sensitivity:</strong> The semiconductor industry is notoriously cyclical. While currently robust, a macroeconomic downturn or oversupply issues could quickly dampen demand and pressure TSEM's margins and growth rates, impacting its lofty valuation.</li>
-<li><strong>Technical Breakdown:</strong> While currently bullish, the RSI (14) at 43.81 is dipping. A decisive break below the critical S1 ($130.76) and especially the S2 ($122.93) levels, which aligns with the SMA 50 ($127.32), could signal a trend reversal and open the door to a deeper retracement.</li>
-</ul>
+<li><strong>Valuation Hangover:</strong> The elephant in the room is the high trailing P/E of 65.57 and the "OVERVALUED" tag from some models, with a fundamental target of $73.15. If expected earnings growth fails to materialize as rapidly as anticipated, this could lead to significant downside and multiple compression.</li>
+<li><strong>Industry Cyclicality & Competition:</strong> The semiconductor industry, while currently booming, is notoriously cyclical and highly competitive. A broader economic downturn or aggressive price competition from rivals could severely impact TSEM's revenue growth and profit margins.</li>
+<li><strong>Technical Breakdown:</strong> Despite a long-term "Bullish (Golden Cross)" trend, the immediate price action is concerning. A major breakdown below critical support levels could signal a trend reversal, causing a cascade of selling pressure and invalidating the bullish thesis.</li>
+</ol>
 
 <h3>📉 The Technicals</h3>
-<p>TSEM is currently hovering at $131.51 after a 5.11% drop. Despite this, the charts are screaming "bullish." We have a <strong>FULL BULLISH EMA stack</strong> (8-EMA at $129.76, 21-EMA at $129.64, 34-EMA at $128.22), which means the short-term trend is very strong. This is further reinforced by a <strong>Golden Cross</strong>, indicating long-term upward momentum is established.</p>
-
-<p>The immediate support levels are crucial. The Pivot Point (PP) is at $134.78, which TSEM failed to hold today. Now, S1 at $130.76 is the next line in the sand, very close to the 8-EMA. Below that, S2 sits at $122.93. The SMA 50 is also lurking at $127.32, which is another significant support.</p>
-
-<p>On the flip side, resistance levels are R1 at $142.61 and R2 at $146.63. The RSI(14) is at 43.81, indicating the stock is nearing oversold conditions on the daily chart but still has room to drop before being truly "cold." The ADX is low at 12.47, suggesting that while the trend is bullish, it's not currently very strong in terms of directional conviction, making it susceptible to pullbacks. The ATR is 8.88, so expect volatility.</p>
+<p>TSEM's short-term technical picture is <strong>TANGLED</strong> and reflects today's heavy selling.</p>
+<ul>
+<li><strong>Price Action:</strong> Trading at $127.21, TSEM is down a significant 8.21% today, pushing it below key short-term moving averages.</li>
+</ul>
+<p><em>   <strong>EMA Stack:</strong> The 8 ($128.80), 21 ($129.25), and 34 ($127.97) EMAs are tightly woven together, confirming a period of indecision or consolidation that has now resolved to the downside with today's drop. Price is currently </em>below* all three.</p>
+<ul>
+<li><strong>SMA 50:</strong> Price is sitting precisely at the SMA 50 ($127.23), a critical confluence level that must hold.</li>
+<li><strong>Long-Term Trend:</strong> Despite the short-term weakness, the overall trend is technically "Bullish (Golden Cross)," indicating that the 50-day SMA is above the 200-day SMA, suggesting underlying strength.</li>
+<li><strong>RSI(14):</strong> At 39.65, the RSI is approaching oversold territory (below 40, nearing 30), signaling potential for a bounce if buyers step in.</li>
+<li><strong>ADX:</strong> A low ADX of 12.47 reinforces the lack of strong trend direction despite the Golden Cross, adding to the choppiness.</li>
+<li><strong>Pivots:</strong> Current price ($127.21) is well below the Pivot Point ($134.78) and even S1 ($130.76). It's now hovering just above S2 ($122.93), which becomes the immediate critical support level. R1 ($142.61) and R2 ($146.63) are significant hurdles for a rebound.</li>
+<li><strong>Volatility:</strong> An ATR of 8.88 indicates TSEM is highly volatile, offering ample trading opportunities but also requiring tighter risk management. Relative Volume at 0.8x suggests today's selling pressure was below average volume, which could imply less conviction from sellers.</li>
+</ul>
 
 <h3>📝 Trading Playbook</h3>
+
 <p><strong>Scenario A — The Breakout (Bullish):</strong></p>
-<p>If TSEM can reclaim and hold the Pivot Point (PP) at $134.78 on increasing volume, this signals renewed bullish conviction. Look for a clean break above today's high and a push towards R1 ($142.61). A move through R1 could quickly put R2 ($146.63) and potentially the 52W high of $149.57 in play.</p>
+<p>Should TSEM reclaim its short-term EMAs and pivot levels, a bullish breakout is on the cards. Look for a convincing close <em>above</em> the Pivot Point ($134.78) on strong volume. Initial targets would be R1 ($142.61), then R2 ($146.63), with the ultimate upside towards the analyst target of $159.29. This move would confirm the underlying Golden Cross strength.</p>
 
 <p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
-<p>Given the strong underlying technicals (FULL BULLISH EMA stack, Golden Cross) and the forward P/E story, today's pullback to $131.51 presents an opportunity. I'm looking for a bounce off S1 ($130.76) or a test of the 8/21 EMAs around $129.76-$129.64. A more conservative entry would be closer to the 34-EMA ($128.22) or the SMA 50 ($127.32) if the price dips further, confirming these as strong support zones. This allows for a tighter stop loss below S2 ($122.93).</p>
+<p>Given the severe sell-off, approaching oversold RSI, and proximity to S2, this is the preferred strategy. Monitor price action closely around S2 ($122.93). An entry near or slightly above S2, especially if it forms a bullish candle (e.g., hammer, engulfing) on increasing volume, presents an attractive risk/reward. The SMA 50 at $127.23 is crucial; a rebound off this level would be ideal. Set a stop-loss just below S2, perhaps around $120, to protect capital if support fails.</p>
 
 <p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
-<p>A confirmed breakdown below S2 ($122.93) on significant volume would invalidate the immediate bullish thesis and signal deeper downside, possibly towards the internal valuation target ($73.15), although that would be an extreme move. Consider hedging or reducing exposure if the stock fails to hold the SMA 50 ($127.32) and S2 ($122.93), as this would suggest the primary bullish trend is failing.</p>
+<p>A definitive break and close <em>below</em> S2 ($122.93), particularly if accompanied by high volume, would signal a potential failure of the dip-buy strategy and a concerning shift in trend. If TSEM fails to hold the $120 level, the bullish Golden Cross trend would be severely compromised. In this scenario, consider hedging with protective puts or exiting the position, as further downside towards the 52-week lows or even the fundamental $73.15 valuation target (albeit a worst-case scenario) cannot be ruled out.</p>
 
 <h3>🏁 Final Verdict</h3>
-<p>TSEM is a compelling growth story caught in a temporary dip; ride the forward earnings wave. Target: $159.29.</p>
+<p>TSEM's deep dive reveals a quant divergence: traditional models scream overvaluation, yet forward earnings and analyst consensus paint a picture of compelling growth. The current dip to $127.21, especially near the critical SMA 50 and S2 pivot, offers a calculated accumulation opportunity for traders willing to look past the red on the screen.</p>
 
-<p>— Ghost out. 👻</p>
-        </div>
+<p><strong>Price Target:</strong> $150 (medium-term, eyeing R2 and beyond, with $159.29 as ultimate aspiration)</p>
 
-        <!-- FOOTER -->
-        <div class="text-center py-4 space-y-1">
-            <div class="text-[9px] text-gray-700 font-mono uppercase tracking-widest">
-                Ghost Alpha Dossier // Watchlist Deep Dive // 2026-03-03 01:43 PM EST
-            </div>
-        </div>
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">78.4%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">73.0%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">22</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
     </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">TANGLED</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$130.55</div><div class="ma-d neg">-2.6%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$127.23</div><div class="ma-d neg">-0.0%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$110.78</div><div class="ma-d pos">+14.8%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">TANGLED</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$128.80</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$129.25</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$127.97</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">40</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">29/39</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm neg">-0.44</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">12.5</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$61.27</span><span>$127.21 (75%)</span><span>$149.57</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:75%"></div><div class="rng-dot" style="left:75%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$128.73</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$115.84</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$105.42</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$95.00</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$150.91</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$110.19</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$8.88</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">0.80x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$146.63 &#xB7; R1=$142.61 &#xB7; PP=$134.78 &#xB7; S1=$130.76 &#xB7; S2=$122.93
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-03-03 03:11 PM EST</div>
+</div>
 </body>
 </html>

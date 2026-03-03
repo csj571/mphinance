@@ -646,6 +646,8 @@ a{{color:inherit;text-decoration:none}}
   </div>
 </div>
 
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct">{html_body}</div></div>
+
 <!-- GEARBOX -->
 <div class="hud gb">
   <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
@@ -678,6 +680,13 @@ a{{color:inherit;text-decoration:none}}
         <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">{_v(data.get("sma_50"))}</div><div class="ma-d {d50c}">{d50}</div></div>
         <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">{_v(data.get("sma_100"))}</div><div class="ma-d {d100c}">{d100}</div></div>
         <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">{_v(data.get("sma_200"))}</div><div class="ma-d {d200c}">{d200}</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="{trend_cls}">{data.get("ema_stack","N/A")}</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">{_v(data.get("ema_8"))}</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">{_v(data.get("ema_21"))}</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">{_v(data.get("ema_34"))}</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">{_v(data.get("ema_55",None),".2f","$","N/A")}/{_v(data.get("ema_89",None),".2f","$","N/A")}</div></div>
       </div>
     </div>
 
@@ -723,7 +732,6 @@ a{{color:inherit;text-decoration:none}}
   </div>
 </div>
 
-<div class="hud" style="padding:1.5rem 2rem"><div class="ct">{html_body}</div></div>
 
 <div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // {generated_at}</div>
 </div>
