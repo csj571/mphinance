@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GLXY Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for GLXY.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+@media(max-width:640px){
+  .vol-row,.osc-row{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row{grid-template-columns:1fr}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/GLXY/" target="_blank">GLXY</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Financial Services &#xB7; Capital Markets &#xB7; 2026-03-03</div>
+  </div>
+  <div>
+    <div class="pr">$20.93</div>
+    <div class="ch neg">-3.68%</div>
+  </div>
+</div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">118.8%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">113.1%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">2</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BEARISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$20.95</div><div class="ma-d neg">-0.1%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$24.78</div><div class="ma-d neg">-15.5%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$28.23</div><div class="ma-d neg">-25.9%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">49</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">29/38</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm pos">+0.21</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">45.6</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$16.67</span><span>$20.93 (15%)</span><span>$45.92</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:15%"></div><div class="rng-dot" style="left:15%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$39.02</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$34.75</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$31.30</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$27.84</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$24.93</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$16.97</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$1.55</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">0.37x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$23.23 &#xB7; R1=$22.48 &#xB7; PP=$21.17 &#xB7; S1=$20.42 &#xB7; S2=$19.11
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[GLXY] Deep Dive: A Deep Value Bet on the Capital Markets' Next Wave</h2>
+<p><strong>Date:</strong> 2026-03-03</p>
+<p><strong>Price:</strong> ~$20.93 | <strong>Verdict:</strong> Speculative Buy</p>
+
+<p>GLXY just dropped 3.68% today, sitting near its 52-week low with zero revenue growth and a negative profit margin. Most traders would run for the hills, but Sam the Quant Ghost smells a bargain beneath the grime.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market currently views GLXY as a rudderless ship in turbulent capital markets – stagnant revenue (0%), bleeding profits (-0.4% profit margin), and a completely bearish short-term technical setup. The current price of $20.93, a stone's throw from its 52-week low of $16.67, reflects this skepticism. Traders see the red and dump, ignoring the bigger picture.</p>
+
+<p>But for us brave souls who peer beyond the immediate bloodbath, GLXY might just be a massively mispriced gem. With an analyst target of $41.67 and a "UNDERRVALUED" stamp suggesting a 99.1% gap to fair value, this isn't just a misstep; it's a Grand Canyon-sized disconnect. The challenge is navigating the short-term pain to capitalize on the potential long-term gain.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<ul>
+<li><strong>Price:</strong> $20.93 (down 3.68% today – ouch!)</li>
+<li><strong>Market Cap:</strong> $8.19B – A serious player, not a micro-cap lottery ticket.</li>
+<li><strong>52W Range:</strong> $16.67 - $45.92 – We're trading at the bottom of the barrel here.</li>
+<li><strong>Revenue Growth:</strong> 0% – Flatline city. This is the market's biggest gripe.</li>
+<li><strong>Profit Margin:</strong> -0.4% – Barely negative, but negative nonetheless.</li>
+<li><strong>P/E:</strong> None | <strong>Forward P/E:</strong> 45.44 – The market expects profitability, eventually.</li>
+<li><strong>Beta:</strong> 3.69 – Prepare for a wild ride. This stock moves with exaggerated force compared to the market.</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Massive Undervaluation & Analyst Conviction:</strong> This is the big one. GLXY is flagged as 99.1% UNDERVALUED with a consensus analyst target of $41.67. That's a whopping 99.9% upside from current levels. While analyst targets aren't gospel, such a significant disconnect demands attention, especially for an $8B market cap company.</li>
+<li><strong>Bottom of the 52-Week Range:</strong> Trading at $20.93, GLXY is just a few bucks off its 52-week low of $16.67. Historically, buying quality assets near their lows, when sentiment is at its worst, yields the greatest returns. This screams "contrarian opportunity."</li>
+<li><strong>Future Profitability Priced In (Forward P/E):</strong> The current P/E is "None" due to negative earnings, but a Forward P/E of 45.44 indicates analysts expect GLXY to return to profitability. If this materializes, the current depressed price offers significant upside leverage.</li>
+<li><strong>Golden Cross (Long-Term Trend Reversal):</strong> Despite the ugly short-term EMAs, the "Trend: Bullish (Golden Cross)" signal suggests a significant long-term technical shift where the 50-day SMA crossed above the 200-day SMA. This is a powerful, though lagging, indicator of a potential major trend reversal.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Stagnant Fundamentals:</strong> 0% revenue growth and a negative profit margin are undeniable red flags. Until GLXY demonstrates a clear path to sustainable growth and profitability, the "undervalued" tag remains purely speculative. This is not a growth stock right now.</li>
+<li><strong>Short-Term Technical Weakness:</strong> The "FULL BEARISH EMA stack" (8: $21.39, 21: $22.36, 34: $23.40) means GLXY is firmly in a downtrend on shorter timeframes. Price action is currently below all these key moving averages, indicating selling pressure.</li>
+<li><strong>High Volatility (Beta 3.69):</strong> While a high beta can amplify upside, it also magnifies downside risk. In a market correction or if GLXY disappoints further, expect outsized losses. This is not for the faint of heart.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+<ul>
+<li><strong>Price:</strong> $20.93, testing immediate support.</li>
+<li><strong>EMA Stack:</strong> FULL BEARISH. The 8-EMA ($21.39) is below the 21-EMA ($22.36), which is below the 34-EMA ($23.40). This is a clear short-term downtrend – price is below all of them.</li>
+<li><strong>SMA 50:</strong> $24.78. SMA 200: None (likely means price is well below it or insufficient data). Price is significantly below the 50-day SMA, confirming short-term weakness.</li>
+</ul>
+<p><em>   <strong>Trend:</strong> Bullish (Golden Cross). This is a fascinating contradiction with the bearish EMAs. It suggests a major long-term positive shift that the short-term price action hasn't caught up to, or is fighting. Could be a dip </em>after* a long-term bullish signal.</p>
+<ul>
+<li><strong>RSI(14):</strong> 48.86. Neutral, but flirting with oversold territory if the slide continues. No immediate bounce signal here.</li>
+</ul>
+<p><em>   <strong>ADX:</strong> 45.57. A strong trend is in play. Given the bearish EMAs and price action, this strongly suggests a </em>strong downtrend* is currently dominating.</p>
+<ul>
+<li><strong>Pivots:</strong> R2=$23.23, R1=$22.48, PP=$21.17, S1=$20.42, S2=$19.11. Current price $20.93 is hovering just above S1. The immediate battleground is between the Pivot Point ($21.17) and S1 ($20.42).</li>
+<li><strong>ATR:</strong> $1.55. Expect daily swings of about $1.55 – significant volatility for a $20 stock.</li>
+<li><strong>Rel Vol:</strong> 0.37x. Trading on very low relative volume today. Lack of interest, or potentially a quiet capitulation.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>A confirmed close above the Pivot Point ($21.17) on increasing volume would signal a short-term reversal. From there, bulls would target R1 ($22.48) and the 8-EMA ($21.39) and 21-EMA ($22.36) to start unwinding the bearish EMA stack. A strong move past R2 ($23.23) could ignite a run towards the SMA 50 ($24.78). This is less likely in the immediate term given current momentum.</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Given the "UNDERRVALUED" status and proximity to 52-week lows, the preferred play is a strategic dip buy. Look for a test of S1 ($20.42). If S1 holds, that's a potential entry. For the really daring, a flush down to S2 ($19.11) or even the 52-week low ($16.67) on high volume followed by a reversal candle would be the ultimate entry, aiming to scoop shares from capitulating traders. <strong>Target a buy zone between $19.00 and $20.50.</strong></p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>If GLXY decisively breaks below S2 ($19.11) and sustains trading below it, the short-term downtrend is accelerating. This would invalidate immediate dip-buy opportunities and could lead to a retest of the 52-week low of $16.67. A stop-loss should be placed firmly below S2 or a percentage point below your preferred entry level, managing the high Beta risk.</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>GLXY is a high-conviction, high-risk deep value play for those with diamond hands. Buy the dip if strong support holds; the upside to the $41.67 analyst target is too compelling to ignore for patient investors.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-03-03 02:57 PM EST</div>
+</div>
+</body>
+</html>

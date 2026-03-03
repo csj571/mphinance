@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HIMS Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for HIMS.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+@media(max-width:640px){
+  .vol-row,.osc-row{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row{grid-template-columns:1fr}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/HIMS/" target="_blank">HIMS</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Healthcare &#xB7; Drug Manufacturers - Specialty & Generic &#xB7; 2026-03-03</div>
+  </div>
+  <div>
+    <div class="pr">$16.04</div>
+    <div class="ch neg">-2.66%</div>
+  </div>
+</div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">103.9%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">85.4%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">3</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BEARISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$17.74</div><div class="ma-d neg">-9.6%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$26.36</div><div class="ma-d neg">-39.2%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$34.71</div><div class="ma-d neg">-53.8%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">41</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">59/40</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm pos">+0.46</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">84.8</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$13.74</span><span>$16.04 (4%)</span><span>$65.3</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:4%"></div><div class="rng-dot" style="left:4%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$53.13</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$45.60</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$39.52</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$33.44</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$21.72</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$13.76</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$1.30</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">0.54x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$17.93 &#xB7; R1=$17.21 &#xB7; PP=$15.76 &#xB7; S1=$15.04 &#xB7; S2=$13.59
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[HIMS] Deep Dive: The Doc is Out — Is Hims & Hers a Bargain or a Broken Trend?</h2>
+<p><strong>Date:</strong> 2026-03-03</p>
+<p><strong>Price:</strong> ~$16.04 | <strong>Verdict:</strong> Hold, Watching for Reversal</p>
+
+<p>Hims & Hers Health (HIMS) is taking a beating, trading near its 52-week lows, but don't let the red scare you off just yet. Beneath the surface of a seemingly broken chart lies a company with serious growth potential, if it can navigate a stormy market.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market sees HIMS as a high-beta growth stock that got ahead of itself, now retreating hard from its $65.3 high, punished by tightening liquidity and concerns about sustained profitability. The current price action and the "FULL BEARISH" EMA stack scream trouble, suggesting a lack of institutional support and a general flight from riskier assets in the healthcare D2C sector. Traders are rightly wary of a stock that's shed over 75% of its value from its peak, pushing it to the brink of its 52-week low of $13.74.</p>
+
+<p>However, the reality for HIMS might be more nuanced. This $3.66 billion market cap disruptor is pioneering accessible telehealth, extending its reach beyond initial offerings into a broader spectrum of health & wellness. While its current profit margin of 5.5% is modest, a forward P/E of 10.7 (compared to a trailing P/E of 31.45) suggests analysts are anticipating a significant ramp-up in future earnings and operational efficiency. The current sell-off might be presenting an opportunity for long-term investors to accumulate a high-growth company at a potentially discounted rate, provided it can demonstrate a durable competitive advantage and continued margin expansion.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<ul>
+<li><strong>Revenue Growth (YoY):</strong> A robust 28.4% – showing HIMS is still expanding its subscriber base and service offerings.</li>
+</ul>
+<p><em>   <strong>Profit Margin:</strong> 5.5% – thin, indicating a focus on growth over immediate deep profitability, but showing they </em>can* make money.</p>
+<ul>
+<li><strong>P/E (Trailing):</strong> 31.45 – elevated for current earnings, reflecting growth expectations.</li>
+<li><strong>Forward P/E:</strong> 10.7 – a dramatic drop, implying significant expected earnings acceleration. This is a crucial data point.</li>
+<li><strong>Market Cap:</strong> $3.66B – still a relatively small player with room to run.</li>
+<li><strong>Beta:</strong> 2.61 – buckle up, this stock is volatile and moves hard with the broader market.</li>
+<li><strong>Analyst Target:</strong> $20.19 – suggesting a 25% upside from current levels.</li>
+</ul>
+<p><em>   <strong>Valuation (Fair Value):</strong> $13.3, indicating a -17.1% gap from current price. </em>This is a key divergence from analyst sentiment.*</p>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Massive Earnings Acceleration:</strong> The leap from a 31.45 P/E to a 10.7 Forward P/E is not just a hint, it's a shout. The market is pricing in substantial earnings growth. If HIMS delivers, the current share price will look incredibly cheap in hindsight.</li>
+<li><strong>Disruptive D2C Healthcare Model:</strong> HIMS continues to democratize healthcare access, reducing friction points for consumers seeking sensitive treatments. This model is still in its early innings with significant market penetration potential, especially as they expand their therapeutic areas.</li>
+<li><strong>Scaling Profitability:</strong> With a 28.4% revenue growth rate, HIMS is clearly gaining scale. As the user base expands, fixed costs are spread over a larger revenue base, creating operating leverage that should improve the currently slim 5.5% profit margin.</li>
+<li><strong>Strategic Expansion & Brand Power:</strong> HIMS is actively expanding its platform beyond its initial focus areas, cementing its brand as a go-to for convenient and discreet health solutions. This diversification reduces reliance on any single market segment and broadens its total addressable market.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Extreme Volatility & Beta:</strong> With a Beta of 2.61, HIMS is an alpha-generating machine <em>when the market is bullish</em>, but it bleeds severely during downturns. The current bearish trend and high volatility make it a high-risk play.</li>
+<li><strong>Conflicting Valuation Signals:</strong> The analyst target of $20.19 is compelling, but the explicit "FAIR VALUE" of $13.3 from internal models presents a significant red flag. This implies fundamental downside risk and a battle for proper valuation.</li>
+<li><strong>Intense Competition & Regulatory Scrutiny:</strong> The telehealth and D2C healthcare space is heating up with new entrants and established players. HIMS must continue to innovate and execute to maintain its edge, while navigating a complex and evolving regulatory landscape for telehealth.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+<p>HIMS is currently trading at ~$16.04, deeply entrenched in a short-term bearish trend.</p>
+<ul>
+<li><strong>52W Range:</strong> $13.74 - $65.3. We're currently scraping the bottom, just above the 52-week low.</li>
+<li><strong>EMA Stack:</strong> FULL BEARISH. The 8-EMA ($15.97), 21-EMA ($18.69), and 34-EMA ($21.73) are all stacked bearishly above the current price, acting as overhead resistance. Price closed below the 8-EMA today.</li>
+<li><strong>SMA 50:</strong> $26.36. A long way to go to reclaim this key moving average, emphasizing the strong downtrend.</li>
+<li><strong>RSI(14):</strong> 41.23. Weak, but not yet oversold, indicating room for further downside if selling pressure continues.</li>
+</ul>
+<p><em>   <strong>ADX:</strong> 84.77. This is an extremely high reading, indicating a </em>very strong trend<em>. Given the current price action and EMA stack, this signals a powerful </em>downward* trend in play.</p>
+<ul>
+<li><strong>Pivots:</strong> Current price ($16.04) is just above the PP ($15.76). Key immediate support is S1 ($15.04) and S2 ($13.59), with S2 being dangerously close to the 52W low ($13.74). Resistance levels are R1 ($17.21) and R2 ($17.93).</li>
+<li><strong>ATR:</strong> 1.3. Expect daily moves of around $1.3, highlighting its volatility.</li>
+<li><strong>Relative Volume:</strong> 0.54x. Below average volume, suggesting current price action might be consolidation or lack of conviction in either direction, though it could also indicate weak buying interest.</li>
+<li><strong>Trend:</strong> "Bullish (Golden Cross)". This signal is likely historical given the current price action. While a Golden Cross (SMA50 crossing above SMA200) signals a long-term bullish trend, the price has clearly broken down from that, with short-term EMAs firmly bearish. The lack of an SMA 200 reading makes this signal less actionable for current analysis.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>HIMS needs to reclaim significant levels. A decisive close above the 8-EMA ($15.97) and then R1 ($17.21) on increasing volume would signal a potential short-term reversal. Bulls would then target R2 ($17.93) and attempt to flip the EMA stack. This would imply the forward P/E story is gaining traction.</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Given the strong technical downtrend and the fair value target of $13.3, a dip buy strategy focusing on key support near the 52W low is preferred. Look for HIMS to test S1 ($15.04) or, ideally, S2 ($13.59) and the 52W low ($13.74). A bounce off these levels, especially with a clear bullish candle formation and increasing volume, would offer a better risk/reward entry. This is where the long-term thesis could converge with short-term value.</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>If HIMS decisively breaks below S2 ($13.59) and the 52W low ($13.74) on significant volume, it's a strong bearish signal. The next support level would be uncharted territory, potentially leading to further capitulation. A short position or avoiding the stock entirely would be prudent until a clear bottom is formed.</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>HIMS is a high-growth company trading in a deep technical hole with conflicting fundamental valuations. Its long-term potential is undeniable if it can execute on expected earnings growth, but short-term pain is real. Hold, watch for the technical picture to stabilize, and consider accumulating near S2 ($13.59) if support holds. Potential upside target: $20.19.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-03-03 02:56 PM EST</div>
+</div>
+</body>
+</html>
