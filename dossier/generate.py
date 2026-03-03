@@ -128,7 +128,7 @@ def _update_index_page():
     """Scan docs/reports/ and docs/watchlist/ and regenerate the docs/index.html archive page."""
     docs_dir = OUTPUT_DIR.parent  # docs/
     reports_dir = OUTPUT_DIR       # docs/reports/
-    watchlist_dir = docs_dir / "watchlist"
+    watchlist_dir = docs_dir / "ticker"
 
     reports = []
     if reports_dir.exists():
@@ -140,17 +140,19 @@ def _update_index_page():
                     "path": f"reports/{f.name}",
                 })
 
-    # Scan watchlist deep dives
     watchlist = []
     if watchlist_dir.exists():
-        for f in sorted(watchlist_dir.iterdir()):
-            if f.name.endswith("_deep_dive.md"):
-                ticker = f.stem.replace("_deep_dive", "")
-                watchlist.append({
-                    "ticker": ticker,
-                    "md_path": f"watchlist/{f.name}",
-                    "json_path": f"watchlist/{ticker}_deep_dive.json",
-                })
+        for ticker_folder in sorted(watchlist_dir.iterdir()):
+            if ticker_folder.is_dir():
+                dd = ticker_folder / "deep_dive.md"
+                if dd.exists():
+                    ticker = ticker_folder.name
+                    watchlist.append({
+                        "ticker": ticker,
+                        "html_path": f"ticker/{ticker}/deep_dive.html",
+                        "md_path": f"ticker/{ticker}/deep_dive.md",
+                        "json_path": f"ticker/{ticker}/deep_dive.json",
+                    })
 
     index_html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -245,7 +247,7 @@ def _update_index_page():
         for w in watchlist:
             index_html += f"""                <div class="report-link bg-black/40 border border-gray-800 rounded px-4 py-3 flex items-center justify-between">
                     <div>
-                        <a href="watchlist/{w['ticker']}_deep_dive.html" class="text-neon-amber font-bold text-sm hover:text-white transition-colors">{w['ticker']}</a>
+                        <a href="{w['html_path']}" class="text-neon-amber font-bold text-sm hover:text-white transition-colors">{w['ticker']}</a>
                     </div>
                     <div class="flex gap-2">
                         <a href="https://www.tradingview.com/symbols/{w['ticker']}/" target="_blank" class="text-[9px] text-gray-400 border border-gray-700 px-1.5 py-0.5 rounded hover:text-neon-blue hover:border-neon-blue/30 transition-colors">TV</a>

@@ -29,7 +29,7 @@ from dossier.data_sources.ticker_enrichment import (
     _tradingview_summary, _intrinsic_value, _fetch_news,
 )
 
-OUTPUT_DIR = PROJECT_ROOT / "docs" / "watchlist"
+TICKER_DIR = PROJECT_ROOT / "docs" / "ticker"
 WATCHLIST_FILE = PROJECT_ROOT / "watchlist.txt"
 
 
@@ -282,18 +282,19 @@ def generate_deep_dive(ticker: str) -> str:
 """
 
     # ── Write Output ──
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    md_path = OUTPUT_DIR / f"{ticker}_deep_dive.md"
+    ticker_dir = TICKER_DIR / ticker
+    ticker_dir.mkdir(parents=True, exist_ok=True)
+    md_path = ticker_dir / "deep_dive.md"
     with open(md_path, "w") as f:
         f.write(md_content)
 
     # Also write JSON for API consumption
-    json_path = OUTPUT_DIR / f"{ticker}_deep_dive.json"
+    json_path = ticker_dir / "deep_dive.json"
     with open(json_path, "w") as f:
         json.dump(data, f, indent=2, default=str)
 
     # Render as styled HTML page
-    html_path = OUTPUT_DIR / f"{ticker}_deep_dive.html"
+    html_path = ticker_dir / "deep_dive.html"
     _render_html(ticker, md_content, data, html_path)
 
     print(f"    ✓ {md_path.name} + {html_path.name}")
@@ -409,10 +410,10 @@ def _render_html(ticker: str, md_content: str, data: dict, output_path: Path):
 
         <!-- NAV BAR -->
         <div class="flex justify-between items-center">
-            <a href="../index.html" class="font-tech text-neon-green text-sm tracking-widest hover:text-white transition-colors">← ALPHA://HUD</a>
+            <a href="../../index.html" class="font-tech text-neon-green text-sm tracking-widest hover:text-white transition-colors">← ALPHA://HUD</a>
             <div class="flex gap-3">
-                <a href="{ticker}_deep_dive.md" download class="px-2 py-1 bg-gray-800 text-[10px] text-gray-400 border border-gray-700 hover:text-white hover:border-gray-500 transition-colors uppercase font-mono rounded">↓ RAW MD</a>
-                <a href="{ticker}_deep_dive.json" class="px-2 py-1 bg-gray-800 text-[10px] text-gray-400 border border-gray-700 hover:text-white hover:border-gray-500 transition-colors uppercase font-mono rounded">↓ JSON</a>
+                <a href="deep_dive.md" download class="px-2 py-1 bg-gray-800 text-[10px] text-gray-400 border border-gray-700 hover:text-white hover:border-gray-500 transition-colors uppercase font-mono rounded">↓ RAW MD</a>
+                <a href="deep_dive.json" class="px-2 py-1 bg-gray-800 text-[10px] text-gray-400 border border-gray-700 hover:text-white hover:border-gray-500 transition-colors uppercase font-mono rounded">↓ JSON</a>
             </div>
         </div>
 
@@ -484,7 +485,7 @@ def main():
             results.append(path)
 
     print(f"\n✅ Generated {len(results)}/{len(tickers)} deep dives")
-    print(f"   Output: {OUTPUT_DIR}/")
+    print(f"   Output: {TICKER_DIR}/")
 
 
 if __name__ == "__main__":
