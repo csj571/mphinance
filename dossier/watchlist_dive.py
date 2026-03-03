@@ -292,8 +292,176 @@ def generate_deep_dive(ticker: str) -> str:
     with open(json_path, "w") as f:
         json.dump(data, f, indent=2, default=str)
 
-    print(f"    ✓ {md_path.name}")
+    # Render as styled HTML page
+    html_path = OUTPUT_DIR / f"{ticker}_deep_dive.html"
+    _render_html(ticker, md_content, data, html_path)
+
+    print(f"    ✓ {md_path.name} + {html_path.name}")
     return str(md_path)
+
+
+def _render_html(ticker: str, md_content: str, data: dict, output_path: Path):
+    """Convert markdown deep dive to a styled HTML page."""
+    import re
+
+    # Simple markdown → HTML conversion
+    html_body = md_content
+
+    # Headers
+    html_body = re.sub(r'^## (.+)$', r'<h2>\1</h2>', html_body, flags=re.MULTILINE)
+    html_body = re.sub(r'^### (.+)$', r'<h3>\1</h3>', html_body, flags=re.MULTILINE)
+
+    # Bold
+    html_body = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', html_body)
+    # Italic
+    html_body = re.sub(r'\*(.+?)\*', r'<em>\1</em>', html_body)
+
+    # Unordered lists
+    lines = html_body.split('\n')
+    in_list = False
+    new_lines = []
+    for line in lines:
+        stripped = line.strip()
+        if re.match(r'^[\-\*]\s+', stripped):
+            if not in_list:
+                new_lines.append('<ul>')
+                in_list = True
+            item = re.sub(r'^[\-\*]\s+', '', stripped)
+            new_lines.append(f'<li>{item}</li>')
+        elif re.match(r'^\d+\.\s+', stripped):
+            if not in_list:
+                new_lines.append('<ol>')
+                in_list = True
+            item = re.sub(r'^\d+\.\s+', '', stripped)
+            new_lines.append(f'<li>{item}</li>')
+        else:
+            if in_list:
+                new_lines.append('</ul>' if any('<ul>' in l for l in new_lines[-20:]) else '</ol>')
+                in_list = False
+            if stripped == '---':
+                new_lines.append('<hr>')
+            elif stripped == '':
+                new_lines.append('')
+            elif not stripped.startswith('<h'):
+                new_lines.append(f'<p>{stripped}</p>' if stripped else '')
+            else:
+                new_lines.append(stripped)
+    if in_list:
+        new_lines.append('</ul>')
+    html_body = '\n'.join(new_lines)
+
+    # Tables
+    html_body = re.sub(
+        r'<p>\|(.+)\|</p>',
+        lambda m: '<tr>' + ''.join(f'<td>{c.strip()}</td>' for c in m.group(1).split('|')) + '</tr>',
+        html_body
+    )
+    html_body = re.sub(r'<tr><td>-+</td>.*?</tr>', '', html_body)
+    html_body = re.sub(r'(<tr>.*?</tr>\s*)+', lambda m: '<table>' + m.group(0) + '</table>', html_body, flags=re.DOTALL)
+
+    est = ZoneInfo("America/New_York")
+    generated_at = datetime.now(est).strftime("%Y-%m-%d %I:%M %p EST")
+
+    change_class = "text-neon-green" if data.get("change_pct", 0) >= 0 else "text-neon-red"
+    trend_class = "text-neon-green" if data.get("trend") == "Bullish" else "text-neon-red"
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{ticker} Deep Dive | ALPHA.DOSSIER</title>
+    <meta name="description" content="Full deep-dive analysis for {ticker} — thesis, technicals, bull/bear case, trading playbook.">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {{
+            theme: {{
+                extend: {{
+                    fontFamily: {{ 'mono': ['"JetBrains Mono"', 'monospace'], 'tech': ['"Share Tech Mono"', 'monospace'] }},
+                    colors: {{ 'neon-green': '#00ff41', 'neon-red': '#ff3e3e', 'neon-blue': '#00f3ff', 'neon-amber': '#ffb000', 'hud-black': '#0a0a0a' }}
+                }}
+            }}
+        }}
+    </script>
+    <style>
+        body {{ background-color: #050505; color: #e0e0e0; font-family: 'JetBrains Mono', monospace;
+            background-image: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.25) 50%),
+            linear-gradient(90deg, rgba(255,0,0,0.06), rgba(0,255,0,0.02), rgba(0,0,255,0.06));
+            background-size: 100% 2px, 3px 100%; }}
+        .hud-panel {{ background: rgba(10,10,10,0.8); border: 1px solid #333; box-shadow: 0 0 10px rgba(0,0,0,0.5); backdrop-filter: blur(4px); }}
+        .content h2 {{ font-size: 1.5rem; font-weight: 900; color: #fff; margin: 2rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #333;
+            font-family: 'Share Tech Mono', monospace; text-transform: uppercase; letter-spacing: 0.05em; }}
+        .content h3 {{ font-size: 1.1rem; font-weight: 700; color: #ffb000; margin: 1.5rem 0 0.75rem; letter-spacing: 0.03em; }}
+        .content p {{ color: #c0c0c0; line-height: 1.8; margin: 0.5rem 0; font-size: 0.85rem; }}
+        .content strong {{ color: #ffffff; }}
+        .content em {{ color: #00f3ff; font-style: normal; }}
+        .content ul, .content ol {{ margin: 0.5rem 0 0.5rem 1.5rem; color: #c0c0c0; font-size: 0.85rem; line-height: 2; }}
+        .content li {{ margin: 0.3rem 0; }}
+        .content hr {{ border: none; border-top: 1px solid #333; margin: 2rem 0; }}
+        .content table {{ width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.8rem; }}
+        .content td {{ padding: 0.5rem 0.75rem; border: 1px solid #333; color: #c0c0c0; }}
+        .content tr:first-child td {{ font-weight: bold; color: #888; background: rgba(255,255,255,0.03); }}
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+    <div class="max-w-4xl mx-auto space-y-6">
+
+        <!-- NAV BAR -->
+        <div class="flex justify-between items-center">
+            <a href="../index.html" class="font-tech text-neon-green text-sm tracking-widest hover:text-white transition-colors">← ALPHA://HUD</a>
+            <div class="flex gap-3">
+                <a href="{ticker}_deep_dive.md" download class="px-2 py-1 bg-gray-800 text-[10px] text-gray-400 border border-gray-700 hover:text-white hover:border-gray-500 transition-colors uppercase font-mono rounded">↓ RAW MD</a>
+                <a href="{ticker}_deep_dive.json" class="px-2 py-1 bg-gray-800 text-[10px] text-gray-400 border border-gray-700 hover:text-white hover:border-gray-500 transition-colors uppercase font-mono rounded">↓ JSON</a>
+            </div>
+        </div>
+
+        <!-- HEADER -->
+        <div class="hud-panel p-6 rounded-sm border-l-4 border-neon-amber">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-black font-tech tracking-widest text-white">
+                        <a href="https://www.tradingview.com/symbols/{ticker}/" target="_blank" class="hover:text-neon-blue transition-colors">{ticker}</a>
+                        <span class="text-neon-amber ml-2">DEEP.DIVE</span>
+                    </h1>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-[0.3em] mt-1">
+                        {data.get('sector', 'N/A')} · {data.get('industry', 'N/A')}
+                    </p>
+                </div>
+                <div class="text-right space-y-1">
+                    <div class="text-2xl font-bold font-mono text-white">${data.get('price', 'N/A')}</div>
+                    <div class="{change_class} text-sm font-mono">{data.get('change_pct', 0):+.2f}%</div>
+                </div>
+            </div>
+
+            <!-- Quick Stats Bar -->
+            <div class="flex flex-wrap gap-4 mt-4 pt-3 border-t border-gray-800 text-[10px] font-mono">
+                <span class="text-gray-500">MCAP <span class="text-white">{data.get('market_cap', 'N/A')}</span></span>
+                <span class="text-gray-500">EMA <span class="{trend_class}">{data.get('ema_stack', 'N/A')}</span></span>
+                <span class="text-gray-500">RSI <span class="text-white">{data.get('rsi', 'N/A')}</span></span>
+                <span class="text-gray-500">ADX <span class="text-white">{data.get('adx', 'N/A')}</span></span>
+                <span class="text-gray-500">TV <span class="text-neon-blue">{data.get('tv_rec', 'N/A')}</span></span>
+                <span class="text-gray-500">VAL <span class="{('text-neon-green' if 'UNDER' in str(data.get('val_status', '')) else 'text-neon-red')}">{data.get('val_status', 'N/A')}</span></span>
+            </div>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="hud-panel p-6 md:p-8 rounded-sm content">
+            {html_body}
+        </div>
+
+        <!-- FOOTER -->
+        <div class="text-center py-4 space-y-1">
+            <div class="text-[9px] text-gray-700 font-mono uppercase tracking-widest">
+                Ghost Alpha Dossier // Watchlist Deep Dive // {generated_at}
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+
+    with open(output_path, "w") as f:
+        f.write(html)
 
 
 def main():

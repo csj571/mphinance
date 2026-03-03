@@ -245,10 +245,11 @@ def _update_index_page():
         for w in watchlist:
             index_html += f"""                <div class="report-link bg-black/40 border border-gray-800 rounded px-4 py-3 flex items-center justify-between">
                     <div>
-                        <a href="https://www.tradingview.com/symbols/{w['ticker']}/" target="_blank" class="text-neon-amber font-bold text-sm hover:text-white transition-colors">{w['ticker']}</a>
+                        <a href="watchlist/{w['ticker']}_deep_dive.html" class="text-neon-amber font-bold text-sm hover:text-white transition-colors">{w['ticker']}</a>
                     </div>
                     <div class="flex gap-2">
-                        <a href="{w['md_path']}" class="text-[9px] text-gray-400 border border-gray-700 px-1.5 py-0.5 rounded hover:text-white hover:border-gray-500 transition-colors">MD</a>
+                        <a href="https://www.tradingview.com/symbols/{w['ticker']}/" target="_blank" class="text-[9px] text-gray-400 border border-gray-700 px-1.5 py-0.5 rounded hover:text-neon-blue hover:border-neon-blue/30 transition-colors">TV</a>
+                        <a href="{w['md_path']}" download class="text-[9px] text-gray-400 border border-gray-700 px-1.5 py-0.5 rounded hover:text-white hover:border-gray-500 transition-colors">MD</a>
                         <a href="{w['json_path']}" class="text-[9px] text-gray-400 border border-gray-700 px-1.5 py-0.5 rounded hover:text-white hover:border-gray-500 transition-colors">JSON</a>
                     </div>
                 </div>
