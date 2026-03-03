@@ -125,9 +125,10 @@ def _run_mphinance_strategies() -> list[dict]:
 
 
 def _update_index_page():
-    """Scan docs/reports/ and regenerate the docs/index.html archive page."""
+    """Scan docs/reports/ and docs/watchlist/ and regenerate the docs/index.html archive page."""
     docs_dir = OUTPUT_DIR.parent  # docs/
     reports_dir = OUTPUT_DIR       # docs/reports/
+    watchlist_dir = docs_dir / "watchlist"
 
     reports = []
     if reports_dir.exists():
@@ -137,6 +138,18 @@ def _update_index_page():
                     "filename": f.name,
                     "date": f.stem.replace("_alpha_dossier", ""),
                     "path": f"reports/{f.name}",
+                })
+
+    # Scan watchlist deep dives
+    watchlist = []
+    if watchlist_dir.exists():
+        for f in sorted(watchlist_dir.iterdir()):
+            if f.name.endswith("_deep_dive.md"):
+                ticker = f.stem.replace("_deep_dive", "")
+                watchlist.append({
+                    "ticker": ticker,
+                    "md_path": f"watchlist/{f.name}",
+                    "json_path": f"watchlist/{ticker}_deep_dive.json",
                 })
 
     index_html = f"""<!DOCTYPE html>
@@ -218,7 +231,33 @@ def _update_index_page():
 
     index_html += """            </div>
         </div>
+"""
 
+    # ── Watchlist Deep Dives Section ──
+    if watchlist:
+        index_html += f"""
+        <div class="hud-panel p-4 rounded-sm border-l-4 border-neon-amber">
+            <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-4 border-b border-gray-800 pb-2">
+                🔍 WATCHLIST.DEEP.DIVES <span class="text-neon-amber">// {len(watchlist)} TICKERS</span>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+"""
+        for w in watchlist:
+            index_html += f"""                <div class="report-link bg-black/40 border border-gray-800 rounded px-4 py-3 flex items-center justify-between">
+                    <div>
+                        <a href="https://www.tradingview.com/symbols/{w['ticker']}/" target="_blank" class="text-neon-amber font-bold text-sm hover:text-white transition-colors">{w['ticker']}</a>
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="{w['md_path']}" class="text-[9px] text-gray-400 border border-gray-700 px-1.5 py-0.5 rounded hover:text-white hover:border-gray-500 transition-colors">MD</a>
+                        <a href="{w['json_path']}" class="text-[9px] text-gray-400 border border-gray-700 px-1.5 py-0.5 rounded hover:text-white hover:border-gray-500 transition-colors">JSON</a>
+                    </div>
+                </div>
+"""
+        index_html += """            </div>
+        </div>
+"""
+
+    index_html += """
         <div class="text-center py-4">
             <div class="text-[9px] text-gray-700 font-mono uppercase tracking-widest">
                 Ghost Alpha Dossier Pipeline // mphinance
@@ -232,7 +271,7 @@ def _update_index_page():
     index_path = docs_dir / "index.html"
     with open(index_path, "w") as f:
         f.write(index_html)
-    print(f"  ✓ Index updated: {index_path} ({len(reports)} reports)")
+    print(f"  ✓ Index updated: {index_path} ({len(reports)} reports, {len(watchlist)} watchlist)")
 
 
 def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
@@ -385,13 +424,24 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     if generate_pdf:
         pdf_path = build_pdf(report_path)
 
-    # ── Stage 11: Update Index ──
-    print("\n[11/11] INDEX UPDATE")
+    # ── Stage 11: Ticker Deep-Dive Pages ──
+    print("\n[11/13] TICKER PAGES")
+    try:
+        from dossier.pages.ticker_page import generate_all_ticker_pages
+        ticker_pages = generate_all_ticker_pages(dossiers, date, institutional)
+        print(f"  ✓ Generated {len(ticker_pages)} ticker pages")
+    except Exception as e:
+        print(f"  [WARN] Ticker pages failed: {e}")
+        ticker_pages = []
+
+    # ── Stage 12: Update Index ──
+    print("\n[12/13] INDEX UPDATE")
     _update_index_page()
 
-    # ── Git Push ──
+    # ── Stage 13: Git Push ──
     if not dry_run:
-        print("\n[PUSH] Committing to Git...")
+        print("\n[13/13] GIT PUSH")
+        print("  Committing to Git...")
         try:
             subprocess.run(["git", "add", "docs/", "dossier/persistence/"],
                            cwd=str(PROJECT_ROOT), check=True)
@@ -415,6 +465,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     print(f"  Pulse:  {len(market_pulse)} benchmarks")
     print(f"  Signals: {len(scanner_signals)}")
     print(f"  Dossiers: {len(dossiers)}")
+    print(f"  Ticker Pages: {len(ticker_pages)}")
     print(f"  VIX: {market['vix']['vix_level']} ({market['vix']['regime_name']})")
     print("=" * 72)
 
