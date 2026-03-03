@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WFC Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for WFC.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+@media(max-width:640px){
+  .vol-row,.osc-row{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row{grid-template-columns:1fr}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/WFC/" target="_blank">WFC</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Financial Services &#xB7; Banks - Diversified &#xB7; 2026-03-03</div>
+  </div>
+  <div>
+    <div class="pr">$83.29</div>
+    <div class="ch pos">+0.86%</div>
+  </div>
+</div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">35.4%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">33.4%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">1</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">TANGLED</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$88.06</div><div class="ma-d neg">-5.4%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$90.17</div><div class="ma-d neg">-7.6%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$87.84</div><div class="ma-d neg">-5.2%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">32</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">31/20</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm neg">-0.58</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">25.5</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$76.84</span><span>$83.29 (32%)</span><span>$97.28</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:32%"></div><div class="rng-dot" style="left:32%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$92.46</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$89.47</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$87.06</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$84.65</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$94.74</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$81.38</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$3.26</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">0.63x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$85.66 &#xB7; R1=$84.12 &#xB7; PP=$81.53 &#xB7; S1=$79.99 &#xB7; S2=$77.40
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[WFC] Deep Dive: The Phoenix of Finance? Unshackling Hidden Value</h2>
+<p><strong>Date:</strong> 2026-03-03</p>
+<p><strong>Price:</strong> ~$83.29 | <strong>Verdict:</strong> Cautiously Bullish</p>
+
+<p>Wells Fargo. The name alone often brings to mind scandals, regulatory woes, and a stock that has lagged its peers. But what if the market is too busy looking in the rearview mirror to see the road ahead?</p>
+
+<h3>The Core Thesis</h3>
+<p>The market sees WFC through the lens of its past transgressions – the asset cap, the fines, the seemingly endless remediation efforts. This sentiment has baked in a discount, creating a situation where the stock trades at a reasonable 13.31 P/E and a compelling 10.51 forward P/E, despite a healthy 26.7% profit margin. It's a company still under a heavy regulatory microscope, but one that has been systematically shedding non-core assets, simplifying operations, and, most importantly, addressing the root causes of its past issues.</p>
+
+<p>What the market often misses is the sheer scale and earnings power of Wells Fargo once these regulatory handcuffs are loosened. Management's relentless focus on improving internal controls and customer trust, while painful in the short term, is laying the groundwork for a significant re-rating. While our valuation tool pegs fair value lower at $73.17, the Street's consensus analyst target of $101.65 suggests a belief that meaningful upside exists once WFC is freed to deploy its capital and grow without constraint. This isn't just a bank; it's a value play disguised as a perpetual punching bag.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<ul>
+<li><strong>Price:</strong> $83.29</li>
+<li><strong>Market Cap:</strong> $261.46B – A titan, even with its issues.</li>
+<li><strong>Revenue Growth:</strong> 5.0% – Decent, showing underlying business strength despite restrictions.</li>
+<li><strong>Profit Margin:</strong> 26.7% – A robust margin, indicating strong operational efficiency where allowed.</li>
+<li><strong>P/E (Current/Forward):</strong> 13.31 / 10.51 – Suggests either undervaluation or expected earnings growth, indicating a discount relative to potential.</li>
+<li><strong>Beta:</strong> 1.07 – Slightly more volatile than the broader market.</li>
+<li><strong>52W Range:</strong> $76.84 - $97.28 – Currently trading near the lower end of its annual range.</li>
+<li><strong>Analyst Target:</strong> $101.65 – A significant ~22% upside from current levels.</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Regulatory Shackles Easing:</strong> The biggest catalyst. Progress on satisfying regulatory requirements, particularly the lifting of the Fed's asset cap, would unlock massive potential for growth, capital deployment, and shareholder returns. Every positive update on this front is a step closer to a significant re-rating.</li>
+<li><strong>Undervaluation & Capital Return:</strong> Trading at a forward P/E of just 10.51, WFC is arguably cheap for a diversified financial institution with its scale. Once free from regulatory constraints, expect increased share buybacks and potentially higher dividends, acting as strong tailwinds for the stock price. The analyst target of $101.65 highlights this embedded value.</li>
+<li><strong>Interest Rate Tailwinds:</strong> A sustained higher interest rate environment generally benefits banks by expanding Net Interest Margins (NIM). WFC, with its massive deposit base, is well-positioned to capitalize on this, boosting profitability further.</li>
+<li><strong>Operational Efficiency & Simplification:</strong> Management has been aggressively shedding non-core assets and streamlining operations. This focus on efficiency should lead to improved profitability and a cleaner, more agile balance sheet, setting the stage for sustainable growth.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Persistent Regulatory Headwinds:</strong> The primary risk. Any delays in asset cap removal, new fines, or extended oversight could continue to depress the stock and hinder growth. The current low relative volume (0.63x) suggests a lack of strong conviction, possibly due to this ongoing uncertainty.</li>
+<li><strong>Economic Downturn:</strong> As a diversified bank, WFC is sensitive to macroeconomic conditions. A significant recession could lead to increased loan losses, reduced consumer spending, and tighter credit markets, impacting earnings.</li>
+<li><strong>Competitive Landscape & NIM Compression:</strong> Intense competition in banking, combined with potential rapid shifts in interest rate policy (e.g., unexpected aggressive rate cuts), could put pressure on WFC's Net Interest Margin, affecting profitability.</li>
+<li><strong>Valuation Tool Discrepancy:</strong> While analyst targets are high, some valuation models, like the one showing a "FAIR VALUE" target of $73.17, indicate potential downside. This divergence highlights a possible floor if market sentiment turns significantly negative.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+<p>Current Price: $83.29</p>
+<ul>
+<li><strong>EMA Stack (Tangled & Bearish):</strong> The stock is currently trading below its short-term EMAs (8-EMA: $84.62, 21-EMA: $86.9, 34-EMA: $87.9). The "tangled" nature and price below them indicate short-term weakness and a lack of clear upward momentum.</li>
+<li><strong>SMA 50:</strong> $90.17 – Price is significantly below the 50-day moving average, reinforcing the bearish short-term trend.</li>
+<li><strong>Trend (Golden Cross):</strong> Despite the immediate technical weakness, the "Golden Cross" indicates a bullish longer-term trend signal, likely from a prior period. This suggests underlying strength might be lurking beneath the surface.</li>
+<li><strong>RSI(14):</strong> 31.65 – Approaching oversold territory. This could signal a potential bounce or mean current selling pressure is strong and sustained.</li>
+<li><strong>ADX:</strong> 25.54 – Indicates developing trend strength, but the direction needs to be confirmed by price action. Given the other signals, it likely pertains to the recent downward pressure.</li>
+<li><strong>Pivots:</strong> R2=$85.66, R1=$84.12, PP=$81.53, S1=$79.99, S2=$77.4. The price sits between PP and R1.</li>
+<li><strong>ATR:</strong> 3.26 – Daily volatility.</li>
+<li><strong>Rel Vol:</strong> 0.63x – Below average volume, suggesting limited conviction in recent moves.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>WFC recaptures upward momentum, fueled by positive regulatory news or broader market sentiment. Look for a decisive close above the 8-EMA ($84.62) and then R1 ($84.12) on increasing volume. Confirmation would be a break above the 21-EMA ($86.9) and 34-EMA ($87.9). Target R2 ($85.66) initially, then the SMA 50 ($90.17), with a stretch target towards the 52W high of $97.28 and ultimately the analyst target of $101.65.</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Given the current RSI near oversold levels and the longer-term bullish signal (Golden Cross), buying weakness into support offers a favorable risk/reward. Wait for WFC to test the Pivots Point ($81.53) or S1 ($79.99). Look for bullish candlestick patterns (e.g., hammer, engulfing) or a reversal in intraday price action on these levels. Set a tight stop below S2 ($77.4), targeting a bounce back towards the EMAs. This play banks on the underlying value emerging from oversold conditions.</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>If negative news hits or the overall market sours, WFC could break down. A sustained close below S1 ($79.99) on heavy volume would be a red flag. The next key support is S2 ($77.4). A break below S2 would likely target the 52W low of $76.84 and, in a worst-case scenario (e.g., new regulatory issues), could approach the Valuation Target of $73.17. This scenario would warrant a stop-loss or consider a bearish hedge.</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>WFC is a sleeping giant hampered by regulatory chains; buy the dip into oversold territory, targeting a long-term price of $101.65 as the shackles eventually fall.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-03-03 02:20 PM EST</div>
+</div>
+</body>
+</html>
