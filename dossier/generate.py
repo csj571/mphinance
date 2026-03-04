@@ -126,7 +126,7 @@ def _run_mphinance_strategies() -> list[dict]:
 
 def _update_index_page():
     """Scan docs/reports/ and docs/ticker/ and regenerate the docs/index.html archive page.
-    Also copies the latest report to docs/latest.html for a stable shareable URL."""
+    Also copies the latest report to docs/reports/latest.html for a stable permalink."""
     import shutil
     from datetime import datetime as _dt
     docs_dir = OUTPUT_DIR.parent  # docs/
@@ -136,17 +136,17 @@ def _update_index_page():
     reports = []
     if reports_dir.exists():
         for f in sorted(reports_dir.iterdir(), reverse=True):
-            if f.suffix == ".html":
+            if f.suffix == ".html" and f.stem != "latest":
                 reports.append({
                     "filename": f.name,
                     "date": f.stem.replace("_alpha_dossier", ""),
                     "path": f"reports/{f.name}",
                 })
 
-    # ── Copy latest report to docs/latest.html ──
+    # ── Copy latest report to docs/reports/latest.html ──
     if reports:
         latest_src = reports_dir / reports[0]["filename"]
-        latest_dst = docs_dir / "latest.html"
+        latest_dst = reports_dir / "latest.html"
         shutil.copy2(latest_src, latest_dst)
         print(f"  ✓ Latest report copied → {latest_dst}")
 
@@ -213,14 +213,20 @@ def _update_index_page():
         }}
         .report-link {{ transition: all 0.2s; }}
         .report-link:hover {{ transform: translateX(4px); border-color: #00f3ff; }}
+        .archive-link {{ transition: all 0.15s; display: flex; padding: 6px 10px; border-radius: 3px; text-decoration: none; }}
+        .archive-link:hover {{ background: rgba(0, 243, 255, 0.06); }}
         .latest-cta {{
             display: block;
             background: linear-gradient(135deg, rgba(0, 255, 65, 0.08), rgba(0, 243, 255, 0.05));
             border: 1px solid #00ff41;
             border-radius: 4px;
-            padding: 24px;
+            padding: 32px 28px;
             text-decoration: none;
             transition: all 0.3s;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
             position: relative;
             overflow: hidden;
         }}
@@ -252,7 +258,7 @@ def _update_index_page():
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">
-    <div class="max-w-4xl mx-auto space-y-6">
+    <div class="max-w-5xl mx-auto space-y-5">
         <div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:8px 16px;text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;border-radius:2px">
             <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none">🚀 Try TraderDaddy Pro — AI-Powered Trading Dashboard</a>
         </div>
@@ -266,53 +272,49 @@ def _update_index_page():
         </div>
 """
 
-    # ── Latest Report Hero Section ──
+    # ── Two-column: Hero CTA (left) + Archive sidebar (right) ──
     if reports:
         index_html += f"""
-        <a href="latest.html" class="latest-cta">
-            <div class="flex items-center justify-between">
-                <div>
-                    <div class="flex items-center gap-3 mb-2">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="md:col-span-2">
+                <a href="reports/latest.html" class="latest-cta">
+                    <div class="flex items-center gap-3 mb-3">
                         <span class="pulse-dot"></span>
                         <span class="text-[10px] text-neon-green uppercase tracking-[0.3em] font-bold">Latest Report</span>
                     </div>
-                    <div class="text-xl md:text-2xl font-bold text-white font-tech tracking-wider">
-                        Alpha Dossier — {latest_date}
+                    <div class="text-2xl md:text-3xl font-bold text-white font-tech tracking-wider mb-2">
+                        Alpha Dossier
                     </div>
-                    <div class="text-[10px] text-gray-500 mt-2 uppercase tracking-widest">
+                    <div class="text-lg text-neon-blue font-tech">{latest_date}</div>
+                    <div class="text-[10px] text-gray-500 mt-4 uppercase tracking-widest">
                         Click to read the full intelligence report →
                     </div>
-                </div>
-                <div class="text-4xl md:text-5xl opacity-20 font-tech text-neon-green">📊</div>
-            </div>
-        </a>
-"""
-
-    # ── Archive Section ──
-    index_html += f"""
-        <div class="hud-panel p-4 rounded-sm">
-            <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-4 border-b border-gray-800 pb-2">
-                📁 ARCHIVE <span class="text-neon-blue">// {len(reports)} TOTAL</span>
-            </div>
-            <div class="space-y-2">
-"""
-
-    if reports:
-        for i, r in enumerate(reports):
-            is_latest = " border-neon-green" if i == 0 else " border-gray-800"
-            latest_badge = '<span class="text-neon-green text-[9px] ml-2 font-bold">LATEST</span>' if i == 0 else ""
-            index_html += f"""                <a href="{r['path']}" class="report-link block bg-black/40 border{is_latest} rounded px-4 py-3 text-sm hover:bg-gray-900/50">
-                    <span class="text-neon-blue font-bold">{r['date']}</span>
-                    <span class="text-gray-500 ml-3">Alpha Dossier</span>
-                    {latest_badge}
+                    <div class="text-[9px] text-gray-700 mt-2">
+                        Permalink: /reports/latest.html
+                    </div>
                 </a>
+            </div>
+            <div class="md:col-span-1">
+                <div class="hud-panel p-4 rounded-sm h-full">
+                    <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-3 border-b border-gray-800 pb-2">
+                        📁 Archive <span class="text-neon-blue">// {len(reports)}</span>
+                    </div>
+                    <div class="space-y-1 max-h-64 overflow-y-auto pr-1" style="scrollbar-width:thin;scrollbar-color:#333 transparent">
 """
-    else:
-        index_html += '                <div class="text-gray-600 text-sm italic p-4">No reports generated yet. Run the pipeline first.</div>\n'
-
-    index_html += """            </div>
+        for i, r in enumerate(reports):
+            dot_color = "text-neon-green" if i == 0 else "text-gray-700"
+            index_html += f"""                        <a href="{r['path']}" class="archive-link flex items-center gap-2">
+                            <span class="{dot_color} text-[6px]">●</span>
+                            <span class="text-neon-blue text-xs">{r['date']}</span>
+                        </a>
+"""
+        index_html += """                    </div>
+                </div>
+            </div>
         </div>
 """
+    else:
+        index_html += '        <div class="hud-panel p-6 rounded-sm text-gray-600 text-sm italic">No reports generated yet. Run the pipeline first.</div>\n'
 
     # ── Watchlist Deep Dives Section ──
     if watchlist:
