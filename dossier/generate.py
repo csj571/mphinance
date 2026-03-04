@@ -747,6 +747,36 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         print(f"  [WARN] Ticker pages failed: {e}")
         ticker_pages = []
 
+    # ── Stage 11b: Auto-Watchlist Discovery ──
+    print("\n[11b/13] AUTO-WATCHLIST (A-grade only)")
+    try:
+        watchlist_path = PROJECT_ROOT / "watchlist.txt"
+        existing = set()
+        if watchlist_path.exists():
+            existing = set(l.strip().upper() for l in watchlist_path.read_text().splitlines() if l.strip())
+
+        ticker_dir = PROJECT_ROOT / "docs" / "ticker"
+        has_page = set()
+        if ticker_dir.exists():
+            has_page = set(d.name for d in ticker_dir.iterdir() if d.is_dir())
+
+        new_adds = []
+        for d in dossiers:
+            ticker = d.get("ticker", "").upper()
+            grade = d.get("scores", {}).get("grade", "")
+            if grade == "A" and ticker and ticker not in existing and ticker not in has_page:
+                new_adds.append(ticker)
+
+        if new_adds:
+            with open(watchlist_path, "a") as f:
+                for t in new_adds:
+                    f.write(f"{t}\n")
+            print(f"  🆕 Auto-added {len(new_adds)} A-grade tickers: {', '.join(new_adds)}")
+        else:
+            print(f"  ✓ No new A-grade discoveries (checked {len(dossiers)} dossiers)")
+    except Exception as e:
+        print(f"  [WARN] Auto-watchlist failed: {e}")
+
     # ── Stage 12: Update Index ──
     print("\n[12/13] INDEX UPDATE")
     _update_index_page()
