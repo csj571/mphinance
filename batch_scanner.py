@@ -189,6 +189,58 @@ def main():
             else:
                 send_to_sheets(df, strategy_name)
     
+    # ── CBOE Options Alerts ──
+    print(f"\n{'='*60}")
+    print(f"🔔 Running: CBOE Options Alerts")
+    print(f"{'='*60}")
+    try:
+        from cboe_weekly_scanner import scan as cboe_scan
+        cboe_result = cboe_scan(dry_run=args.dry_run, output_json=True)
+
+        # Build a DataFrame from the diff for Sheets
+        new_rows = []
+        for category, label in [
+            ("optionable", "Newly Optionable"),
+            ("weekly_etfs", "New Weekly ETF"),
+            ("weekly_equities", "New Weekly Equity"),
+        ]:
+            for ticker, name in cboe_result["diff"][category]["new"].items():
+                new_rows.append({
+                    "name": ticker,
+                    "description": name,
+                    "close": "",
+                    "Type": label,
+                })
+        for category, label in [
+            ("optionable", "Options Removed"),
+            ("weekly_etfs", "Weekly ETF Removed"),
+            ("weekly_equities", "Weekly Equity Removed"),
+        ]:
+            for ticker, name in cboe_result["diff"][category]["removed"].items():
+                new_rows.append({
+                    "name": ticker,
+                    "description": name,
+                    "close": "",
+                    "Type": label,
+                })
+
+        cboe_count = len(new_rows)
+        results_summary["CBOE Options Alerts"] = cboe_count
+
+        if new_rows:
+            cboe_df = pd.DataFrame(new_rows)
+            if args.dry_run:
+                print(f"\n  [DRY RUN] Would send {cboe_count} options alerts:")
+                print(cboe_df.to_string(index=False))
+            else:
+                send_to_sheets(cboe_df, "CBOE Options Alerts")
+        else:
+            print("  ✅ No new options changes detected")
+
+    except Exception as e:
+        print(f"  ❌ CBOE scan error: {e}")
+        results_summary["CBOE Options Alerts"] = 0
+
     # Summary
     print(f"\n{'='*60}")
     print("📋 SUMMARY")

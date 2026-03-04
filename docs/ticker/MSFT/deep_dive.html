@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSFT Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for MSFT.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/MSFT/" target="_blank">MSFT</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Technology &#xB7; Software - Infrastructure &#xB7; 2026-03-03</div>
+  </div>
+  <div>
+    <div class="pr">$403.8</div>
+    <div class="ch pos">+1.32%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[MSFT] Deep Dive: Cloud Conqueror Caught in Technical Crosswinds – Opportunity Knocks?</h2>
+<p><strong>Date:</strong> 2026-03-03</p>
+<p><strong>Price:</strong> ~$403.8 | <strong>Verdict:</strong> Accumulate on Dips</p>
+
+<p>Microsoft isn't just a software giant anymore; it's the digital infrastructure underpinning the modern world, yet our quants are flagging a potential entry point. Don't let the noise fool you, the underlying machine is a beast, but the charts are flashing caution – and opportunity.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market often gets caught up in the immediate headlines, seeing Microsoft solely through the lens of AI hype and its stratospheric market cap. While AI integration via Copilot and OpenAI is undoubtedly a monumental growth driver, the reality is far more robust: MSFT is a diversified, cash-generating machine with deeply entrenched ecosystems in cloud (Azure), productivity (Office 365), and enterprise software. It's not just <em>participating</em> in the future; it's <em>building</em> it.</p>
+
+<p>However, our models are flagging that at ~$403.8, the stock is currently trading at a premium. While analysts see significant upside to $596, our internal quantitative valuation suggests a fair value of $333.47, meaning it's trading about 17.4% above what the numbers <em>alone</em> suggest. This gap between perceived value and quant-driven fair value, coupled with a bearish technical setup, tells us a disciplined approach is crucial. We're looking for weakness to exploit, not chasing rallies.</p>
+
+<h3>📊 The Numbers You Need</h3>
+
+<ul>
+<li><strong>Market Cap:</strong> $3001.49B – A behemoth, but still growing.</li>
+<li><strong>Beta:</strong> 1.11 – Slightly more volatile than the broader market, as expected for a tech giant.</li>
+</ul>
+<p><em>   <strong>Revenue Growth:</strong> A robust 16.7% – This isn't small-cap growth, this is </em>trillion-dollar company* growth.</p>
+<ul>
+<li><strong>Profit Margin:</strong> A staggering 39.0% – MSFT is a money-printing machine. High margins indicate strong pricing power and efficient operations.</li>
+<li><strong>P/E:</strong> 25.27 | <strong>Forward P/E:</strong> 21.43 – The forward P/E suggests analysts expect earnings growth to outpace current valuation concerns, but it's still a premium to the market average.</li>
+<li><strong>Analyst Target:</strong> A bullish $596.0 – Wall Street sees significant upside, implying a potential 47% jump from current levels.</li>
+<li><strong>Quant Valuation:</strong> Our models assess MSFT as trading at a <strong>-17.4% gap</strong> above its calculated "FAIR VALUE" of <strong>$333.47</strong>. This is the key friction point we need to manage.</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+
+<ol>
+<li><strong>Azure's Cloud Dominance:</strong> Azure continues to be a growth engine, consistently taking market share and benefiting from the secular trend of cloud migration. Its sticky enterprise solutions ensure recurring, high-margin revenue streams that fuel the entire ecosystem.</li>
+<li><strong>AI Monetization & Integration:</strong> Copilot isn't just a feature; it's a new revenue stream across Windows, Office, and GitHub. The deep integration with OpenAI positions MSFT at the forefront of the generative AI revolution, promising significant long-term monetization opportunities for enterprise and consumer alike.</li>
+<li><strong>Enterprise Ecosystem Lock-in:</strong> From Office 365 to Dynamics and LinkedIn, Microsoft's suite of services creates a powerful network effect. Enterprises are deeply embedded, making switching costs incredibly high and ensuring consistent subscription revenue.</li>
+<li><strong>Shareholder Returns:</strong> While not explicitly in the data, Microsoft's history of consistent dividend growth and substantial share buybacks provides a strong floor for investors and returns capital, signaling management's confidence and commitment.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+
+<ol>
+<li><strong>Regulatory Scrutiny:</strong> As a dominant force in multiple sectors, MSFT is a perpetual target for antitrust regulators globally. Any adverse rulings or forced divestitures could significantly impact future growth and market perception.</li>
+<li><strong>Intensifying Cloud/AI Competition:</strong> While a leader, MSFT faces fierce competition from AWS (Amazon) and Google Cloud. The AI race is also crowded, with new players emerging rapidly. Failure to innovate or maintain a competitive edge could erode market share and margins.</li>
+<li><strong>Valuation Risk (Quant Perspective):</strong> Our quantitative models indicate the stock is currently trading at a premium of 17.4% above its calculated fair value of $333.47. If broader market sentiment shifts or growth unexpectedly slows, this premium could quickly dissipate, leading to a significant pullback.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+
+<p>The charts paint a picture of recent weakness, despite a longer-term bullish trend.</p>
+
+<ul>
+<li><strong>52W Range:</strong> $381.71 - $551.43. We're trading towards the lower end of this range, but still well off the absolute low.</li>
+<li><strong>EMA Stack: FULL BEARISH.</strong> This is a critical red flag for short-term traders. The 8-period EMA ($398.66) is below the 21-period ($407.81), which is below the 34-period ($420.03). This confirms short-term downward momentum, indicating sellers are in control.</li>
+<li><strong>RSI(14): 43.96.</strong> The Relative Strength Index is trending towards oversold territory but hasn't reached it yet, suggesting there could be more room to the downside before a significant bounce.</li>
+<li><strong>ADX: 32.59.</strong> A strong ADX value indicates a clear trend is in place. Coupled with the bearish EMAs, this implies the downtrend has conviction.</li>
+<li><strong>Pivots:</strong></li>
+<li><strong>R2:</strong> $407.35</li>
+<li><strong>R1:</strong> $402.95</li>
+<li><strong>PP:</strong> $396.79</li>
+<li><strong>S1:</strong> $392.39</li>
+<li><strong>S2:</strong> $386.23</li>
+<li>Our current price ~$403.8 is caught between R1 and the daily pivot point, indicating a struggle. A break below PP ($396.79) would quickly target S1 and S2.</li>
+<li><strong>Relative Volume:</strong> 0.66x. Below average volume on this move suggests a lack of strong conviction from either buyers or sellers. It could signal exhaustion of the recent move or simply a pause.</li>
+<li><strong>SMA 50:</strong> $441.51. This is a key resistance level if the stock attempts to rebound.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>A clear break and hold above R2 ($407.35) on increasing volume would signal a potential reversal of the short-term bearish trend. Look for confirmation with the 8-EMA crossing above the 21-EMA. A successful move here could target the 34-EMA ($420.03) and then the SMA 50 ($441.51). Set stop-loss below R1 ($402.95).</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Given the "FULL BEARISH" EMA stack and the quant valuation indicating a premium, this is our preferred strategy. Watch for a test of S1 ($392.39) or S2 ($386.23). The 52-week low of $381.71 is the ultimate deep discount zone. Accumulate gradually as the price approaches these levels. A strong bounce off S1 or S2, ideally with RSI entering oversold (<30) and then hooking up, would be a strong entry signal. Place initial buy orders near S1 and add on further weakness towards S2. Set a protective stop below the 52W low ($381.71).</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>If MSFT breaks below S2 ($386.23) with conviction and heavy volume, especially if the RSI continues to plummet without bouncing, it indicates significant capitulation. In this scenario, consider reducing exposure, hedging with options (e.g., long puts or bear put spreads), or preparing for a deeper correction towards the quantitative fair value of $333.47 (though this is a longer-term target, not an immediate technical level).</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>Microsoft remains a long-term compounder, but current technicals and valuation models suggest caution. Accumulate on dips, targeting a medium-term rebound to ~$450.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">29.1%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">43.5%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">18</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">8%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BEARISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$400.38</div><div class="ma-d pos">+0.9%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$441.51</div><div class="ma-d neg">-8.5%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$470.79</div><div class="ma-d neg">-14.2%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BEARISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$398.66</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$407.81</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$420.03</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">44</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">65/44</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm pos">+2.87</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">32.6</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$381.71</span><span>$403.8 (13%)</span><span>$551.43</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:13%"></div><div class="rng-dot" style="left:13%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$511.38</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$486.60</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$466.57</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$446.54</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$422.10</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$378.66</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$9.73</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">0.66x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$407.35 &#xB7; R1=$402.95 &#xB7; PP=$396.79 &#xB7; S1=$392.39 &#xB7; S2=$386.23
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">Microsoft Corporation</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$3001.49B</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">228,000</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NMS</div></div>
+      </div>
+      <div class="fd-desc">Microsoft Corporation develops and supports software, services, devices, and solutions worldwide. The Productivity and Business Processes segment offers Microsoft 365 commercial, enterprise mobility + security, windows commercial, power BI, exchange, sharepoint, Microsoft teams, security and compliance, and copilot; Microsoft 365 commercial products, such as Windows commercial on-premises and office licensed services; Microsoft 365 consumer products and cloud services, including Microsoft 365 consumer subscriptions, office licensed on-premises, and other consumer services; LinkedIn; dynamics products and cloud services, such as dynamics 365, cloud-based applications, and on-premises ERP and CRM applications. Its Intelligent Cloud segment provides Server products and cloud services comprising Azure and other cloud services, GitHub, Nuance Healthcare, virtual desktop offerings, and other cloud services; server products, including SQL and windows server, visual studio and system center related client access licenses, and other on-premises offerings; enterprise and partner services, such as enterprise support and nuance professional services, industry solutions, Microsoft partner network, and learning experience.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://www.microsoft.com" target="_blank" style="color:#00f3ff">https://www.microsoft.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-lo">36</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-hi">91</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-hi">81</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">90</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">25.27</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">21.43</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">9.83</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">7.68</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">17.08</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">N/A</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 9.80 &middot; P/FCF: 56.0</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v pos">+16.7%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v pos">+59.8%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v pos">+59.5%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$41.10</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">68.6%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v pos">47.1%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v pos">39.0%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v pos">34.4%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v pos">14.9%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">1.11</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm pos">1.39</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">31.5</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$123.28B</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$89.46B</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$53.64B</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$160.51B</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">0.90%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">$3.64</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">21.3%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">2026-02-19</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (53 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$392.00</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$600.00</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$730.00</div></div>
+        </div>
+        <div class="est-labels"><span>$392</span><span>Current $404</span><span>$730</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:3%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">STRONG_BUY</span> &middot; Mean Target: $596.00</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-03-03 03:46 PM EST</div>
+</div>
+</body>
+</html>

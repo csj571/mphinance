@@ -314,6 +314,123 @@ def generate_deep_dive(ticker: str) -> str:
     except Exception as e:
         print(f"    [INFO] VoPR skipped: {e}")
 
+    # ── Profile & Fundamentals (Stock Rover-style) ──
+    company_name = info.get("longName") or info.get("shortName") or ticker
+    description_raw = info.get("longBusinessSummary", "")
+    # Truncate to ~3 sentences for the panel
+    if description_raw:
+        sentences = description_raw.split(". ")
+        description_short = ". ".join(sentences[:3]) + ("." if len(sentences) > 3 else "")
+    else:
+        description_short = ""
+
+    employees = info.get("fullTimeEmployees")
+    website = info.get("website", "")
+    exchange = info.get("exchange", "N/A")
+    float_shares = _fmt_num(info.get("floatShares"))
+
+    # Valuation ratios
+    ps_ratio = _safe(info.get("priceToSalesTrailing12Months"))
+    pb_ratio = _safe(info.get("priceToBook"))
+    ev_ebitda = _safe(info.get("enterpriseToEbitda"))
+    peg_ratio = _safe(info.get("pegRatio"))
+    ev_revenue = _safe(info.get("enterpriseToRevenue"))
+    fcf_raw = info.get("freeCashflow")
+    mcap_raw = info.get("marketCap")
+    price_to_fcf = round(mcap_raw / fcf_raw, 2) if (mcap_raw and fcf_raw and fcf_raw > 0) else None
+
+    # Growth
+    earnings_growth = round((info.get("earningsGrowth", 0) or 0) * 100, 1)
+    earnings_q_growth = round((info.get("earningsQuarterlyGrowth", 0) or 0) * 100, 1)
+    rev_per_share = _safe(info.get("revenuePerShare"))
+
+    # Profitability
+    gross_margin = round((info.get("grossMargins", 0) or 0) * 100, 1)
+    operating_margin = round((info.get("operatingMargins", 0) or 0) * 100, 1)
+    net_margin = round((info.get("profitMargins", 0) or 0) * 100, 1)
+    roe = round((info.get("returnOnEquity", 0) or 0) * 100, 1)
+    roa = round((info.get("returnOnAssets", 0) or 0) * 100, 1)
+
+    # Financial Health
+    current_ratio = _safe(info.get("currentRatio"))
+    debt_equity = _safe(info.get("debtToEquity"))
+    total_debt = _fmt_num(info.get("totalDebt"))
+    total_cash = _fmt_num(info.get("totalCash"))
+    fcf_fmt = _fmt_num(fcf_raw)
+    operating_cf = _fmt_num(info.get("operatingCashflow"))
+
+    # Dividends
+    div_rate_raw = info.get("dividendRate")
+    div_rate = _safe(div_rate_raw)
+    # Compute yield from rate/price (more reliable than yfinance's dividendYield)
+    if div_rate_raw and price > 0:
+        div_yield = round(div_rate_raw / price * 100, 2)
+    else:
+        _dy_raw = info.get("dividendYield", 0) or 0
+        # yfinance returns this as a decimal (0.0091) sometimes, or percentage (0.91) other times
+        div_yield = round(_dy_raw * 100, 2) if _dy_raw < 1 else round(_dy_raw, 2)
+    payout_ratio = round((info.get("payoutRatio", 0) or 0) * 100, 1)
+    ex_div_date_raw = info.get("exDividendDate")
+    if ex_div_date_raw:
+        try:
+            from datetime import timezone as _tz
+            ex_div_date = datetime.fromtimestamp(ex_div_date_raw, tz=_tz.utc).strftime("%Y-%m-%d")
+        except Exception:
+            ex_div_date = str(ex_div_date_raw)
+    else:
+        ex_div_date = "N/A"
+
+    # Analyst Estimates
+    target_low = _safe(info.get("targetLowPrice"))
+    target_high = _safe(info.get("targetHighPrice"))
+    target_median = _safe(info.get("targetMedianPrice"))
+    rec_key = (info.get("recommendationKey") or "N/A").upper()
+    num_analysts = info.get("numberOfAnalystOpinions", 0) or 0
+
+    # ── Composite Scores (0-100, Stock Rover-style) ──
+    def _score_clamp(val):
+        return max(0, min(100, int(val))) if val is not None else None
+
+    # Value Score: lower P/E + lower P/B + lower PEG = higher score
+    _pe_raw = info.get("trailingPE")
+    _pb_raw = info.get("priceToBook")
+    _peg_raw = info.get("pegRatio")
+    value_parts = []
+    if _pe_raw and 0 < _pe_raw < 100:
+        value_parts.append(max(0, 100 - _pe_raw * 2))
+    if _pb_raw and 0 < _pb_raw < 50:
+        value_parts.append(max(0, 100 - _pb_raw * 10))
+    if _peg_raw and 0 < _peg_raw < 10:
+        value_parts.append(max(0, 100 - _peg_raw * 20))
+    value_score = _score_clamp(sum(value_parts) / len(value_parts)) if value_parts else None
+
+    # Growth Score: revenue + earnings growth
+    growth_parts = []
+    _rg = info.get("revenueGrowth")
+    _eg = info.get("earningsGrowth")
+    if _rg is not None:
+        growth_parts.append(min(100, max(0, 50 + _rg * 200)))
+    if _eg is not None:
+        growth_parts.append(min(100, max(0, 50 + _eg * 100)))
+    growth_score = _score_clamp(sum(growth_parts) / len(growth_parts)) if growth_parts else None
+
+    # Quality Score: margins + ROE
+    quality_parts = []
+    _gm = info.get("grossMargins")
+    _om = info.get("operatingMargins")
+    _roe_raw = info.get("returnOnEquity")
+    if _gm is not None and _gm > 0:
+        quality_parts.append(min(100, _gm * 120))
+    if _om is not None and _om > 0:
+        quality_parts.append(min(100, _om * 200))
+    if _roe_raw is not None and _roe_raw > 0:
+        quality_parts.append(min(100, _roe_raw * 200))
+    quality_score = _score_clamp(sum(quality_parts) / len(quality_parts)) if quality_parts else None
+
+    # Sentiment Score: analyst recommendation
+    rec_map = {"STRONG_BUY": 90, "BUY": 75, "HOLD": 50, "SELL": 25, "STRONG_SELL": 10}
+    sentiment_score = rec_map.get(rec_key, None)
+
     data = {
         "date": date_str, "price": round(price, 2), "change_pct": change_pct,
         "market_cap": _fmt_num(info.get("marketCap")),
@@ -343,6 +460,38 @@ def generate_deep_dive(ticker: str) -> str:
         "val_gap": valuation.get("gap_pct", 0),
         "val_target": valuation.get("target_price", "N/A"),
         "vopr": vopr_data,
+        # ── Stock Rover-style fundamentals ──
+        "company_name": company_name,
+        "description": description_short,
+        "website": website,
+        "employees": f"{employees:,}" if employees else "N/A",
+        "exchange": exchange,
+        "float_shares": float_shares,
+        # Valuation
+        "ps_ratio": ps_ratio, "pb_ratio": pb_ratio,
+        "ev_ebitda": ev_ebitda, "peg_ratio": peg_ratio,
+        "ev_revenue": ev_revenue, "price_to_fcf": price_to_fcf,
+        # Growth
+        "earnings_growth": earnings_growth,
+        "earnings_q_growth": earnings_q_growth,
+        "rev_per_share": rev_per_share,
+        # Profitability
+        "gross_margin": gross_margin, "operating_margin": operating_margin,
+        "net_margin": net_margin, "roe": roe, "roa": roa,
+        # Financial Health
+        "current_ratio": current_ratio, "debt_equity": debt_equity,
+        "total_debt": total_debt, "total_cash": total_cash,
+        "fcf": fcf_fmt, "operating_cf": operating_cf,
+        # Dividends
+        "div_yield": div_yield, "div_rate": div_rate,
+        "payout_ratio": payout_ratio, "ex_div_date": ex_div_date,
+        # Estimates
+        "target_low": target_low, "target_high": target_high,
+        "target_median": target_median, "rec_key": rec_key,
+        "num_analysts": num_analysts,
+        # Scores
+        "value_score": value_score, "growth_score": growth_score,
+        "quality_score": quality_score, "sentiment_score": sentiment_score,
     }
 
     # ── Gemini AI Deep Dive ──
@@ -528,6 +677,28 @@ def _render_html(ticker: str, md_content: str, data: dict, output_path: Path):
                 <table class="stk-tbl"><tr><th>Type</th><th>Strike</th><th>&#x394;</th><th>&#x398;</th><th>Mid</th></tr>{strikes_rows}</table>'''
         vopr_html += '</div>'
 
+    # ── Fundamental Dashboard Helpers ──
+    def _score_card(label, score):
+        if score is None:
+            return f'<div class="score-card"><div class="score-num score-na">—</div><div class="score-lbl">{label}</div></div>'
+        cls = "score-hi" if score >= 65 else ("score-mid" if score >= 40 else "score-lo")
+        return f'<div class="score-card"><div class="score-num {cls}">{score}</div><div class="score-lbl">{label}</div></div>'
+
+    def _rec_color(rec):
+        if "BUY" in str(rec): return "pos"
+        if "SELL" in str(rec): return "neg"
+        return "neutral"
+
+    def _est_bar(d):
+        tl = d.get("target_low")
+        th = d.get("target_high")
+        p = d.get("price", 0)
+        if tl is None or th is None or th == tl:
+            return ""
+        pct = max(0, min(100, (p - tl) / (th - tl) * 100))
+        return f'''<div class="est-labels"><span>${tl:.0f}</span><span>Current ${p:.0f}</span><span>${th:.0f}</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:{pct:.0f}%"></div></div>'''
+
     html = f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -615,10 +786,30 @@ a{{color:inherit;text-decoration:none}}
 .ct tr:first-child td{{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}}
 .ft{{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}}
 
+.fd-grid{{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}}
+.fd-grid .gb-card{{text-align:center}}
+.fd-desc{{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}}
+.fd-split{{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}}
+.fd-split .gb-panel{{margin-bottom:0}}
+.score-row{{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}}
+.score-card{{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}}
+.score-num{{font-size:1.6rem;font-weight:900;line-height:1.2}}
+.score-lbl{{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}}
+.score-hi{{color:#00ff41}}.score-mid{{color:#ffb000}}.score-lo{{color:#ff3e3e}}.score-na{{color:#333}}
+.est-bar{{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}}
+.est-fill{{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}}
+.est-dot{{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}}
+.est-labels{{display:flex;justify-content:space-between;font-size:9px;color:#555}}
+.prof-row{{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}}
+.prof-item{{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}}
+.prof-k{{font-size:9px;color:#555}}
+.prof-v{{font-size:9px;font-weight:bold}}
+
 @media(max-width:640px){{
-  .vol-row,.osc-row{{grid-template-columns:repeat(2,1fr)}}
+  .vol-row,.osc-row,.fd-grid{{grid-template-columns:repeat(2,1fr)}}
   .ma-g{{grid-template-columns:repeat(2,1fr)}}
-  .lvl-row{{grid-template-columns:1fr}}
+  .lvl-row,.fd-split{{grid-template-columns:1fr}}
+  .score-row{{grid-template-columns:repeat(2,1fr)}}
   .hdr{{flex-direction:column}}.hdr .pr{{text-align:left}}
 }}
 </style>
@@ -728,6 +919,106 @@ a{{color:inherit;text-decoration:none}}
     </div>
 
     {vopr_html}
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">{data.get("company_name",ticker)}</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">{data.get("market_cap","N/A")}</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">{data.get("employees","N/A")}</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">{data.get("exchange","N/A")}</div></div>
+      </div>
+      {f'<div class="fd-desc">{data.get("description","")}</div>' if data.get("description") else ''}
+      {f'<div class="gb-sub" style="margin-top:4px"><a href="{data.get("website","")}" target="_blank" style="color:#00f3ff">{data.get("website","")}</a></div>' if data.get("website") else ''}
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        {_score_card("Value", data.get("value_score"))}
+        {_score_card("Growth", data.get("growth_score"))}
+        {_score_card("Quality", data.get("quality_score"))}
+        {_score_card("Sentiment", data.get("sentiment_score"))}
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">{_v(data.get("pe"),".2f","")}</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">{_v(data.get("fwd_pe"),".2f","")}</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">{_v(data.get("ps_ratio"),".2f","")}</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">{_v(data.get("pb_ratio"),".2f","")}</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">{_v(data.get("ev_ebitda"),".2f","")}</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">{_v(data.get("peg_ratio"),".2f","")}</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: {_v(data.get("ev_revenue"),".2f","")} &middot; P/FCF: {_v(data.get("price_to_fcf"),".1f","")}</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v {_c(data.get("rev_growth",0))}">{data.get("rev_growth",0):+.1f}%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v {_c(data.get("earnings_growth",0))}">{data.get("earnings_growth",0):+.1f}%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v {_c(data.get("earnings_q_growth",0))}">{data.get("earnings_q_growth",0):+.1f}%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">{_v(data.get("rev_per_share"),".2f","$")}</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v {_c(data.get("gross_margin",0))}">{data.get("gross_margin",0):.1f}%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v {_c(data.get("operating_margin",0))}">{data.get("operating_margin",0):.1f}%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v {_c(data.get("net_margin",0))}">{data.get("net_margin",0):.1f}%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v {_c(data.get("roe",0))}">{data.get("roe",0):.1f}%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v {_c(data.get("roa",0))}">{data.get("roa",0):.1f}%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">{_v(data.get("beta"),".2f","")}</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm {_c(data.get("current_ratio"),1)}">{_v(data.get("current_ratio"),".2f","")}</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">{_v(data.get("debt_equity"),".1f","")}</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">{data.get("total_debt","N/A")}</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">{data.get("total_cash","N/A")}</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm {_c(0 if data.get("fcf","N/A")=="N/A" else 1)}">{data.get("fcf","N/A")}</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">{data.get("operating_cf","N/A")}</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">{data.get("div_yield",0):.2f}%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">{_v(data.get("div_rate"),".2f","$")}</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">{data.get("payout_ratio",0):.1f}%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">{data.get("ex_div_date","N/A")}</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates ({data.get("num_analysts",0)} analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">{_v(data.get("target_low"))}</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">{_v(data.get("target_median"))}</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">{_v(data.get("target_high"))}</div></div>
+        </div>
+        {_est_bar(data)}
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="{_rec_color(data.get('rec_key','N/A'))}">{data.get("rec_key","N/A")}</span> &middot; Mean Target: {_v(data.get("analyst_target"))}</div>
+      </div>
+    </div>
 
   </div>
 </div>
