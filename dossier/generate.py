@@ -125,7 +125,9 @@ def _run_mphinance_strategies() -> list[dict]:
 
 
 def _update_index_page():
-    """Scan docs/reports/ and docs/ticker/ and regenerate the docs/index.html archive page."""
+    """Scan docs/reports/ and docs/ticker/ and regenerate the docs/index.html archive page.
+    Also copies the latest report to docs/latest.html for a stable shareable URL."""
+    import shutil
     from datetime import datetime as _dt
     docs_dir = OUTPUT_DIR.parent  # docs/
     reports_dir = OUTPUT_DIR       # docs/reports/
@@ -140,6 +142,13 @@ def _update_index_page():
                     "date": f.stem.replace("_alpha_dossier", ""),
                     "path": f"reports/{f.name}",
                 })
+
+    # ── Copy latest report to docs/latest.html ──
+    if reports:
+        latest_src = reports_dir / reports[0]["filename"]
+        latest_dst = docs_dir / "latest.html"
+        shutil.copy2(latest_src, latest_dst)
+        print(f"  ✓ Latest report copied → {latest_dst}")
 
     watchlist = []
     if watchlist_dir.exists():
@@ -156,6 +165,9 @@ def _update_index_page():
                         "json_path": f"ticker/{ticker}/deep_dive.json",
                         "date": mtime,
                     })
+
+    # ── Build latest report date for hero section ──
+    latest_date = reports[0]["date"] if reports else "—"
 
     index_html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -201,6 +213,42 @@ def _update_index_page():
         }}
         .report-link {{ transition: all 0.2s; }}
         .report-link:hover {{ transform: translateX(4px); border-color: #00f3ff; }}
+        .latest-cta {{
+            display: block;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.08), rgba(0, 243, 255, 0.05));
+            border: 1px solid #00ff41;
+            border-radius: 4px;
+            padding: 24px;
+            text-decoration: none;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }}
+        .latest-cta:hover {{
+            border-color: #00f3ff;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.15), 0 0 60px rgba(0, 243, 255, 0.08);
+            transform: translateY(-2px);
+        }}
+        .latest-cta::before {{
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.05), transparent);
+            animation: shimmer 3s infinite;
+        }}
+        @keyframes shimmer {{ 100% {{ left: 100%; }} }}
+        .pulse-dot {{
+            display: inline-block;
+            width: 8px; height: 8px;
+            background: #00ff41;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }}
+        @keyframes pulse {{
+            0%, 100% {{ opacity: 1; box-shadow: 0 0 4px #00ff41; }}
+            50% {{ opacity: 0.4; box-shadow: 0 0 12px #00ff41; }}
+        }}
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">
@@ -216,10 +264,35 @@ def _update_index_page():
                 Daily Intelligence Reports // Ghost Alpha Pipeline
             </p>
         </div>
+"""
 
+    # ── Latest Report Hero Section ──
+    if reports:
+        index_html += f"""
+        <a href="latest.html" class="latest-cta">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="pulse-dot"></span>
+                        <span class="text-[10px] text-neon-green uppercase tracking-[0.3em] font-bold">Latest Report</span>
+                    </div>
+                    <div class="text-xl md:text-2xl font-bold text-white font-tech tracking-wider">
+                        Alpha Dossier — {latest_date}
+                    </div>
+                    <div class="text-[10px] text-gray-500 mt-2 uppercase tracking-widest">
+                        Click to read the full intelligence report →
+                    </div>
+                </div>
+                <div class="text-4xl md:text-5xl opacity-20 font-tech text-neon-green">📊</div>
+            </div>
+        </a>
+"""
+
+    # ── Archive Section ──
+    index_html += f"""
         <div class="hud-panel p-4 rounded-sm">
             <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-4 border-b border-gray-800 pb-2">
-                REPORTS <span class="text-neon-blue">// {len(reports)} TOTAL</span>
+                📁 ARCHIVE <span class="text-neon-blue">// {len(reports)} TOTAL</span>
             </div>
             <div class="space-y-2">
 """
