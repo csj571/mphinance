@@ -238,5 +238,18 @@ class CashSecuredPutsStrategy(BaseStrategy):
                 
         if not valid_trades:
             return pd.DataFrame()
+        
+        result = pd.DataFrame(valid_trades)
+        
+        # Stage 4: VoPR Overlay — enrich with volatility premium analytics
+        try:
+            from strategies.vopr_overlay import enrich_csp
+            print(f"  Running VoPR overlay on {len(result)} candidates...")
+            result = enrich_csp(result)
+            print(f"  ✓ VoPR enrichment complete")
+        except ImportError:
+            print("  [WARN] VoPR overlay not available, skipping enrichment")
+        except Exception as e:
+            print(f"  [WARN] VoPR overlay failed: {e}")
             
-        return pd.DataFrame(valid_trades)
+        return result

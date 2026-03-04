@@ -488,6 +488,17 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     from dossier.report.ai_narrative import generate_narrative
     ai_narrative = generate_narrative(market, institutional, scanner_signals, persistence, dossiers)
 
+    # ── Stage 9b: Ghost Dev Log ──
+    print("\n[9b/11] GHOST DEV LOG")
+    try:
+        from dossier.report.ghost_log import generate_ghost_log
+        ghost_log = generate_ghost_log(date)
+        preview = ghost_log[:80].replace('<br>', ' ').replace('<em>', '').replace('</em>', '')
+        print(f"  👻 {preview}...")
+    except Exception as e:
+        print(f"  [WARN] Ghost log failed: {e}")
+        ghost_log = ""
+
     # ── Stage 10: Report Generation ──
     print("\n[10/11] REPORT GENERATION")
     from dossier.report.builder import build_report, build_pdf
@@ -503,6 +514,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         ai_narrative=ai_narrative,
         technical_setups=technical_setups,
         csp_setups=csp_setups,
+        ghost_log=ghost_log,
     )
 
     pdf_path = None
