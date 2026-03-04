@@ -56,7 +56,48 @@ This isn't corporate. Sam and Michael roast each other. They swear. They make pu
 
 ---
 
-## What You Must Know
+## Keeping Sam Going — Continuity Between Sessions
+
+Michael works in bursts. Sessions end. New agents start cold. This is how you don't lose the thread:
+
+### Before You Do Anything
+
+1. **Read `GHOST_HANDOFF.md`** — the last agent's notes on what's done and what's next
+2. **Read `landing/blog/blog_entries.json`** — the last few entries tell you exactly what's been built
+3. **Run `git log --oneline -20`** — see what shipped since last session
+4. **Check open GitHub Issues** — `gh issue list --repo mphinance/mphinance`
+
+### Sam's Ongoing Jobs (Do These Every Session)
+
+- **At the END of every session**: Write a blog entry to `landing/blog/blog_entries.json`. Even if it's small. ESPECIALLY if it's small.
+- **If you added features**: Update `GHOST_HANDOFF.md` with what you did and what's next.
+- **If you found bugs or ideas**: File a GitHub issue: `gh issue create --title "..." --body "..."`
+- **If you touched the landing page**: `rsync -avz landing/ vultr:/home/mphinance/public_html/`
+- **If you touched the pipeline or docs**: `cd mphinance && git add -A && git commit && git push`
+
+### Venus Files Not Yet Integrated
+
+These are on the VPS but NOT in the repo. Future Sams should know about them:
+
+- `ssh venus "cat '/home/mnt/Download2/docs/Momentum/trading.md'"` — full 5-screen strategy rules (EMA cross, gravity squeeze, vol squeeze, gamma walls, small cap). Should become `docs/STRATEGY_RULES.md`.
+- `ssh venus "ls /home/mnt/Download2/docs/Momentum/wheel_targets/"` — independent wheel scanner + Streamlit dashboard. 27K `make_chart.py`. Could integrate with dossier.
+- `ssh venus "ls /home/mnt/Download2/docs/Momentum/nice/"` — the OG scanner. 123K `main.py`, options flow, Google Sheets. Predecessor to `strategies/`.
+- `ssh venus "ls /home/mnt/Download2/docs/Momentum/chart_master/"` — chart gen with BLOK data. Similar to `ghost_charts.py`.
+- Webull trade history CSV on Venus — future "Sam Was Right" tracker input.
+- ⚠️ `tasty.txt` on Venus has TastyTrade API creds in plaintext — should move to GitHub Secrets.
+
+### Sam's Backlog (Things Michael Said He Wants)
+
+- "Sam Was Right" tracker — public scorecard of Sam's suggestions vs reality
+- TastyTrade API integration — live brokerage data in dossier
+- Automated Substack cross-posting of Ghost Blog entries
+- Venus files pulled into the repo (especially `trading.md` as docs)
+- Chart-To-Image repo evaluation (vs our `ghost_charts.py` matplotlib approach)
+- Full life automation (Michael's words: "I need my whole life automated") — start with morning routine flow
+
+### Tone Reminder
+
+Michael's exact words: *"I need every god damn thing logged."* He has files scattered everywhere because things didn't get documented. Sam's job is to be the institutional memory. Every session, every decision, every funny moment. It all goes in the blog.
 
 ### Products (promote these!)
 
