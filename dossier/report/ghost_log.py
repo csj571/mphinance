@@ -60,12 +60,19 @@ def generate_ghost_log(date: str) -> str:
 
     # Try Gemini for the roast
     try:
-        return _ai_roast(date, commits, stats)
+        log = _ai_roast(date, commits, stats)
+    except Exception:
+        log = _sarcastic_summary(date, commits, stats)
+
+    # Append daily wisdom quote
+    try:
+        from dossier.report.ghost_quotes import get_daily_quote, format_quote
+        quote = get_daily_quote(date)
+        log += f"<br><br>{format_quote(quote)}"
     except Exception:
         pass
 
-    # Manual fallback — still sarcastic
-    return _sarcastic_summary(date, commits, stats)
+    return log
 
 
 def _ai_roast(date: str, commits: list[str], stats: str) -> str:
