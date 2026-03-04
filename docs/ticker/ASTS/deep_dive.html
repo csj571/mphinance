@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASTS Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for ASTS.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+@media(max-width:640px){
+  .vol-row,.osc-row{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row{grid-template-columns:1fr}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/ASTS/" target="_blank">ASTS</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Technology &#xB7; Communication Equipment &#xB7; 2026-03-04</div>
+  </div>
+  <div>
+    <div class="pr">$92.68</div>
+    <div class="ch pos">+6.63%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[ASTS] Deep Dive: Satellite Stardust or Spaced Out?</h2>
+<p><strong>Date:</strong> 2026-03-04</p>
+<p><strong>Price:</strong> ~$92.68 | <strong>Verdict:</strong> Speculative Buy</p>
+
+<p>AST SpaceMobile isn't just another tech stock; it's a bet on fundamentally changing how the world connects. But is this future a clear signal or just static on the line?</p>
+
+<h3>The Core Thesis</h3>
+<p>The market sees ASTS as a revolutionary player, poised to connect billions of underserved people directly to their phones from space. The narrative is potent: a massive total addressable market (TAM), disruptive technology bypassing traditional infrastructure, and the potential for exponential growth as their constellation deploys. Retail traders, in particular, are captivated by the "first-mover" advantage and the vision of global broadband from orbit.</p>
+
+<p>However, Sam the Quant Ghost sees a different reality beneath the stardust. While the vision is grand, the company currently operates with 0% profit margin and no P/E. This is a high-burn, pre-profit venture where execution risk isn't just a line item in a quarterly report – it's the entire balance sheet. The market is pricing in near-flawless execution and future dominance, pushing the stock well above conservative analyst targets. This isn't investing; it's speculating on a moonshot.</p>
+
+<h3>📊 The Numbers You Need</h3>
+
+<ul>
+<li><strong>Market Cap:</strong> $35.23B – A hefty valuation for a company with no current profits, signaling immense future expectations.</li>
+<li><strong>Revenue Growth:</strong> <strong>2731.3%</strong> – Let that sink in. This isn't a typo. It underscores the incredible potential and early ramp-up, but from a very small base.</li>
+<li><strong>Profit Margin:</strong> 0% – The brutal reality. All about R&D, deployment, and future monetization.</li>
+</ul>
+<p><em>   <strong>P/E:</strong> None | <strong>Forward P/E:</strong> 53.11 – Investors are paying a premium for </em>future* earnings, assuming successful deployment and profitability.</p>
+<ul>
+<li><strong>52W Range:</strong> $36.08 - $129.89 – Volatility isn't just a feature, it's the main event.</li>
+</ul>
+<p><em>   <strong>Analyst Target:</strong> $83.58 – Currently trading ~9.8% </em>above* the average analyst target, suggesting valuation concerns.</p>
+<ul>
+<li><strong>Valuation:</strong> FAIR VALUE (Gap: -9.8%) – Quant models scream "overvalued" at current prices based on traditional metrics.</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Disruptive Technology & Untapped Market:</strong> ASTS aims to provide direct-to-cell connectivity globally, bypassing ground infrastructure entirely. The potential to bring broadband to billions in remote areas (the "unconnected") is a massive, largely untapped market, fueling that 2731.3% revenue growth (albeit from a low base).</li>
+<li><strong>Strategic Partnerships & Validation:</strong> Early successful tests and potential/actual partnerships with major global mobile network operators (MNOs) lend credibility and a clear path to market adoption and scaling. Each successful satellite launch and test milestone could be a significant catalyst.</li>
+<li><strong>Golden Cross & Underlying Trend Strength:</strong> The presence of a Golden Cross indicates longer-term bullish momentum, suggesting the market believes in the ASTS story over time despite short-term fluctuations. This technical signal can attract trend-following institutional money.</li>
+<li><strong>High Short Interest & Squeeze Potential:</strong> While not explicitly given, early-stage, high-growth, no-profit disruptors often attract significant short interest. Any major positive news (successful launch, major contract) could trigger a violent short squeeze, especially with high relative volume (1.54x).</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Path to Profitability & Cash Burn:</strong> A 0% profit margin is a glaring red flag. Building a satellite constellation is incredibly capital-intensive. ASTS will likely require significant future funding, potentially leading to dilution, until revenue scales dramatically to cover costs. There's a long road from early revenue to consistent profitability.</li>
+<li><strong>Execution & Regulatory Hurdles:</strong> Launching and operating satellites is fraught with technical risks, from manufacturing defects to launch failures. Regulatory approvals across numerous countries add complexity and potential delays. Competitors (Starlink, Lynk) are also vying for this space, increasing competitive pressure.</li>
+<li><strong>Valuation Disconnect:</strong> The stock trades at $92.68, notably above the average analyst target of $83.58. Our quant model also flags a -9.8% gap to fair value. This suggests the stock is currently priced for perfection, leaving little room for error or unexpected delays. Any setback could lead to a sharp correction.</li>
+</ul>
+
+<h3>📉 The Technicals</h3>
+
+<ul>
+<li><strong>Price Action:</strong> Currently sitting at $92.68, a 6.63% jump today. It's a fight for control right near key levels.</li>
+<li><strong>EMA Stack:</strong> <strong>TANGLED</strong> (8-EMA: $86.49, 21-EMA: $89.77, 34-EMA: $90.65). This is classic consolidation. The short-term averages are intertwined, suggesting indecision and no clear immediate direction, despite today's bounce. The price is currently above all three, which is constructive.</li>
+<li><strong>SMAs:</strong> The SMA 50 at $93.16 acts as immediate overhead resistance. Clearing this will be key. SMA 200 is unavailable (N/A), indicating the stock hasn't traded long enough or consistently above it to establish a robust long-term average, common for younger or highly volatile stocks.</li>
+<li><strong>Trend:</strong> <strong>Bullish (Golden Cross)</strong>. This is a powerful long-term signal, indicating the 50-day SMA has crossed above the 200-day SMA (though the 200 is N/A in the data, implying this trend is nascent or based on a slightly different calculation than provided granular data). It suggests underlying strength despite short-term tangles.</li>
+<li><strong>RSI(14):</strong> 46.92. Neutral territory. Not overbought, not oversold. Room for movement in either direction.</li>
+</ul>
+<p><em>   <strong>ADX:</strong> 32.04. Indicates a strong trend is in place. Combined with the Golden Cross, this suggests the </em>bullish* trend has established itself, even if short-term price action is consolidating.</p>
+<ul>
+<li><strong>Pivots:</strong> R2=$92.81, R1=$89.86, PP=$84.0, S1=$81.05, S2=$75.19. We're currently knocking on the R2 door. A clear break and hold above $92.81 could signal upward momentum.</li>
+<li><strong>ATR:</strong> 8.11. High Average True Range means this stock moves big. $8.11 swings daily demand discipline and position sizing.</li>
+<li><strong>Rel Vol:</strong> 1.54x. Trading with 54% more volume than average, which is great for validating breakouts or breakdowns.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>If ASTS can punch through and hold above R2 at <strong>$92.81</strong> and more importantly, clear the SMA 50 at <strong>$93.16</strong> with sustained volume (given Rel Vol is 1.54x, this is possible), it could trigger a move towards the 52W high of $129.89. The next resistance level will be psychological, as it's trading in uncharted territory above analyst targets. Target profit around <strong>$105-$110</strong> initially, then re-evaluate. Place a tight stop just below <strong>$89.86 (R1)</strong> to protect capital.</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Given the tangled EMAs and the current price hovering near R2, a pullback is a strong possibility and my preferred entry. Look for a retest of the EMAs at <strong>$90.65 (34-EMA)</strong> or <strong>$89.77 (21-EMA)</strong>. Even better, a dip to the Pivot Point at <strong>$84.0</strong> or S1 at <strong>$81.05</strong> would offer a more attractive risk/reward, especially if accompanied by decreasing selling volume or a bounce. Use these levels as entry points, aiming for a return to R1/R2 and beyond. Set your stop below <strong>$75.19 (S2)</strong>.</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>A clear breakdown below the Pivot Point at <strong>$84.0</strong>, especially if it fails to hold S1 at <strong>$81.05</strong> on increasing volume, signals a potential trend reversal or deeper correction. This would invalidate the short-term bullish thesis. If S2 at <strong>$75.19</strong> gives way, the stock could revisit lower levels within its 52W range. Shorting or selling covered calls might be an option here for experienced traders, with a stop above <strong>$84.0</strong>.</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>ASTS is a high-conviction, high-risk play on a future technology. It's priced for perfection and currently trades above analyst targets, yet the growth potential and underlying bullish technical trend cannot be ignored. For the risk-tolerant, this is a <strong>SPECULATIVE BUY</strong> with a medium-term price target of <strong>$115</strong>, contingent on flawless execution and continued positive operational milestones.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">1.6%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">115.6%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">1</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">47%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">TANGLED</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$90.25</div><div class="ma-d pos">+2.7%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$93.16</div><div class="ma-d neg">-0.5%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$82.04</div><div class="ma-d pos">+13.0%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">TANGLED</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$86.49</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$89.77</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$90.65</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">47</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">60/35</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm neg">-0.08</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">32.0</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$36.08</span><span>$92.68 (60%)</span><span>$129.89</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:60%"></div><div class="rng-dot" style="left:60%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$107.75</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$94.05</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$82.98</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$71.92</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$108.75</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$71.75</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$8.11</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">1.54x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$92.81 &#xB7; R1=$89.86 &#xB7; PP=$84.00 &#xB7; S1=$81.05 &#xB7; S2=$75.19
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-03-04 08:23 AM EST</div>
+</div>
+</body>
+</html>
