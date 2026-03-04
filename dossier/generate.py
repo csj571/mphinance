@@ -128,7 +128,10 @@ def _update_index_page():
     """Scan docs/reports/ and docs/ticker/ and regenerate the docs/index.html archive page.
     Also copies the latest report to docs/reports/latest.html for a stable permalink."""
     import shutil
+    import json as _json
     from datetime import datetime as _dt
+    from collections import defaultdict
+
     docs_dir = OUTPUT_DIR.parent  # docs/
     reports_dir = OUTPUT_DIR       # docs/reports/
     watchlist_dir = docs_dir / "ticker"
@@ -150,21 +153,68 @@ def _update_index_page():
         shutil.copy2(latest_src, latest_dst)
         print(f"  ✓ Latest report copied → {latest_dst}")
 
+    # ── Gather watchlist with sector data from JSON ──
     watchlist = []
     if watchlist_dir.exists():
         for ticker_folder in sorted(watchlist_dir.iterdir()):
             if ticker_folder.is_dir():
-                dd = ticker_folder / "deep_dive.md"
-                if dd.exists():
+                dd_json = ticker_folder / "deep_dive.json"
+                dd_md = ticker_folder / "deep_dive.md"
+                if dd_md.exists():
                     ticker = ticker_folder.name
-                    mtime = _dt.fromtimestamp(dd.stat().st_mtime).strftime("%Y-%m-%d")
+                    mtime = _dt.fromtimestamp(dd_md.stat().st_mtime).strftime("%Y-%m-%d")
+
+                    # Read sector from JSON if available
+                    sector = "Other"
+                    industry = ""
+                    price = ""
+                    if dd_json.exists():
+                        try:
+                            with open(dd_json, "r") as jf:
+                                jdata = _json.load(jf)
+                                sector = jdata.get("sector", "Other") or "Other"
+                                industry = jdata.get("industry", "")
+                                p = jdata.get("price", "")
+                                price = f"${p:.2f}" if isinstance(p, (int, float)) else ""
+                        except Exception:
+                            pass
+
                     watchlist.append({
                         "ticker": ticker,
                         "html_path": f"ticker/{ticker}/deep_dive.html",
                         "md_path": f"ticker/{ticker}/deep_dive.md",
                         "json_path": f"ticker/{ticker}/deep_dive.json",
                         "date": mtime,
+                        "sector": sector,
+                        "industry": industry,
+                        "price": price,
                     })
+
+    # ── Group by sector ──
+    sectors = defaultdict(list)
+    for w in watchlist:
+        sectors[w["sector"]].append(w)
+
+    # Sort sectors by count descending, "Other" at the end
+    sorted_sectors = sorted(
+        sectors.items(),
+        key=lambda x: (x[0] == "Other", -len(x[1]), x[0])
+    )
+
+    # Sector emoji/color mapping
+    sector_styles = {
+        "Technology": ("#00f3ff", "💻"),
+        "Healthcare": ("#00ff88", "🏥"),
+        "Financial Services": ("#ffb000", "🏦"),
+        "Consumer Cyclical": ("#ff6b6b", "🛍️"),
+        "Consumer Defensive": ("#a855f7", "🛒"),
+        "Energy": ("#ff8c00", "⚡"),
+        "Industrials": ("#888", "🏭"),
+        "Basic Materials": ("#cd7f32", "⛏️"),
+        "Communication Services": ("#00d4ff", "📡"),
+        "Real Estate": ("#4caf50", "🏠"),
+        "Utilities": ("#6b6bff", "💡"),
+    }
 
     # ── Build latest report date for hero section ──
     latest_date = reports[0]["date"] if reports else "—"
@@ -255,6 +305,31 @@ def _update_index_page():
             0%, 100% {{ opacity: 1; box-shadow: 0 0 4px #00ff41; }}
             50% {{ opacity: 0.4; box-shadow: 0 0 12px #00ff41; }}
         }}
+        .sector-header {{
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }}
+        .sector-header:hover {{
+            border-color: #00f3ff !important;
+        }}
+        .sector-content {{
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }}
+        .sector-content.open {{
+            max-height: 2000px;
+            transition: max-height 0.5s ease-in;
+        }}
+        .view-badge {{
+            font-size: 8px;
+            color: #555;
+            background: rgba(255,255,255,0.03);
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid #222;
+        }}
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">
@@ -263,12 +338,20 @@ def _update_index_page():
             <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none">🚀 Try TraderDaddy Pro — AI-Powered Trading Dashboard</a>
         </div>
         <div class="hud-panel p-6 rounded-sm border-l-4 border-neon-blue">
-            <h1 class="text-2xl md:text-3xl font-black font-tech tracking-widest text-white uppercase italic">
-                ALPHA.DOSSIER <span class="text-neon-blue">●</span> ARCHIVE
-            </h1>
-            <p class="text-[10px] text-gray-500 uppercase tracking-[0.3em] mt-1">
-                Daily Intelligence Reports // Ghost Alpha Pipeline
-            </p>
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-black font-tech tracking-widest text-white uppercase italic">
+                        ALPHA.DOSSIER <span class="text-neon-blue">●</span> ARCHIVE
+                    </h1>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-[0.3em] mt-1">
+                        Daily Intelligence Reports // Ghost Alpha Pipeline
+                    </p>
+                </div>
+                <div class="text-right">
+                    <div class="text-[9px] text-gray-600 uppercase">Page Views</div>
+                    <div class="text-sm text-neon-blue font-bold font-mono" id="index-views">—</div>
+                </div>
+            </div>
         </div>
 """
 
@@ -316,29 +399,80 @@ def _update_index_page():
     else:
         index_html += '        <div class="hud-panel p-6 rounded-sm text-gray-600 text-sm italic">No reports generated yet. Run the pipeline first.</div>\n'
 
-    # ── Watchlist Deep Dives Section ──
+    # ── Watchlist Deep Dives — Grouped by Sector ──
     if watchlist:
         index_html += f"""
         <div class="hud-panel p-4 rounded-sm border-l-4 border-neon-amber">
-            <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-4 border-b border-gray-800 pb-2">
-                🔍 WATCHLIST.DEEP.DIVES <span class="text-neon-amber">// {len(watchlist)} TICKERS</span>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-"""
-        for w in watchlist:
-            index_html += f"""                <div class="report-link bg-black/40 border border-gray-800 rounded px-4 py-3 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <a href="{w['html_path']}" class="text-neon-amber font-bold text-sm hover:text-white transition-colors">{w['ticker']}</a>
-                        <span class="text-[9px] text-gray-600">{w['date']}</span>
-                    </div>
-                    <div class="flex gap-2">
-                        <a href="https://www.tradingview.com/symbols/{w['ticker']}/" target="_blank" class="text-[9px] text-gray-400 border border-gray-700 px-1.5 py-0.5 rounded hover:text-neon-blue hover:border-neon-blue/30 transition-colors">TV</a>
-                        <a href="{w['md_path']}" download class="text-[9px] text-gray-400 border border-gray-700 px-1.5 py-0.5 rounded hover:text-white hover:border-gray-500 transition-colors">MD</a>
-                        <a href="{w['json_path']}" class="text-[9px] text-gray-400 border border-gray-700 px-1.5 py-0.5 rounded hover:text-white hover:border-gray-500 transition-colors">JSON</a>
-                    </div>
+            <div class="flex justify-between items-center mb-4 border-b border-gray-800 pb-2">
+                <div class="text-[10px] text-gray-500 uppercase tracking-widest">
+                    🔍 WATCHLIST.DEEP.DIVES <span class="text-neon-amber">// {len(watchlist)} TICKERS · {len(sorted_sectors)} SECTORS</span>
                 </div>
+                <button onclick="toggleAll()" class="text-[9px] text-gray-600 border border-gray-700 px-2 py-0.5 rounded hover:text-neon-blue hover:border-neon-blue/30 transition-colors" id="toggle-btn">
+                    Expand All
+                </button>
+            </div>
 """
-        index_html += """            </div>
+        for sector_name, tickers in sorted_sectors:
+            color, emoji = sector_styles.get(sector_name, ("#888", "📦"))
+            index_html += f"""
+            <div class="mb-2">
+                <div class="sector-header flex items-center justify-between bg-black/30 border border-gray-800 rounded px-4 py-2"
+                     onclick="toggleSector(this)" style="border-left: 3px solid {color}">
+                    <div class="flex items-center gap-2">
+                        <span>{emoji}</span>
+                        <span class="text-xs font-bold text-white">{sector_name}</span>
+                        <span class="text-[9px] text-gray-600">{len(tickers)} ticker{"s" if len(tickers) != 1 else ""}</span>
+                    </div>
+                    <span class="text-[10px] text-gray-600 sector-arrow">▸</span>
+                </div>
+                <div class="sector-content">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2 pt-2 pb-3">
+"""
+            for w in sorted(tickers, key=lambda x: x["ticker"]):
+                index_html += f"""                        <div class="report-link bg-black/40 border border-gray-800 rounded px-4 py-3 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <a href="{w['html_path']}" class="text-neon-amber font-bold text-sm hover:text-white transition-colors">{w['ticker']}</a>
+                                <span class="text-[8px] text-gray-700">{w['price']}</span>
+                                <span class="view-badge" data-ticker="{w['ticker']}">—</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <a href="https://www.tradingview.com/symbols/{w['ticker']}/" target="_blank" class="text-[9px] text-gray-400 border border-gray-700 px-1.5 py-0.5 rounded hover:text-neon-blue hover:border-neon-blue/30 transition-colors">TV</a>
+                                <a href="{w['md_path']}" download class="text-[9px] text-gray-400 border border-gray-700 px-1.5 py-0.5 rounded hover:text-white hover:border-gray-500 transition-colors">MD</a>
+                                <a href="{w['json_path']}" class="text-[9px] text-gray-400 border border-gray-700 px-1.5 py-0.5 rounded hover:text-white hover:border-gray-500 transition-colors">JSON</a>
+                            </div>
+                        </div>
+"""
+            index_html += """                    </div>
+                </div>
+            </div>
+"""
+        index_html += """        </div>
+"""
+
+    # ── Page View Analytics Summary ──
+    index_html += """
+        <div class="hud-panel p-4 rounded-sm">
+            <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-3 border-b border-gray-800 pb-2">
+                📊 ANALYTICS.PULSE <span class="text-neon-blue">// LOCAL TRACKING</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                <div class="bg-black/40 border border-gray-800 rounded p-3">
+                    <div class="text-[9px] text-gray-600 uppercase">Index Views</div>
+                    <div class="text-lg font-bold text-neon-blue font-mono" id="stat-index">—</div>
+                </div>
+                <div class="bg-black/40 border border-gray-800 rounded p-3">
+                    <div class="text-[9px] text-gray-600 uppercase">Report Views</div>
+                    <div class="text-lg font-bold text-neon-green font-mono" id="stat-reports">—</div>
+                </div>
+                <div class="bg-black/40 border border-gray-800 rounded p-3">
+                    <div class="text-[9px] text-gray-600 uppercase">Ticker Pages</div>
+                    <div class="text-lg font-bold text-neon-amber font-mono" id="stat-tickers">—</div>
+                </div>
+                <div class="bg-black/40 border border-gray-800 rounded p-3">
+                    <div class="text-[9px] text-gray-600 uppercase">Top Ticker</div>
+                    <div class="text-lg font-bold text-white font-mono" id="stat-top">—</div>
+                </div>
+            </div>
         </div>
 """
 
@@ -349,6 +483,76 @@ def _update_index_page():
             </div>
         </div>
     </div>
+
+    <script>
+    // ── Page View Tracking (localStorage) ──
+    (function() {
+        const STORAGE_KEY = 'ghost_dossier_analytics';
+        let analytics = {};
+        try { analytics = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) {}
+
+        // Track this page
+        const page = 'index';
+        analytics[page] = (analytics[page] || 0) + 1;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(analytics));
+
+        // Display index views
+        const el = document.getElementById('index-views');
+        if (el) el.textContent = analytics[page];
+        const statEl = document.getElementById('stat-index');
+        if (statEl) statEl.textContent = analytics[page];
+
+        // Aggregate stats
+        let reportViews = 0, tickerViews = 0, topTicker = '', topCount = 0;
+        for (const [k, v] of Object.entries(analytics)) {
+            if (k.startsWith('report:')) reportViews += v;
+            if (k.startsWith('ticker:')) {
+                tickerViews += v;
+                if (v > topCount) { topCount = v; topTicker = k.replace('ticker:', ''); }
+            }
+        }
+        const rEl = document.getElementById('stat-reports');
+        if (rEl) rEl.textContent = reportViews || '—';
+        const tEl = document.getElementById('stat-tickers');
+        if (tEl) tEl.textContent = tickerViews || '—';
+        const topEl = document.getElementById('stat-top');
+        if (topEl) topEl.textContent = topTicker || '—';
+
+        // Show per-ticker view counts
+        document.querySelectorAll('.view-badge[data-ticker]').forEach(badge => {
+            const t = badge.dataset.ticker;
+            const views = analytics['ticker:' + t] || 0;
+            badge.textContent = views ? views + '👁' : '';
+        });
+    })();
+
+    // ── Sector Toggle ──
+    function toggleSector(header) {
+        const content = header.nextElementSibling;
+        const arrow = header.querySelector('.sector-arrow');
+        content.classList.toggle('open');
+        arrow.textContent = content.classList.contains('open') ? '▾' : '▸';
+    }
+
+    function toggleAll() {
+        const sections = document.querySelectorAll('.sector-content');
+        const btn = document.getElementById('toggle-btn');
+        const allOpen = Array.from(sections).every(s => s.classList.contains('open'));
+        sections.forEach(s => {
+            if (allOpen) s.classList.remove('open');
+            else s.classList.add('open');
+        });
+        document.querySelectorAll('.sector-arrow').forEach(a => a.textContent = allOpen ? '▸' : '▾');
+        btn.textContent = allOpen ? 'Expand All' : 'Collapse All';
+    }
+
+    // Auto-expand first sector
+    const firstContent = document.querySelector('.sector-content');
+    if (firstContent) {
+        firstContent.classList.add('open');
+        firstContent.previousElementSibling.querySelector('.sector-arrow').textContent = '▾';
+    }
+    </script>
 </body>
 </html>
 """
@@ -356,7 +560,7 @@ def _update_index_page():
     index_path = docs_dir / "index.html"
     with open(index_path, "w") as f:
         f.write(index_html)
-    print(f"  ✓ Index updated: {index_path} ({len(reports)} reports, {len(watchlist)} watchlist)")
+    print(f"  ✓ Index updated: {index_path} ({len(reports)} reports, {len(watchlist)} watchlist, {len(sorted_sectors)} sectors)")
 
 
 def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):

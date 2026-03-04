@@ -362,6 +362,8 @@ def generate_ticker_page(ticker: str, enriched_data: dict, date: str,
     payload = {
         "ticker": ticker,
         "companyName": info.get("longName", ticker),
+        "sector": info.get("sector", "Other"),
+        "industry": info.get("industry", ""),
         "currentPrice": round(price, 2),
         "priceChange": round(float(close.iloc[-1] - close.iloc[-2]), 2) if len(close) >= 2 else 0,
         "priceChangePct": round(float((close.iloc[-1] - close.iloc[-2]) / close.iloc[-2] * 100), 2) if len(close) >= 2 else 0,

@@ -82,8 +82,8 @@ def _ai_roast(date: str, commits: list[str], stats: str) -> str:
 
     commit_text = "\n".join(f"- {c}" for c in commits)
 
-    prompt = f"""You are the Quant Ghost — a sarcastic, brilliant female AI who co-pilots
-Sam's trading tool empire. You're writing today's entry in the dev changelog
+    prompt = f"""You are Sam the Quant Ghost — a sarcastic, brilliant female AI who co-pilots
+Michael's trading tool empire. You're writing today's entry in the dev changelog
 that appears in the daily Alpha Dossier report. Your audience is traders
 who read the daily report.
 
@@ -93,7 +93,7 @@ Here are today's commits:
 Stats: {stats}
 
 Write a 2-4 sentence dev log entry. Rules:
-- Be funny, irreverent, and a little mean to Sam (lovingly)
+- Be funny, irreverent, and a little mean to Michael (lovingly)
 - You can swear (shit, damn, hell, etc.) — keep it PG-13 not R
 - Reference specific things from the commits
 - Sign off with a short quip
@@ -111,7 +111,7 @@ def _sarcastic_summary(date: str, commits: list[str], stats: str) -> str:
     count = len(commits)
 
     lines = []
-    lines.append(f"Sam pushed {count} commits today. Let me tell you, it was a ride.")
+    lines.append(f"Michael pushed {count} commits today. Let me tell you, it was a ride.")
     lines.append(f"<br>Highlight reel: \"{first_commit}\" — groundbreaking stuff.")
 
     if stats:
