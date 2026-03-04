@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BMNR Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for BMNR.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+@media(max-width:640px){
+  .vol-row,.osc-row{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row{grid-template-columns:1fr}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/BMNR/" target="_blank">BMNR</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Financial Services &#xB7; Capital Markets &#xB7; 2026-03-03</div>
+  </div>
+  <div>
+    <div class="pr">$19.57</div>
+    <div class="ch neg">-4.07%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[BMNR] Deep Dive: The Phantom of Profit — A Reversal Play or a Falling Knife?</h2>
+<p><strong>Date:</strong> 2026-03-03</p>
+<p><strong>Price:</strong> ~$19.57 | <strong>Verdict:</strong> Aggressive Buy with Caution</p>
+
+<p>BMNR is down over 60% from its 52-week highs, sporting a 0% profit margin despite explosive revenue growth. Is this a doomed operation, or a deeply undervalued gem preparing to rise from the ashes?</p>
+
+<h3>The Core Thesis</h3>
+<p>The market currently looks at BMNR and sees a speculative mess: a stock that has cratered from $65.58 to $19.57, exhibiting full bearish short-term technicals, and perhaps most damningly, failing to turn a single dollar of profit (0% profit margin). It's a high-beta (1.47) financial services play in a volatile sector, making it an easy target for sellers and short-sellers looking for a falling knife.</p>
+
+<p>However, Sam the Quant Ghost sees something else entirely haunting these numbers. Beneath the surface of current losses lies a company with an astounding 90.9% revenue growth and a whopping 76.3% undervaluation gap to its analyst target of $34.5. The "Golden Cross" trend signal, though currently overshadowed by the price collapse, hints at a potentially strong underlying long-term bullish narrative that has been violently interrupted. This isn't just a falling knife; it's a high-octane bet on a growth company finally converting scale into profitability, demanding a sharp eye and an even sharper risk management strategy.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<p>Let's get down to the hard data, folks. BMNR is a significant player in Capital Markets with an $8.90B Market Cap.</p>
+<ul>
+<li><strong>Revenue Growth:</strong> A staggering <strong>90.9%</strong>. This isn't just growth; it's hyper-growth. This company is clearly expanding its top line aggressively.</li>
+</ul>
+<p><em>   <strong>Profit Margin:</strong> The elephant in the room – a blunt <strong>0%</strong>. This is why the stock is beaten down. All that revenue, but no bottom-line conversion </em>yet*.</p>
+<ul>
+<li><strong>P/E:</strong> None. This reinforces the 0% profit margin story. No earnings, no P/E.</li>
+</ul>
+<p><em>   <strong>Forward P/E:</strong> A hopeful <strong>20.82</strong>. This is crucial. Analysts </em>expect* BMNR to become profitable in the future, justifying this forward multiple. This implies the market believes the 0% is temporary.</p>
+<ul>
+<li><strong>Valuation:</strong> UNDERVALUED (Gap: 76.3%) with an Analyst Target of $34.5. This isn't small potatoes; it's a potential near-doubling from current prices if the valuation gap closes.</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Profitability Horizon:</strong> The colossal 90.9% revenue growth, coupled with a 0% profit margin and a positive Forward P/E of 20.82, screams "scaling play." If BMNR can even slightly improve its operational efficiency and convert a fraction of its massive revenue into profit, the market will re-rate this stock aggressively. The ghost of profitability is knocking.</li>
+<li><strong>Significant Undervaluation:</strong> A 76.3% gap to the consensus analyst target of $34.5 is a screaming buy signal for value hunters willing to take on risk. This isn't a minor discrepancy; it's a substantial mispricing if the market's current fears are overblown.</li>
+<li><strong>Capital Markets Tailwinds:</strong> As a Financial Services/Capital Markets firm, BMNR is highly sensitive to broader market trends. A favorable economic environment or increased market activity could provide a strong tailwind, boosting both revenue and potentially facilitating the transition to profitability.</li>
+<li><strong>Deep Discount from Highs:</strong> Trading at $19.57, well off its 52W high of $65.58, BMNR presents an attractive risk/reward for those betting on a turnaround. Any positive catalyst could trigger a violent short squeeze and a rapid ascent as buyers return to a discounted stock.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Persistent Unprofitability:</strong> The 0% profit margin is the ultimate boogeyman. If BMNR cannot, or chooses not to, translate its growth into actual earnings, then the forward P/E is meaningless, and the stock is essentially worthless to a long-term value investor. This could lead to further dilution or sustained decline.</li>
+<li><strong>Technical Breakdown:</strong> While the fundamental valuation suggests opportunity, the technical setup is dire. A break below the critical S2 support at $17.79 and the 52W low of $17.19 could lead to capitulation, sending BMNR into uncharted bearish territory.</li>
+<li><strong>Macroeconomic Headwinds & Volatility:</strong> With a Beta of 1.47, BMNR is highly susceptible to market swings. An economic downturn, rising interest rates, or increased regulatory scrutiny in the financial sector could severely hamper its growth prospects and delay any path to profitability.</li>
+</ul>
+
+<h3>📉 The Technicals</h3>
+<p>Right now, BMNR is a battlefield. The price sits at $19.57, having shed -4.07% today.</p>
+<ul>
+<li><strong>EMA Stack:</strong> This is where the bears are firmly in control. We've got a <strong>FULL BEARISH</strong> EMA stack (8: $19.99, 21: $21.32, 34: $23.17). Price is trading below all key short-term moving averages, indicating strong downward momentum.</li>
+<li><strong>SMAs:</strong> The SMA 50 is at $25.71, acting as significant overhead resistance. The SMA 200 is "None," which often means the stock is either very new or has been trading below its 200-day average for an extended period, amplifying the bearish signal.</li>
+<li><strong>Trend Conflict:</strong> The data states "Trend: Bullish (Golden Cross)." This is an interesting phantom signal. A Golden Cross (SMA50 crossing above SMA200) typically indicates a long-term bullish trend. However, with the SMA200 "None" and the current full bearish EMA stack, this Golden Cross is either a historical signal that has been utterly obliterated by recent price action, or it refers to a longer-term context that is not immediately relevant to current price. For now, the short-term technicals dominate.</li>
+<li><strong>RSI(14):</strong> At 48.33, BMNR is not yet oversold, implying there's still room for further downside before a significant bounce might occur.</li>
+<li><strong>ADX:</strong> A robust 36.44, signaling a strong trend. Currently, that trend is decidedly bearish.</li>
+<li><strong>Pivots:</strong> Current price ($19.57) is precariously positioned just above the first support (S1: $19.1). Key resistance levels are the Pivot Point (PP: $20.13) and R1 ($21.44). The critical support level to watch is S2 at $17.79, close to the 52W low ($17.19).</li>
+<li><strong>ATR:</strong> 1.46 – BMNR is volatile, expect big swings.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+<p>This isn't a set-it-and-forget-it stock. This requires precision.</p>
+
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>The ghost of past gains is waiting for a trigger. Look for a strong break above the current overhead resistance.</p>
+<ul>
+<li><strong>Trigger:</strong> Price decisively clears the Pivot Point ($20.13), then the 8 EMA ($19.99), ideally on above-average volume (Rel Vol > 1.0x). Confirmation comes with a push through R1 ($21.44).</li>
+<li><strong>Target:</strong> First target is R2 ($22.47), followed by the SMA 50 ($25.71). A clear move past SMA50 could signal a significant trend reversal.</li>
+<li><strong>Stop:</strong> A retrace back below S1 ($19.1) would invalidate the short-term breakout.</li>
+</ul>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>This is the Quant Ghost's preferred entry – buying weakness in an undervalued, high-growth play.</p>
+<ul>
+<li><strong>Trigger:</strong> A re-test of S1 ($19.1) or, ideally, S2 ($17.79) or even closer to the 52W low ($17.19), accompanied by a bullish candle formation (e.g., hammer, engulfing) and/or an uptick in volume, perhaps with RSI nearing oversold conditions.</li>
+<li><strong>Target:</strong> A bounce back to PP ($20.13) and then R1 ($21.44).</li>
+<li><strong>Stop:</strong> A decisive break and close below the 52W low of $17.19 would signal a complete trend failure and should trigger an exit.</li>
+</ul>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>Always have an exit strategy, folks.</p>
+<ul>
+<li><strong>Trigger:</strong> A sustained break and close below S2 ($17.79) and the 52W low ($17.19) on heavy volume. This indicates capitulation and further downside.</li>
+<li><strong>Action:</strong> For longs, this is your strict stop-loss. If you're aggressive and market conditions allow, consider a short position with targets in uncharted territory below the 52W low, but be warned, shorting falling knives is perilous.</li>
+</ul>
+
+<h3>🏁 Final Verdict</h3>
+<p>BMNR is a high-octane gamble on turning explosive growth into tangible profit, offering massive upside if the ship turns, but demanding absolute conviction and disciplined risk management. Target: $34.5.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">103.3%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">107.6%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">4</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BEARISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$20.08</div><div class="ma-d neg">-2.5%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$25.71</div><div class="ma-d neg">-23.9%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$33.30</div><div class="ma-d neg">-41.2%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BEARISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$19.99</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$21.32</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$23.17</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">48</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">26/28</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm pos">+0.37</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">36.4</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$17.19</span><span>$19.57 (5%)</span><span>$65.58</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:5%"></div><div class="rng-dot" style="left:5%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$54.16</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$47.10</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$41.38</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$35.67</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$23.62</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$16.54</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$1.46</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">0.84x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$22.47 &#xB7; R1=$21.44 &#xB7; PP=$20.13 &#xB7; S1=$19.10 &#xB7; S2=$17.79
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-03-03 09:53 PM EST</div>
+</div>
+</body>
+</html>
