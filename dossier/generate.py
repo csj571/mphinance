@@ -703,8 +703,19 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         print(f"  [WARN] Ghost log failed: {e}")
         ghost_log = ""
 
+    # ── Stage 9c: Ghost Suggestions ──
+    print("\n[9c/13] GHOST SUGGESTIONS")
+    try:
+        from dossier.report.ghost_suggestions import generate_suggestions
+        ghost_suggestions = generate_suggestions(date)
+        preview = ghost_suggestions[:80].replace('<br>', ' ').replace('<b>', '').replace('</b>', '')
+        print(f"  🗺️ {preview}...")
+    except Exception as e:
+        print(f"  [WARN] Ghost suggestions failed: {e}")
+        ghost_suggestions = ""
+
     # ── Stage 10: Report Generation ──
-    print("\n[10/11] REPORT GENERATION")
+    print("\n[10/13] REPORT GENERATION")
     from dossier.report.builder import build_report, build_pdf
 
     report_path = build_report(
@@ -719,6 +730,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         technical_setups=technical_setups,
         csp_setups=csp_setups,
         ghost_log=ghost_log,
+        ghost_suggestions=ghost_suggestions,
     )
 
     pdf_path = None
@@ -739,12 +751,47 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     print("\n[12/13] INDEX UPDATE")
     _update_index_page()
 
+    # ── Stage 12b: Blog Entry ──
+    print("\n[12b/13] GHOST BLOG UPDATE")
+    try:
+        import json as _json
+        blog_path = PROJECT_ROOT / "landing" / "blog" / "blog_entries.json"
+        entries = []
+        if blog_path.exists():
+            with open(blog_path) as bf:
+                entries = _json.load(bf)
+
+        # Don't duplicate entries for the same date
+        if not any(e.get("date") == date for e in entries):
+            # Pick a chart ticker (most active from scanner)
+            chart_ticker = scanner_signals[0]["symbol"] if scanner_signals else ""
+
+            entries.append({
+                "date": date,
+                "ghost_log": ghost_log,
+                "suggestions": ghost_suggestions,
+                "commits": len(subprocess.run(
+                    ["git", "log", "--since=1 day ago", "--oneline"],
+                    cwd=str(PROJECT_ROOT), capture_output=True, text=True
+                ).stdout.strip().split("\n")),
+                "files_changed": len(dossiers),
+                "chart_ticker": chart_ticker,
+            })
+
+            with open(blog_path, "w") as bf:
+                _json.dump(entries, bf, indent=2)
+            print(f"  ✓ Blog entry added for {date} (chart: {chart_ticker})")
+        else:
+            print(f"  ✓ Blog entry already exists for {date}")
+    except Exception as e:
+        print(f"  [WARN] Blog update failed: {e}")
+
     # ── Stage 13: Git Push ──
     if not dry_run:
         print("\n[13/13] GIT PUSH")
         print("  Committing to Git...")
         try:
-            subprocess.run(["git", "add", "docs/", "dossier/persistence/"],
+            subprocess.run(["git", "add", "docs/", "dossier/persistence/", "landing/blog/"],
                            cwd=str(PROJECT_ROOT), check=True)
             subprocess.run(
                 ["git", "commit", "-m", f"📊 Alpha Dossier {date}"],

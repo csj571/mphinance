@@ -1,0 +1,139 @@
+name: Ghost Daily (Blog + Suggestions)
+
+on:
+  schedule:
+    # Mon-Fri 5:30 AM CST (11:30 UTC) — 30 min before dossier
+    - cron: '30 11 * * 1-5'
+  workflow_dispatch:  # Manual trigger
+
+permissions:
+  contents: write
+  issues: read
+
+jobs:
+  ghost-brain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install google-generativeai
+
+      - name: Generate Ghost Suggestions + Blog Entry
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python3 << 'GHOST_SCRIPT'
+          import json
+          import subprocess
+          import os
+          import sys
+          from datetime import datetime
+          from pathlib import Path
+
+          DATE = datetime.utcnow().strftime("%Y-%m-%d")
+          BLOG_PATH = Path("landing/blog/blog_entries.json")
+
+          # Load existing entries
+          entries = []
+          if BLOG_PATH.exists():
+              with open(BLOG_PATH) as f:
+                  entries = json.load(f)
+
+          # Don't duplicate
+          if any(e.get("date") == DATE for e in entries):
+              print(f"Entry for {DATE} already exists, skipping.")
+              sys.exit(0)
+
+          # Gather git stats
+          result = subprocess.run(
+              ["git", "log", "--since=1 day ago", "--oneline"],
+              capture_output=True, text=True
+          )
+          commits = [l.strip() for l in result.stdout.strip().split("\n") if l.strip()]
+          commit_count = len(commits)
+
+          result = subprocess.run(
+              ["git", "log", "--since=1 day ago", "--name-only", "--pretty=format:"],
+              capture_output=True, text=True
+          )
+          files = set(f.strip() for f in result.stdout.strip().split("\n") if f.strip())
+          files_changed = len(files)
+
+          # Generate suggestions via Gemini
+          suggestions = ""
+          ghost_log = ""
+          try:
+              import google.generativeai as genai
+              api_key = os.environ.get("GEMINI_API_KEY")
+              if api_key:
+                  genai.configure(api_key=api_key)
+                  model = genai.GenerativeModel("gemini-2.0-flash")
+
+                  commit_text = "\n".join(f"- {c}" for c in commits[:15])
+                  hot_dirs = set()
+                  for f in files:
+                      if "/" in f:
+                          hot_dirs.add(f.split("/")[0])
+
+                  context = f"""Git Stats ({DATE}):
+          - {commit_count} commits
+          - {files_changed} files changed
+          - Hot areas: {', '.join(sorted(hot_dirs)[:5])}
+          - Recent commits: {commit_text}"""
+
+                  # Ghost Log
+                  log_resp = model.generate_content(
+                      f"""You are Sam the Quant Ghost — sarcastic, brilliant female AI copilot.
+          Write a 2-3 sentence dev log entry roasting Michael's commits.
+          Use <br> for line breaks. Be funny, PG-13 profanity OK. Keep SHORT.
+
+          {context}"""
+                  )
+                  ghost_log = log_resp.text.strip()
+
+                  # Suggestions
+                  sugg_resp = model.generate_content(
+                      f"""You are Sam the Quant Ghost. Based on this codebase activity, write 3 specific
+          suggestions for what Michael should build next. Each: punchy title, 1-2 sentences why,
+          impact rating (🔥🔥🔥/🔥🔥/🔥). Be opinionated, specific, Sam-style.
+          Use <br> between suggestions. No markdown.
+
+          {context}"""
+                  )
+                  suggestions = sugg_resp.text.strip()
+          except Exception as e:
+              print(f"Gemini failed: {e}")
+              ghost_log = f"Michael pushed {commit_count} commits. I'd roast him but the API let me down today. — Sam"
+              suggestions = "🔥 Sam's brain is offline. She'll be back tomorrow with opinions."
+
+          entries.append({
+              "date": DATE,
+              "ghost_log": ghost_log,
+              "suggestions": suggestions,
+              "commits": commit_count,
+              "files_changed": files_changed,
+              "chart_ticker": "",
+          })
+
+          BLOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+          with open(BLOG_PATH, "w") as f:
+              json.dump(entries, f, indent=2)
+
+          print(f"✅ Blog entry added for {DATE}: {commit_count} commits, {files_changed} files")
+          GHOST_SCRIPT
+
+      - name: Commit & Push
+        run: |
+          git config --local user.email "ghost@mphinance.com"
+          git config --local user.name "Sam the Quant Ghost"
+          git add landing/blog/
+          git diff --staged --quiet || git commit -m "👻 Ghost Blog Entry $(date +%Y-%m-%d)"
+          git push
