@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NPKI Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for NPKI.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+@media(max-width:640px){
+  .vol-row,.osc-row{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row{grid-template-columns:1fr}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/NPKI/" target="_blank">NPKI</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Energy &#xB7; Oil & Gas Equipment & Services &#xB7; 2026-03-03</div>
+  </div>
+  <div>
+    <div class="pr">$13.69</div>
+    <div class="ch neg">-2.70%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[NPKI] Deep Dive: Fueling Up for the Next Leg Higher?</h2>
+<p><strong>Date:</strong> 2026-03-03</p>
+<p><strong>Price:</strong> ~$13.69 | <strong>Verdict:</strong> Bullish – Watch for Entry</p>
+
+<p>NPKI, an Oil & Gas Equipment and Services player, just dipped 2.7%, leaving some traders wondering if this is a minor pullback in a strong uptrend or the start of something more concerning. Let's peel back the layers.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market often gets caught up in day-to-day noise, seeing NPKI's recent -2.7% dip and sub-50 RSI as a sign of weakness. Some might point to the stock trading above its intrinsic "fair value" of $12.0 according to internal models and a high current P/E of 37.0, suggesting it's overextended for the cyclical energy sector. They might fear a broader sector correction could drag NPKI down, especially with its beta of 1.24 indicating higher volatility.</p>
+
+<p>However, the reality painted by the underlying fundamentals and long-term technicals tells a different story. This is a company demonstrating impressive 30.7% revenue growth and a healthy 14.1% profit margin in a sector that's notoriously difficult to navigate. The forward P/E of 21.64 is significantly lower, suggesting robust earnings growth is anticipated, justifying the current valuation. While the price has pulled back slightly, the long-term trend remains firmly bullish, evidenced by a Golden Cross and a fully bullish EMA stack <em>configuration</em>. The current dip might just be an opportunity to fuel up before the next leg higher, especially with a significant analyst target of $18.75 dangling above.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<ul>
+<li><strong>Price:</strong> $13.69 (down 2.7% today)</li>
+<li><strong>Market Cap:</strong> $1.16B – Mid-cap with room to run.</li>
+<li><strong>52W Range:</strong> $10.31 - $15.96 – Current price is well within, but closer to the top end.</li>
+<li><strong>Revenue Growth:</strong> A staggering <strong>30.7%</strong> YoY. That's serious acceleration.</li>
+<li><strong>Profit Margin:</strong> Solid <strong>14.1%</strong>. They're not just growing revenue, they're keeping profits.</li>
+<li><strong>P/E:</strong> 37.0 (Current) | <strong>Forward P/E:</strong> 21.64 – This steep drop implies strong earnings expectations.</li>
+<li><strong>Beta:</strong> 1.24 – Expect NPKI to move about 24% more than the broader market.</li>
+<li><strong>Analyst Target:</strong> $18.75 – Significant upside from current levels.</li>
+<li><strong>Internal Valuation:</strong> FAIR VALUE (Gap: -12.4%), Target: $12.0 – A notable discrepancy with analyst targets, indicating some caution is warranted.</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Explosive Growth & Profitability:</strong> NPKI's 30.7% revenue growth isn't just good; it's outstanding for an energy sector play. Coupled with a 14.1% profit margin, this indicates operational efficiency and strong market demand for its services. This isn't speculative growth; it's profitable expansion.</li>
+<li><strong>Anticipated Earnings Power:</strong> The shift from a current P/E of 37.0 to a forward P/E of 21.64 signals that the market, and likely analysts, expect substantial earnings growth in the coming year. This projected increase in profitability could easily justify and even push the stock higher.</li>
+<li><strong>Strong Technical Foundation:</strong> Despite today's dip, the long-term trend is firmly bullish, marked by a <strong>Golden Cross</strong> (50-day SMA crossing above 200-day SMA, though 200 SMA data isn't provided, this is stated as a trend). The EMA stack (8: $14.24, 21: $14.18, 34: $13.96) is in a "FULL BULLISH" configuration, meaning the shorter EMAs are above the longer ones, indicating underlying strength even if price just dipped below them.</li>
+<li><strong>Analyst Conviction & Sector Tailwinds:</strong> With an average analyst target of $18.75, NPKI has a potential ~37% upside from its current price. This conviction, combined with potential tailwinds in the broader energy sector (e.g., increased drilling activity, higher demand for oil & gas equipment/services), sets the stage for a significant rally.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Valuation Discrepancy:</strong> The most glaring red flag. While analysts see $18.75, internal valuation places fair value at $12.0, meaning NPKI is currently trading about 12.4% <em>above</em> its internally assessed fair value. This conflict demands careful consideration and could cap upside or lead to sharper pullbacks if the market re-rates.</li>
+<li><strong>Cyclical Sector Volatility:</strong> The Oil & Gas Equipment & Services industry is inherently cyclical and sensitive to commodity price fluctuations. While NPKI shows strength, a sustained downturn in oil and gas prices could severely impact demand for its services, regardless of its individual performance. Its Beta of 1.24 confirms this higher volatility risk.</li>
+<li><strong>Short-Term Technical Weakness:</strong> While the long-term trend is bullish, the recent price dip (-2.7%) puts NPKI below its 8, 21, and 34 EMAs, indicating short-term weakness. An RSI(14) of 43.28 confirms this loss of momentum, suggesting further downside is possible before a rebound.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+<p>NPKI is currently priced at $13.69, having pulled back from recent highs. The <strong>EMA Stack is "FULL BULLISH"</strong> (8: $14.24 > 21: $14.18 > 34: $13.96), signaling a healthy underlying uptrend structure. However, the current price is <em>below</em> all three of these EMAs, suggesting a short-term breakdown. The price is hovering just above the <strong>SMA 50 at $13.51</strong>, which could act as crucial support. A <strong>Golden Cross</strong> confirms the long-term bullish trend.</p>
+
+<p>The <strong>RSI(14) is at 43.28</strong>, indicating the stock is cooling off and losing bullish momentum – not yet oversold, but certainly not in overbought territory. The <strong>ADX at 37.56</strong> points to a strong trend, but the RSI suggests that strength might be currently applied to a short-term downtrend within the larger bullish structure.</p>
+
+<p><strong>Key Pivots to Watch:</strong></p>
+<ul>
+<li>Resistance: R1=$14.42, R2=$14.78</li>
+<li>Pivot Point (PP): $14.16</li>
+<li>Support: S1=$13.80, S2=$13.54</li>
+</ul>
+
+<p>The <strong>ATR of 0.75</strong> shows a decent daily trading range for potential swings. Today's <strong>Relative Volume is 1.0x</strong>, indicating normal trading activity.</p>
+
+<h3>📝 Trading Playbook</h3>
+
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>Watch for NPKI to reclaim its EMAs. A decisive move above the PP at $14.16, followed by a break past R1 at $14.42, would signal strong bullish intent. A close above $14.42 with increased volume would be a prime entry, targeting R2 at $14.78 and then the analyst target of $18.75. Stop loss could be placed below the previous day's low or S1 ($13.80).</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Given the recent weakness, the preferred play is to wait for confirmation of support. The current price of $13.69 is just above S1 ($13.80) and S2 ($13.54), with the SMA 50 ($13.51) providing additional confluence. Look for a bounce off these levels, ideally with a bullish reversal candlestick pattern and a turnaround in RSI. A strong bounce off $13.51 (SMA 50) would offer a lower-risk entry, targeting a move back to the EMAs and eventually R1/R2. Stop loss below $13.40 to protect against a breakdown.</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>If NPKI fails to hold support at S2 ($13.54) and breaks below the SMA 50 ($13.51), it suggests a deeper correction could be underway. This would invalidate the short-term bullish thesis. The next significant support levels are hard to identify without a 200 SMA, but the internal valuation target of $12.0 would be a logical downside target. Traders should consider hedging or exiting positions if $13.51 breaks decisively.</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>NPKI is a fundamentally strong growth stock in a cyclical sector, currently experiencing a short-term technical pullback within a powerful long-term uptrend. While the internal valuation suggests it's slightly rich, the analyst target provides substantial upside. I'm <strong>Bullish,</strong> with an upside target to <strong>$18.75</strong>, but waiting for a confirmed dip-buy entry around the $13.50-$13.80 support zone is crucial to maximize risk-reward.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">117.6%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">38.7%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">33</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BULLISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$14.30</div><div class="ma-d neg">-4.3%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$13.51</div><div class="ma-d pos">+1.3%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$12.91</div><div class="ma-d pos">+6.0%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BULLISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$14.24</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$14.18</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$13.96</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">43</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">19/28</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm neg">-0.11</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">37.6</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$10.31</span><span>$13.69 (60%)</span><span>$15.96</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:60%"></div><div class="rng-dot" style="left:60%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$14.63</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$13.80</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$13.14</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$12.47</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$15.72</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$12.88</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$0.75</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">1.00x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$14.78 &#xB7; R1=$14.42 &#xB7; PP=$14.16 &#xB7; S1=$13.80 &#xB7; S2=$13.54
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-03-03 08:48 PM EST</div>
+</div>
+</body>
+</html>
