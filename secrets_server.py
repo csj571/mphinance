@@ -22,6 +22,7 @@ SECRETS_FILE = Path(__file__).parent / "secrets.env"
 CATALOG_FILE = Path(__file__).parent / "secrets_catalog.json"
 FIREBASE_PROJECT = "studio-3669937961-ea8a7"
 FIRESTORE_COLLECTION = "secrets"
+SERVICE_ACCOUNT_FILE = Path(__file__).parent / "service_account.json"
 
 # ═══ Firestore Cloud Sync ═══
 _firestore_db = None
@@ -36,14 +37,16 @@ def _get_firestore():
         import firebase_admin
         from firebase_admin import credentials, firestore
 
-        # Try Application Default Credentials first, fall back to project ID only
         if not firebase_admin._apps:
-            try:
-                cred = credentials.ApplicationDefault()
+            if SERVICE_ACCOUNT_FILE.exists():
+                cred = credentials.Certificate(str(SERVICE_ACCOUNT_FILE))
                 firebase_admin.initialize_app(cred, {"projectId": FIREBASE_PROJECT})
-            except Exception:
-                # Fall back to just project ID (works with firebase CLI login)
-                firebase_admin.initialize_app(options={"projectId": FIREBASE_PROJECT})
+            else:
+                try:
+                    cred = credentials.ApplicationDefault()
+                    firebase_admin.initialize_app(cred, {"projectId": FIREBASE_PROJECT})
+                except Exception:
+                    firebase_admin.initialize_app(options={"projectId": FIREBASE_PROJECT})
 
         _firestore_db = firestore.client()
         return _firestore_db
