@@ -237,7 +237,7 @@ def pick_daily_momentum(ticker_payloads: list[dict], date: str) -> dict:
 
 
 def _save_picks(result: dict, date: str):
-    """Append today's picks to the rolling picks file."""
+    """Append today's picks to the rolling picks file AND write API endpoint."""
     try:
         PICKS_FILE.parent.mkdir(parents=True, exist_ok=True)
 
@@ -265,6 +265,80 @@ def _save_picks(result: dict, date: str):
             json.dump(history, f, indent=2)
     except Exception as e:
         print(f"    [WARN] Daily picks save failed: {e}")
+
+    # ── Write Static API Endpoint ──
+    # Served via GitHub Pages at:
+    #   https://mphinance.github.io/mphinance/api/daily-picks.json
+    try:
+        api_dir = PROJECT_ROOT / "docs" / "api"
+        api_dir.mkdir(parents=True, exist_ok=True)
+
+        medals = {0: "gold", 1: "silver", 2: "bronze"}
+        api_picks = []
+        for i, pick in enumerate(result.get("picks", [])):
+            api_picks.append({
+                "rank": i + 1,
+                "medal": medals.get(i, ""),
+                "ticker": pick["ticker"],
+                "score": pick["score"],
+                "raw_score": pick.get("raw_score", pick["score"]),
+                "quality_score": pick.get("quality_score", 100),
+                "is_pullback_setup": pick.get("is_pullback_setup", False),
+                "price": pick["price"],
+                "change_pct": pick.get("change_pct", 0),
+                "grade": pick.get("grade", ""),
+                "ema_stack": pick.get("ema_stack", ""),
+                "trend": pick.get("trend", ""),
+                "rsi": pick.get("rsi", 0),
+                "adx": pick.get("adx", 0),
+                "stoch_k": pick.get("stoch_k", 0),
+                "rel_vol": pick.get("rel_vol", 1.0),
+                "breakdown": pick.get("breakdown", {}),
+                "quality_flags": pick.get("quality_flags", {}),
+                "quality_reasons": pick.get("quality_reasons", []),
+                "tradingview_url": f"https://www.tradingview.com/symbols/{pick['ticker']}/",
+            })
+
+        # Full ranking (compact — just ticker + score + pullback flag)
+        all_ranked = []
+        for s in result.get("all_ranked", []):
+            all_ranked.append({
+                "ticker": s["ticker"],
+                "score": s["score"],
+                "grade": s.get("grade", ""),
+                "is_pullback": s.get("is_pullback_setup", False),
+                "ema_stack": s.get("ema_stack", ""),
+            })
+
+        api_payload = {
+            "date": date,
+            "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "picks": api_picks,
+            "total_scored": len(result.get("all_ranked", [])),
+            "all_ranked": all_ranked,
+            "scoring_weights": {
+                "ema_stack": {"max": 20, "desc": "EMA 8>21>34>55>89 alignment"},
+                "pullback": {"max": 15, "desc": "Bounce 2.0: EMA aligned + ADX>25 + Stoch<40 + near EMA21"},
+                "adx": {"max": 15, "desc": "ADX trend strength (>25 trending, >40 strong)"},
+                "rsi": {"max": 10, "desc": "RSI sweet spot (40-65 optimal)"},
+                "trend": {"max": 10, "desc": "Overall trend direction (Bullish/Bearish)"},
+                "rel_vol": {"max": 10, "desc": "Relative volume vs 20-day avg"},
+                "price_vs_ema": {"max": 10, "desc": "Price proximity to EMA 21"},
+                "macd": {"max": 5, "desc": "MACD histogram momentum"},
+                "institutional": {"max": 5, "desc": "TickerTrace institutional buying signal"},
+            },
+            "quality_gate": "final_score = raw_score × (quality_score / 100)",
+            "history": history[-7:],  # Last 7 days of picks
+        }
+
+        api_path = api_dir / "daily-picks.json"
+        with open(api_path, "w") as f:
+            json.dump(api_payload, f, indent=2)
+        print(f"    ✓ API endpoint: docs/api/daily-picks.json")
+    except Exception as e:
+        print(f"    [WARN] API endpoint write failed: {e}")
+
+
 
 
 def format_picks_text(picks_data: dict) -> str:
