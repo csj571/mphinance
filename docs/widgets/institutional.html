@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Institutional Intel — Alpha.HUD Widget</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg: #050508;
+            --panel: rgba(10, 10, 10, 0.9);
+            --border: #333;
+            --green: #00ff41;
+            --red: #ff3e3e;
+            --blue: #00f3ff;
+            --amber: #ffb000;
+            --text: #e0e0e0;
+            --dim: #888;
+            --muted: #555;
+            --purple: #a855f7
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text);
+            background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.04));
+            background-size: 100% 2px, 3px 100%
+        }
+
+        .widget {
+            max-width: 380px;
+            margin: 16px auto;
+            border: 1px solid var(--border);
+            border-right: 4px solid var(--green);
+            background: var(--panel);
+            overflow: hidden
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .header .title {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 11px;
+            color: var(--green);
+            letter-spacing: 0.15em;
+            text-transform: uppercase
+        }
+
+        .header .source {
+            font-size: 9px;
+            color: var(--muted);
+            letter-spacing: 0.1em
+        }
+
+        .signal-box {
+            margin: 8px 12px;
+            padding: 10px 14px;
+            border-radius: 4px;
+            border: 1px solid
+        }
+
+        .signal-box.buying {
+            border-color: rgba(0, 255, 65, 0.3);
+            background: rgba(0, 255, 65, 0.05)
+        }
+
+        .signal-box.selling {
+            border-color: rgba(255, 62, 62, 0.3);
+            background: rgba(255, 62, 62, 0.05)
+        }
+
+        .signal-dir {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em
+        }
+
+        .signal-dir.buying {
+            color: var(--green)
+        }
+
+        .signal-dir.selling {
+            color: var(--red)
+        }
+
+        .signal-meta {
+            font-size: 9px;
+            color: var(--dim);
+            margin-top: 4px
+        }
+
+        .fund-list {
+            padding: 0 12px 8px;
+            max-height: 160px;
+            overflow-y: auto
+        }
+
+        .fund-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 4px;
+            font-size: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03)
+        }
+
+        .fund-row:last-child {
+            border-bottom: none
+        }
+
+        .fund-row .fund-name {
+            color: var(--dim)
+        }
+
+        .fund-row .fund-weight {
+            font-weight: 700
+        }
+
+        .no-data {
+            padding: 20px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 11px;
+            font-style: italic
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-top: 1px solid #1a1a1a
+        }
+
+        .footer .brand {
+            font-size: 8px;
+            color: #333;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            text-decoration: none
+        }
+
+        .footer .brand:hover {
+            color: var(--purple)
+        }
+
+        .embed-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 8px;
+            padding: 3px 10px;
+            border: 1px solid #333;
+            color: #555;
+            background: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-radius: 2px;
+            transition: all 0.2s
+        }
+
+        .embed-btn:hover {
+            color: var(--blue);
+            border-color: var(--blue)
+        }
+
+        .embed-btn.copied {
+            color: #22c55e;
+            border-color: #22c55e
+        }
+    </style>
+</head>
+
+<body>
+    <div class="widget">
+        <div class="header">
+            <span class="title">Institutional.Intel</span>
+            <span class="source">TickerTrace</span>
+        </div>
+        <div id="w-content">
+            <div class="no-data">Loading...</div>
+        </div>
+        <div class="footer">
+            <a href="https://www.tickertrace.pro" class="brand" target="_blank">Powered by TickerTrace</a>
+            <button class="embed-btn" onclick="copyEmbed()">&lt;/&gt; Embed</button>
+        </div>
+    </div>
+    <script>
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            let ticker = params.get('t') || params.get('ticker') || 'TSLA';
+            const base = window.location.href.includes('github.io')
+                ? `https://mphinance.github.io/mphinance/ticker/${ticker}/latest.json`
+                : `../ticker/${ticker}/latest.json`;
+
+            fetch(base + '?t=' + Date.now()).then(r => r.json()).then(d => {
+                const tt = d.tickertrace || {};
+                const detail = tt.detail || {};
+                const signal = tt.signal || null;
+                const container = document.getElementById('w-content');
+
+                if (!detail.holdings && !signal) {
+                    container.innerHTML = '<div class="no-data">No institutional data for ' + d.ticker + '</div>';
+                    return;
+                }
+
+                let html = '';
+
+                // Signal box
+                if (signal) {
+                    const dir = (signal.direction || '').toLowerCase();
+                    const isBuying = dir.includes('buy');
+                    html += `<div class="signal-box ${isBuying ? 'buying' : 'selling'}">
+                    <div class="signal-dir ${isBuying ? 'buying' : 'selling'}">${signal.direction}</div>
+                    <div class="signal-meta">Conv: ${signal.conviction ? signal.conviction.toFixed(1) : 'N/A'} · Funds: ${(signal.funds || []).join(', ') || 'N/A'}</div>
+                </div>`;
+                }
+
+                // Fund holdings
+                if (detail.holdings && detail.holdings.length > 0) {
+                    html += '<div class="fund-list">';
+                    detail.holdings.forEach(f => {
+                        const delta = f.weight_delta || 0;
+                        const cls = delta > 0 ? 'color:var(--green)' : delta < 0 ? 'color:var(--red)' : 'color:var(--muted)';
+                        const sign = delta > 0 ? '+' : '';
+                        html += `<div class="fund-row">
+                        <span class="fund-name">${f.fund}</span>
+                        <span class="fund-weight" style="${cls}">${f.weight ? f.weight.toFixed(2) + '%' : sign + (delta ? delta.toFixed(3) + '%' : '0%')}</span>
+                    </div>`;
+                    });
+                    html += '</div>';
+                }
+
+                container.innerHTML = html;
+            }).catch(() => { document.getElementById('w-content').innerHTML = '<div class="no-data">Failed to load data</div>'; });
+
+            window.copyEmbed = function () {
+                const url = `https://mphinance.github.io/mphinance/widgets/institutional.html?t=${ticker}`;
+                const code = `<iframe src="${url}" width="380" height="320" frameborder="0" style="border-radius:4px;overflow:hidden;"></iframe>`;
+                navigator.clipboard.writeText(code).then(() => {
+                    const btn = document.querySelector('.embed-btn'); btn.textContent = '✓ Copied!'; btn.classList.add('copied');
+                    setTimeout(() => { btn.textContent = '</> Embed'; btn.classList.remove('copied'); }, 2000);
+                });
+            };
+        })();
+    </script>
+</body>
+
+</html>

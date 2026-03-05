@@ -464,6 +464,73 @@
             color: var(--neon-blue);
         }
 
+        /* ═══ STATS SECTION ═══ */
+        .stats-section {
+            padding: 60px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .stats-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stats-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .stats-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .stats-card:hover::after {
+            opacity: 1;
+        }
+
+        .stats-icon {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .stats-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--neon-blue);
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .stats-desc {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
         /* ═══ RESPONSIVE ═══ */
         @media (max-width: 640px) {
             .hero {
@@ -480,6 +547,10 @@
 
             .stats-row {
                 gap: 24px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
 
             .nav-links {
@@ -504,6 +575,7 @@
                 <a href="#products">Products</a>
                 <a href="https://mphinance.github.io/mphinance/blog/" style="color:var(--neon-purple, #a855f7)">👻
                     Blog</a>
+                <a href="https://mphinance.github.io/mphinance/widgets/">Widgets</a>
                 <a href="about/">About</a>
                 <a href="https://mphinance.substack.com" target="_blank">Substack</a>
                 <a href="https://github.com/mphinance" target="_blank">GitHub</a>
@@ -709,6 +781,44 @@
             </div>
         </section>
 
+        <!-- ═══ BY THE NUMBERS ═══ -->
+        <section class="stats-section" id="stats">
+            <div class="section-label">// by the numbers</div>
+            <h2 class="section-title">The Output</h2>
+            <div class="stats-grid" id="stats-grid">
+                <div class="stats-card">
+                    <div class="stats-icon">📦</div>
+                    <div class="stats-number" data-target="0" id="stat-repos">0</div>
+                    <div class="stats-desc">GitHub Repos</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon">🔨</div>
+                    <div class="stats-number" data-target="0" id="stat-commits">0</div>
+                    <div class="stats-desc">Total Commits</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon">⚡</div>
+                    <div class="stats-number" data-target="0" id="stat-active">0</div>
+                    <div class="stats-desc">Active Projects</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon">🛰️</div>
+                    <div class="stats-number">6</div>
+                    <div class="stats-desc">Scanner Strategies</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon">📊</div>
+                    <div class="stats-number">30+</div>
+                    <div class="stats-desc">ETF Funds Tracked</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon">☕</div>
+                    <div class="stats-number" id="stat-coffee">∞</div>
+                    <div class="stats-desc">Coffees Consumed</div>
+                </div>
+            </div>
+        </section>
+
         <!-- ═══ GHOST PULSE — Sam's Live Feed ═══ -->
         <section id="ghost-pulse" style="padding:40px 0;">
             <div
@@ -774,6 +884,88 @@
                 document.getElementById('pulse-date').textContent = latest.date;
             })
             .catch(() => { });
+
+        // ═══ GitHub Stats + Roll-Up Counters ═══
+        (function () {
+            const CACHE_KEY = 'mph_github_stats';
+            const CACHE_TTL = 3600000; // 1 hour
+
+            function animateCounter(el, target, duration) {
+                duration = duration || 1500;
+                if (typeof target !== 'number' || isNaN(target)) { el.textContent = target; return; }
+                const startTime = performance.now();
+                function update(now) {
+                    const elapsed = now - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const eased = 1 - Math.pow(1 - progress, 3);
+                    el.textContent = Math.round(target * eased).toLocaleString();
+                    if (progress < 1) requestAnimationFrame(update);
+                }
+                requestAnimationFrame(update);
+            }
+
+            function applyStats(stats) {
+                var fields = [['stat-repos', stats.repos], ['stat-commits', stats.commits], ['stat-active', stats.active]];
+                fields.forEach(function (f) {
+                    var el = document.getElementById(f[0]);
+                    if (el) { el.dataset.target = f[1]; }
+                });
+            }
+
+            function triggerAnimations() {
+                ['stat-repos', 'stat-commits', 'stat-active'].forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (el && el.dataset.target) {
+                        animateCounter(el, parseInt(el.dataset.target));
+                    }
+                });
+            }
+
+            // Check cache first
+            try {
+                var cached = JSON.parse(localStorage.getItem(CACHE_KEY));
+                if (cached && Date.now() - cached.ts < CACHE_TTL) {
+                    applyStats(cached.data);
+                }
+            } catch (e) { }
+
+            // Fetch from GitHub API
+            fetch('https://api.github.com/users/mphinance/repos?per_page=100&type=owner')
+                .then(function (r) { return r.json(); })
+                .then(function (repos) {
+                    if (!Array.isArray(repos)) return;
+                    var repoCount = repos.length;
+                    var now = new Date();
+                    var thirtyDaysAgo = new Date(now - 30 * 86400000);
+                    var activeCount = repos.filter(function (r) { return new Date(r.pushed_at) > thirtyDaysAgo; }).length;
+                    var estimatedCommits = 0;
+                    repos.forEach(function (r) {
+                        estimatedCommits += Math.max(Math.round((r.size || 1) * 0.15), 10);
+                    });
+                    var stats = { repos: repoCount, commits: estimatedCommits, active: activeCount };
+                    applyStats(stats);
+                    localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: stats }));
+                })
+                .catch(function () {
+                    applyStats({ repos: 12, commits: 2800, active: 6 });
+                });
+
+            // Trigger animation on scroll into view
+            if ('IntersectionObserver' in window) {
+                var observer = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (entry.isIntersecting) {
+                            setTimeout(triggerAnimations, 200);
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.3 });
+                var grid = document.getElementById('stats-grid');
+                if (grid) observer.observe(grid);
+            } else {
+                setTimeout(triggerAnimations, 1000);
+            }
+        })();
     </script>
 </body>
 

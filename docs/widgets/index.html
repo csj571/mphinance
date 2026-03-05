@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpha.HUD Widgets — Embeddable Trading Intelligence</title>
+    <meta name="description"
+        content="Self-contained, embeddable trading intelligence widgets. Signal bars, technical matrices, AI synthesis, options flow, and institutional tracking — powered by Alpha.HUD.">
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg: #050508;
+            --panel: #0d0d12;
+            --border: #1a1a24;
+            --green: #00ff41;
+            --red: #ff3e3e;
+            --blue: #00f3ff;
+            --amber: #ffb000;
+            --purple: #a855f7;
+            --text: #e0e0e8;
+            --dim: #8888a0;
+            --muted: #555568
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            line-height: 1.6
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-size: 60px 60px;
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+            pointer-events: none;
+            z-index: 0
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 24px;
+            position: relative;
+            z-index: 1
+        }
+
+        h1 {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 2rem;
+            color: #fff;
+            letter-spacing: 0.08em;
+            text-align: center;
+            margin: 40px 0 8px
+        }
+
+        h1 span {
+            color: var(--purple)
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--dim);
+            margin-bottom: 40px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto
+        }
+
+        .ticker-input {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 40px
+        }
+
+        .ticker-input input {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-radius: 4px;
+            width: 160px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s
+        }
+
+        .ticker-input input:focus {
+            border-color: var(--blue)
+        }
+
+        .ticker-input button {
+            font-family: 'JetBrains Mono', monospace;
+            background: linear-gradient(135deg, var(--blue), #0088cc);
+            color: #fff;
+            border: none;
+            padding: 10px 24px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s
+        }
+
+        .ticker-input button:hover {
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+            transform: translateY(-1px)
+        }
+
+        .widget-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+            transition: all 0.3s
+        }
+
+        .widget-card:hover {
+            border-color: #2a2a3a;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3)
+        }
+
+        .widget-card h3 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px
+        }
+
+        .widget-card .desc {
+            font-size: 0.8rem;
+            color: var(--dim);
+            margin-bottom: 16px
+        }
+
+        .widget-card .tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 16px
+        }
+
+        .tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6rem;
+            padding: 3px 8px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--dim);
+            letter-spacing: 0.08em;
+            text-transform: uppercase
+        }
+
+        .preview {
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            background: #000;
+            min-height: 120px
+        }
+
+        .preview iframe {
+            width: 100%;
+            border: none;
+            display: block
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px
+        }
+
+        .cta {
+            text-align: center;
+            margin: 40px 0;
+            padding: 24px;
+            background: linear-gradient(90deg, #1a1a2e, #16213e);
+            border: 1px solid #0f3460;
+            border-radius: 8px
+        }
+
+        .cta a {
+            color: var(--blue);
+            text-decoration: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px 0;
+            font-size: 0.65rem;
+            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.1em;
+            text-transform: uppercase
+        }
+
+        @media(max-width:640px) {
+            .grid-2 {
+                grid-template-columns: 1fr
+            }
+
+            h1 {
+                font-size: 1.4rem
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Alpha.<span>HUD</span> Widgets</h1>
+        <div class="subtitle">Self-contained, embeddable trading intelligence. Drop these into any blog, Substack, or
+            website. No dependencies. Just data.</div>
+
+        <div class="ticker-input">
+            <input type="text" id="ticker-input" placeholder="TSLA" value="TSLA" maxlength="5">
+            <button onclick="loadAll()">Load Ticker</button>
+        </div>
+
+        <!-- Signal Bar -->
+        <div class="widget-card">
+            <h3>📡 Signal Bar</h3>
+            <div class="desc">Trend direction, RSI momentum, implied volatility, and EMA stack status at a glance.</div>
+            <div class="tags">
+                <span class="tag">Trend</span><span class="tag">RSI</span><span class="tag">IV/HV</span><span
+                    class="tag">EMA Stack</span>
+            </div>
+            <div class="preview">
+                <iframe id="frame-signal" src="signal-bar.html?t=TSLA" height="140"></iframe>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <!-- AI Synthesis -->
+            <div class="widget-card">
+                <h3>🤖 AI Synthesis</h3>
+                <div class="desc">AI-generated analysis with technical + fundamental scores and overall grade.</div>
+                <div class="tags">
+                    <span class="tag">Grade</span><span class="tag">Tech Score</span><span class="tag">Fund
+                        Score</span><span class="tag">AI Verdict</span>
+                </div>
+                <div class="preview">
+                    <iframe id="frame-ai" src="ai-synthesis.html?t=TSLA" height="380"></iframe>
+                </div>
+            </div>
+
+            <!-- Valuation + Options -->
+            <div>
+                <div class="widget-card" style="margin-bottom:24px">
+                    <h3>💰 Valuation Panel</h3>
+                    <div class="desc">Graham + Lynch + Analyst blended fair value with gap visualization.</div>
+                    <div class="tags">
+                        <span class="tag">Fair Value</span><span class="tag">Gap %</span><span class="tag">Blended
+                            Model</span>
+                    </div>
+                    <div class="preview">
+                        <iframe id="frame-val" src="valuation.html?t=TSLA" height="260"></iframe>
+                    </div>
+                </div>
+
+                <div class="widget-card">
+                    <h3>📊 Options Flow</h3>
+                    <div class="desc">Call/put volume breakdown, visual ratio bar, and open interest ratios.</div>
+                    <div class="tags">
+                        <span class="tag">Volume</span><span class="tag">P/C Ratio</span><span class="tag">Open
+                            Interest</span>
+                    </div>
+                    <div class="preview">
+                        <iframe id="frame-opts" src="options-flow.html?t=TSLA" height="310"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Matrix -->
+        <div class="widget-card">
+            <h3>🔬 Technical Matrix</h3>
+            <div class="desc">Complete technical picture: EMA/SMA stack, pivot points, Fibonacci levels, volume profile,
+                and oscillators.</div>
+            <div class="tags">
+                <span class="tag">EMA 8/21/34/55/89</span><span class="tag">Pivots</span><span
+                    class="tag">Fibonacci</span><span class="tag">ADX/MACD/Stoch</span>
+            </div>
+            <div class="preview">
+                <iframe id="frame-tech" src="technical-matrix.html?t=TSLA" height="520"></iframe>
+            </div>
+        </div>
+
+        <!-- Institutional -->
+        <div class="widget-card">
+            <h3>🏛️ Institutional Intel</h3>
+            <div class="desc">Real-time institutional ETF holdings from TickerTrace — who's buying and selling.</div>
+            <div class="tags">
+                <span class="tag">ARK</span><span class="tag">YieldMax</span><span class="tag">Avantis</span><span
+                    class="tag">NestYield</span>
+            </div>
+            <div class="preview">
+                <iframe id="frame-inst" src="institutional.html?t=TSLA" height="320"></iframe>
+            </div>
+        </div>
+
+        <div class="cta">
+            <a href="https://mphinance.github.io/mphinance/" target="_blank">View Full Alpha Dossier →</a>
+        </div>
+
+        <div class="footer">Alpha.HUD Widgets // mphinance // Powered by Sam the Quant Ghost 👻</div>
+    </div>
+
+    <script>
+        function loadAll() {
+            const ticker = document.getElementById('ticker-input').value.toUpperCase().trim();
+            if (!ticker) return;
+            document.getElementById('frame-signal').src = `signal-bar.html?t=${ticker}`;
+            document.getElementById('frame-ai').src = `ai-synthesis.html?t=${ticker}`;
+            document.getElementById('frame-val').src = `valuation.html?t=${ticker}`;
+            document.getElementById('frame-opts').src = `options-flow.html?t=${ticker}`;
+            document.getElementById('frame-tech').src = `technical-matrix.html?t=${ticker}`;
+            document.getElementById('frame-inst').src = `institutional.html?t=${ticker}`;
+        }
+
+        document.getElementById('ticker-input').addEventListener('keypress', e => {
+            if (e.key === 'Enter') loadAll();
+        });
+    </script>
+</body>
+
+</html>

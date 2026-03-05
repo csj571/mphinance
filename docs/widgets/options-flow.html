@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Options Flow — Alpha.HUD Widget</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg: #050508;
+            --panel: rgba(10, 10, 10, 0.9);
+            --border: #333;
+            --green: #00ff41;
+            --red: #ff3e3e;
+            --blue: #00f3ff;
+            --amber: #ffb000;
+            --text: #e0e0e0;
+            --dim: #888;
+            --muted: #555;
+            --purple: #a855f7
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text);
+            background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.04));
+            background-size: 100% 2px, 3px 100%
+        }
+
+        .widget {
+            max-width: 380px;
+            margin: 16px auto;
+            border: 1px solid var(--border);
+            border-right: 4px solid var(--blue);
+            background: var(--panel);
+            overflow: hidden
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .header .title {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 11px;
+            color: var(--blue);
+            letter-spacing: 0.15em;
+            text-transform: uppercase
+        }
+
+        .header .ticker {
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.06em
+        }
+
+        .flow-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            text-align: center;
+            border-bottom: 1px solid #1a1a1a
+        }
+
+        .flow-cell {
+            padding: 14px 8px
+        }
+
+        .flow-cell .label {
+            font-size: 8px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.12em
+        }
+
+        .flow-cell .value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-top: 2px
+        }
+
+        .ratio-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px;
+            padding: 2px;
+            background: var(--border)
+        }
+
+        .ratio-cell {
+            background: rgba(15, 15, 20, 0.95);
+            text-align: center;
+            padding: 12px
+        }
+
+        .ratio-cell .label {
+            font-size: 8px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.12em
+        }
+
+        .ratio-cell .value {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin-top: 4px
+        }
+
+        .ratio-bar {
+            margin: 12px 16px;
+            position: relative
+        }
+
+        .ratio-bar .track {
+            height: 8px;
+            background: #1a1a1a;
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex
+        }
+
+        .ratio-bar .calls-fill {
+            background: linear-gradient(90deg, rgba(0, 255, 65, 0.6), var(--green));
+            height: 100%;
+            transition: width 0.6s ease
+        }
+
+        .ratio-bar .puts-fill {
+            background: linear-gradient(90deg, var(--red), rgba(255, 62, 62, 0.6));
+            height: 100%;
+            transition: width 0.6s ease
+        }
+
+        .ratio-bar .labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4px;
+            font-size: 8px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-top: 1px solid #1a1a1a
+        }
+
+        .footer .brand {
+            font-size: 8px;
+            color: #333;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            text-decoration: none
+        }
+
+        .footer .brand:hover {
+            color: var(--purple)
+        }
+
+        .embed-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 8px;
+            padding: 3px 10px;
+            border: 1px solid #333;
+            color: #555;
+            background: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-radius: 2px;
+            transition: all 0.2s
+        }
+
+        .embed-btn:hover {
+            color: var(--blue);
+            border-color: var(--blue)
+        }
+
+        .embed-btn.copied {
+            color: #22c55e;
+            border-color: #22c55e
+        }
+    </style>
+</head>
+
+<body>
+    <div class="widget">
+        <div class="header">
+            <span class="title">Options.Flow</span>
+            <span class="ticker" id="w-ticker">---</span>
+        </div>
+        <div class="flow-grid">
+            <div class="flow-cell">
+                <div class="label">Calls</div>
+                <div class="value" style="color:var(--green)" id="w-calls">--</div>
+            </div>
+            <div class="flow-cell">
+                <div class="label">Puts</div>
+                <div class="value" style="color:var(--red)" id="w-puts">--</div>
+            </div>
+            <div class="flow-cell">
+                <div class="label">Total</div>
+                <div class="value" style="color:#fff" id="w-total">--</div>
+            </div>
+        </div>
+        <div class="ratio-bar">
+            <div class="track">
+                <div class="calls-fill" id="calls-bar"></div>
+                <div class="puts-fill" id="puts-bar"></div>
+            </div>
+            <div class="labels"><span>Calls</span><span>Puts</span></div>
+        </div>
+        <div class="ratio-row">
+            <div class="ratio-cell">
+                <div class="label">P/C (Volume)</div>
+                <div class="value" id="w-pcvol">--</div>
+            </div>
+            <div class="ratio-cell">
+                <div class="label">P/C (Open Int)</div>
+                <div class="value" id="w-pcoi">--</div>
+            </div>
+        </div>
+        <div class="footer">
+            <a href="https://mphinance.github.io/mphinance/" class="brand" target="_blank">Alpha.HUD // mphinance</a>
+            <button class="embed-btn" onclick="copyEmbed()">&lt;/&gt; Embed</button>
+        </div>
+    </div>
+    <script>
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            let ticker = params.get('t') || params.get('ticker') || 'TSLA';
+            const base = window.location.href.includes('github.io')
+                ? `https://mphinance.github.io/mphinance/ticker/${ticker}/latest.json`
+                : `../ticker/${ticker}/latest.json`;
+
+            function fmt(n) { return n >= 1000000 ? (n / 1000000).toFixed(1) + 'M' : n >= 1000 ? (n / 1000).toFixed(0) + 'K' : n.toLocaleString(); }
+
+            fetch(base + '?t=' + Date.now()).then(r => r.json()).then(d => {
+                document.getElementById('w-ticker').textContent = d.ticker;
+                const vs = d.volumeStats || {};
+                document.getElementById('w-calls').textContent = fmt(vs.callVolume || 0);
+                document.getElementById('w-puts').textContent = fmt(vs.putVolume || 0);
+                document.getElementById('w-total').textContent = fmt(vs.totalVolume || 0);
+
+                // Ratio bar
+                const total = (vs.callVolume || 0) + (vs.putVolume || 0);
+                if (total > 0) {
+                    const callPct = ((vs.callVolume || 0) / total * 100).toFixed(1);
+                    document.getElementById('calls-bar').style.width = callPct + '%';
+                    document.getElementById('puts-bar').style.width = (100 - parseFloat(callPct)) + '%';
+                }
+
+                // P/C ratios
+                const pcvol = vs.pcRatioVol || 0;
+                const pcoi = vs.pcRatioOi || 0;
+                const pcvolEl = document.getElementById('w-pcvol');
+                pcvolEl.textContent = pcvol;
+                pcvolEl.style.color = pcvol > 1 ? 'var(--red)' : 'var(--green)';
+
+                const pcoiEl = document.getElementById('w-pcoi');
+                pcoiEl.textContent = pcoi;
+                pcoiEl.style.color = pcoi > 1 ? 'var(--red)' : 'var(--green)';
+            }).catch(() => { document.getElementById('w-ticker').textContent = ticker + ' (no data)'; });
+
+            window.copyEmbed = function () {
+                const url = `https://mphinance.github.io/mphinance/widgets/options-flow.html?t=${ticker}`;
+                const code = `<iframe src="${url}" width="380" height="310" frameborder="0" style="border-radius:4px;overflow:hidden;"></iframe>`;
+                navigator.clipboard.writeText(code).then(() => {
+                    const btn = document.querySelector('.embed-btn'); btn.textContent = '✓ Copied!'; btn.classList.add('copied');
+                    setTimeout(() => { btn.textContent = '</> Embed'; btn.classList.remove('copied'); }, 2000);
+                });
+            };
+        })();
+    </script>
+</body>
+
+</html>

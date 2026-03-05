@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Synthesis — Alpha.HUD Widget</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg: #050508;
+            --panel: rgba(10, 10, 10, 0.9);
+            --border: #333;
+            --green: #00ff41;
+            --red: #ff3e3e;
+            --blue: #00f3ff;
+            --amber: #ffb000;
+            --purple: #a855f7;
+            --text: #e0e0e0;
+            --dim: #888;
+            --muted: #555
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text);
+            background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.04));
+            background-size: 100% 2px, 3px 100%
+        }
+
+        .widget {
+            max-width: 420px;
+            margin: 16px auto;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--amber);
+            background: var(--panel);
+            overflow: hidden
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 2px solid var(--border)
+        }
+
+        .header .title {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 11px;
+            color: var(--amber);
+            letter-spacing: 0.15em;
+            text-transform: uppercase
+        }
+
+        .header .title .blink {
+            animation: blink 1s step-end infinite
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0
+            }
+        }
+
+        .header .grade {
+            font-size: 10px;
+            background: rgba(255, 176, 0, 0.1);
+            color: var(--amber);
+            padding: 2px 8px;
+            border: 1px solid rgba(255, 176, 0, 0.3);
+            letter-spacing: 0.1em
+        }
+
+        .scores {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px;
+            padding: 2px;
+            background: var(--border)
+        }
+
+        .score-cell {
+            background: rgba(15, 15, 20, 0.9);
+            text-align: center;
+            padding: 12px
+        }
+
+        .score-cell .label {
+            font-size: 8px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.15em
+        }
+
+        .score-cell .value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-top: 2px
+        }
+
+        .analysis {
+            padding: 12px 16px;
+            font-size: 11px;
+            color: #ccc;
+            line-height: 1.7;
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid #1a1a1a;
+            border-bottom: 1px solid #1a1a1a;
+            max-height: 180px;
+            overflow-y: auto
+        }
+
+        .ticker-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-bottom: 1px solid #1a1a1a
+        }
+
+        .ticker-row img {
+            width: 24px;
+            height: 24px;
+            border-radius: 3px;
+            border: 1px solid var(--border);
+            background: #fff;
+            padding: 1px;
+            object-fit: contain
+        }
+
+        .ticker-row .name {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.06em
+        }
+
+        .ticker-row .sector {
+            font-size: 9px;
+            color: var(--muted);
+            margin-left: auto
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px
+        }
+
+        .footer .brand {
+            font-size: 8px;
+            color: #333;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            text-decoration: none
+        }
+
+        .footer .brand:hover {
+            color: var(--purple)
+        }
+
+        .embed-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 8px;
+            padding: 3px 10px;
+            border: 1px solid #333;
+            color: #555;
+            background: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-radius: 2px;
+            transition: all 0.2s
+        }
+
+        .embed-btn:hover {
+            color: var(--blue);
+            border-color: var(--blue)
+        }
+
+        .embed-btn.copied {
+            color: #22c55e;
+            border-color: #22c55e
+        }
+    </style>
+</head>
+
+<body>
+    <div class="widget">
+        <div class="ticker-row">
+            <img id="w-logo" src="" alt="">
+            <span class="name" id="w-ticker">---</span>
+            <span class="sector" id="w-sector">---</span>
+        </div>
+        <div class="header">
+            <span class="title">AI.Synthesis <span class="blink">_</span></span>
+            <span class="grade" id="w-grade">GRADE: --</span>
+        </div>
+        <div class="scores">
+            <div class="score-cell">
+                <div class="label">Tech.Score</div>
+                <div class="value" id="w-tech">--</div>
+            </div>
+            <div class="score-cell">
+                <div class="label">Fund.Score</div>
+                <div class="value" id="w-fund">--</div>
+            </div>
+        </div>
+        <div class="analysis" id="w-analysis">Loading AI analysis...</div>
+        <div class="footer">
+            <a href="https://mphinance.github.io/mphinance/" class="brand" target="_blank">Alpha.HUD // mphinance</a>
+            <button class="embed-btn" onclick="copyEmbed()">&lt;/&gt; Embed</button>
+        </div>
+    </div>
+    <script>
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            let ticker = params.get('t') || params.get('ticker') || 'TSLA';
+            const base = window.location.href.includes('github.io')
+                ? `https://mphinance.github.io/mphinance/ticker/${ticker}/latest.json`
+                : `../ticker/${ticker}/latest.json`;
+
+            fetch(base + '?t=' + Date.now()).then(r => r.json()).then(d => {
+                document.getElementById('w-logo').src = d.logo_url || '';
+                document.getElementById('w-ticker').textContent = d.ticker;
+                document.getElementById('w-sector').textContent = d.sector || '';
+                document.getElementById('w-grade').textContent = 'GRADE: ' + (d.scores?.grade || 'N/A');
+
+                const techEl = document.getElementById('w-tech');
+                techEl.textContent = d.scores?.technical || '--';
+                techEl.style.color = (d.scores?.technical || 0) > 60 ? 'var(--green)' : 'var(--red)';
+
+                const fundEl = document.getElementById('w-fund');
+                fundEl.textContent = d.scores?.fundamental || '--';
+                fundEl.style.color = (d.scores?.fundamental || 0) > 60 ? 'var(--green)' : 'var(--red)';
+
+                document.getElementById('w-analysis').innerHTML = d.ai_analysis || 'No analysis available.';
+            }).catch(() => { document.getElementById('w-ticker').textContent = ticker + ' (no data)'; });
+
+            window.copyEmbed = function () {
+                const url = `https://mphinance.github.io/mphinance/widgets/ai-synthesis.html?t=${ticker}`;
+                const code = `<iframe src="${url}" width="420" height="360" frameborder="0" style="border-radius:4px;overflow:hidden;"></iframe>`;
+                navigator.clipboard.writeText(code).then(() => {
+                    const btn = document.querySelector('.embed-btn'); btn.textContent = '✓ Copied!'; btn.classList.add('copied');
+                    setTimeout(() => { btn.textContent = '</> Embed'; btn.classList.remove('copied'); }, 2000);
+                });
+            };
+        })();
+    </script>
+</body>
+
+</html>

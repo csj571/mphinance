@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signal Bar — Alpha.HUD Widget</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg: #050508;
+            --panel: rgba(10, 10, 10, 0.9);
+            --border: #333;
+            --green: #00ff41;
+            --red: #ff3e3e;
+            --blue: #00f3ff;
+            --amber: #ffb000;
+            --purple: #a855f7;
+            --text: #e0e0e0;
+            --dim: #888;
+            --muted: #555
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text);
+            background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.04));
+            background-size: 100% 2px, 3px 100%
+        }
+
+        .widget {
+            max-width: 700px;
+            margin: 16px auto;
+            padding: 0
+        }
+
+        .ticker-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            border-bottom: 2px solid var(--border);
+            background: var(--panel)
+        }
+
+        .ticker-bar .logo {
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            object-fit: contain;
+            background: #fff;
+            padding: 2px
+        }
+
+        .ticker-bar .name {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.08em;
+            margin-left: 10px
+        }
+
+        .ticker-bar .price-block {
+            text-align: right
+        }
+
+        .ticker-bar .price {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff
+        }
+
+        .ticker-bar .change {
+            font-size: 0.75rem;
+            font-weight: 700
+        }
+
+        .signal-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2px;
+            background: var(--border)
+        }
+
+        .signal-cell {
+            background: var(--panel);
+            text-align: center;
+            padding: 16px 8px;
+            position: relative
+        }
+
+        .signal-cell .label {
+            font-size: 9px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 6px
+        }
+
+        .signal-cell .value {
+            font-size: 1.3rem;
+            font-weight: 800;
+            font-family: 'Share Tech Mono', monospace
+        }
+
+        .signal-cell .sub {
+            font-size: 8px;
+            color: var(--dim);
+            margin-top: 4px
+        }
+
+        .signal-cell .bar {
+            height: 3px;
+            border-radius: 2px;
+            margin-top: 6px;
+            background: #222
+        }
+
+        .signal-cell .bar-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.5s ease
+        }
+
+        .glow-green {
+            color: var(--green);
+            text-shadow: 0 0 8px rgba(0, 255, 65, 0.4)
+        }
+
+        .glow-red {
+            color: var(--red);
+            text-shadow: 0 0 8px rgba(255, 62, 62, 0.4)
+        }
+
+        .glow-blue {
+            color: var(--blue);
+            text-shadow: 0 0 8px rgba(0, 243, 255, 0.4)
+        }
+
+        .glow-amber {
+            color: var(--amber);
+            text-shadow: 0 0 8px rgba(255, 176, 0, 0.4)
+        }
+
+        .side-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(10, 10, 10, 0.8);
+            border-top: 1px solid #1a1a1a
+        }
+
+        .footer .brand {
+            font-size: 8px;
+            color: #333;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            text-decoration: none
+        }
+
+        .footer .brand:hover {
+            color: var(--purple)
+        }
+
+        .embed-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 8px;
+            padding: 3px 10px;
+            border: 1px solid #333;
+            color: #555;
+            background: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-radius: 2px;
+            transition: all 0.2s
+        }
+
+        .embed-btn:hover {
+            color: var(--blue);
+            border-color: var(--blue)
+        }
+
+        .embed-btn.copied {
+            color: #22c55e;
+            border-color: #22c55e
+        }
+
+        @media(max-width:480px) {
+            .signal-grid {
+                grid-template-columns: repeat(2, 1fr)
+            }
+
+            .signal-cell .value {
+                font-size: 1rem
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="widget" id="signal-widget">
+        <div class="ticker-bar">
+            <div style="display:flex;align-items:center">
+                <img class="logo" id="w-logo" src="" alt="">
+                <span class="name" id="w-ticker">---</span>
+            </div>
+            <div class="price-block">
+                <div class="price" id="w-price">$---</div>
+                <div class="change" id="w-change">---</div>
+            </div>
+        </div>
+        <div class="signal-grid">
+            <div class="signal-cell">
+                <div class="side-bar" id="trend-bar"></div>
+                <div class="label">Trend</div>
+                <div class="value" id="w-trend">---</div>
+                <div class="sub" id="w-crossover">---</div>
+            </div>
+            <div class="signal-cell">
+                <div class="label">RSI (14)</div>
+                <div class="value" id="w-rsi" style="color:#fff">---</div>
+                <div class="bar">
+                    <div class="bar-fill" id="rsi-bar"></div>
+                </div>
+            </div>
+            <div class="signal-cell">
+                <div class="label">Implied Vol</div>
+                <div class="value glow-blue" id="w-iv">---</div>
+                <div class="sub" id="w-hv">HV: ---</div>
+            </div>
+            <div class="signal-cell">
+                <div class="label">EMA Stack</div>
+                <div class="value" id="w-ema">---</div>
+            </div>
+        </div>
+        <div class="footer">
+            <a href="https://mphinance.github.io/mphinance/" class="brand" target="_blank">Alpha.HUD // mphinance</a>
+            <button class="embed-btn" onclick="copyEmbed()">&lt;/&gt; Embed</button>
+        </div>
+    </div>
+    <script>
+        (function () {
+            // Get ticker from query param or parent directory
+            const params = new URLSearchParams(window.location.search);
+            let ticker = params.get('t') || params.get('ticker');
+            if (!ticker) {
+                const parts = window.location.pathname.split('/').filter(Boolean);
+                const widgetIdx = parts.indexOf('widgets');
+                if (widgetIdx > -1 && parts[widgetIdx + 1]) ticker = parts[widgetIdx + 1];
+            }
+            if (!ticker) ticker = 'TSLA';
+
+            const base = window.location.href.includes('github.io')
+                ? `https://mphinance.github.io/mphinance/ticker/${ticker}/latest.json`
+                : `../ticker/${ticker}/latest.json`;
+
+            fetch(base + '?t=' + Date.now())
+                .then(r => r.json())
+                .then(d => render(d))
+                .catch(() => {
+                    document.getElementById('w-ticker').textContent = ticker + ' (no data)';
+                });
+
+            function render(d) {
+                document.getElementById('w-logo').src = d.logo_url || '';
+                document.getElementById('w-ticker').textContent = d.ticker;
+                document.getElementById('w-price').textContent = '$' + d.currentPrice;
+
+                const chg = d.priceChangePct || 0;
+                const chgEl = document.getElementById('w-change');
+                chgEl.textContent = (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%';
+                chgEl.className = 'change ' + (chg >= 0 ? 'glow-green' : 'glow-red');
+
+                // Trend
+                const trendEl = document.getElementById('w-trend');
+                const bullish = (d.trendOverall || '').includes('Bullish');
+                trendEl.textContent = d.trendOverall || 'N/A';
+                trendEl.className = 'value ' + (bullish ? 'glow-green' : 'glow-red');
+                document.getElementById('trend-bar').style.background = bullish ? 'var(--green)' : 'var(--red)';
+                document.getElementById('w-crossover').textContent = d.technical_analysis?.trend?.crossover || '';
+
+                // RSI
+                const rsi = parseFloat(d.technical_analysis?.oscillators?.rsi_14) || 50;
+                document.getElementById('w-rsi').textContent = rsi.toFixed(1);
+                const rsiFill = document.getElementById('rsi-bar');
+                rsiFill.style.width = rsi + '%';
+                rsiFill.style.background = rsi > 70 ? 'var(--red)' : rsi < 30 ? 'var(--green)' : '#666';
+
+                // IV
+                document.getElementById('w-iv').textContent = (d.impliedVolatility || 0).toFixed(1) + '%';
+                document.getElementById('w-hv').textContent = 'HV: ' + (d.historicVolatility || 0).toFixed(1) + '%';
+
+                // EMA Stack
+                const emaEl = document.getElementById('w-ema');
+                const stack = d.technical_analysis?.ema_stack || 'N/A';
+                emaEl.textContent = stack.replace('PARTIAL ', 'P.');
+                if (stack.includes('BULLISH')) emaEl.className = 'value glow-green';
+                else if (stack.includes('BEARISH')) emaEl.className = 'value glow-red';
+                else emaEl.className = 'value glow-amber';
+            }
+
+            window.copyEmbed = function () {
+                const url = `https://mphinance.github.io/mphinance/widgets/signal-bar.html?t=${ticker}`;
+                const code = `<iframe src="${url}" width="700" height="140" frameborder="0" style="border-radius:4px;overflow:hidden;"></iframe>`;
+                navigator.clipboard.writeText(code).then(() => {
+                    const btn = document.querySelector('.embed-btn');
+                    btn.textContent = '✓ Copied!';
+                    btn.classList.add('copied');
+                    setTimeout(() => { btn.textContent = '</> Embed'; btn.classList.remove('copied'); }, 2000);
+                });
+            };
+        })();
+    </script>
+</body>
+
+</html>
