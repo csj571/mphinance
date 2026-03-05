@@ -660,6 +660,10 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     # Fill with institutional buying tickers
     inst_buy_tickers = [s["ticker"] for s in institutional.get("top_buying", [])[:4]]
     setup_tickers = [t for t in dict.fromkeys(setup_tickers + inst_buy_tickers) if not _is_junk(t)][:10]
+    # Fallback to core watchlist if no strategy/institutional tickers
+    if not setup_tickers:
+        setup_tickers = CORE_WATCHLIST[:6]
+        print("  (falling back to Core Watchlist for setups)")
     technical_setups = generate_setups(setup_tickers, max_setups=6)
     print(f"  {len(technical_setups)} setups analyzed")
 
