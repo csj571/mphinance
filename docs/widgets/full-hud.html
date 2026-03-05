@@ -26,6 +26,7 @@
             --border: #282838;
             --green: #00ff41;
             --red: #f0b400;
+            --danger: #e53935;
             --blue: #00f3ff;
             --amber: #ffb000;
             --purple: #a855f7;
@@ -530,70 +531,72 @@
                     document.title = d.ticker + ' — Alpha.HUD';
                 })
                 .catch(() => {
-                    document.getElementById('hud').innerHTML = '<div class="loading">No data for ' + ticker + '</div>';
+                    document.getElementById('hud').innerHTML = '<div class="loading" style="padding:50px 20px;text-align:center"><div style="font-size:1.2rem;margin-bottom:8px;color:#f0b400">⚠ No data for ' + ticker + '</div><div style="font-size:0.7rem;color:#777;max-width:400px;margin:0 auto;line-height:1.6">This ticker isn\'t on the watchlist yet. Alpha.HUD uses pre-generated data from the daily dossier pipeline — only tracked tickers have data.<br><br><a href="https://mphinance.github.io/mphinance/" style="color:#00f3ff;text-decoration:none">Browse the dossier →</a></div></div>';
                 });
+        })();
 
-            function buildHUD(d) {
-                const ta = d.technical_analysis || {};
-                const ema = ta.ema || {};
-                const trend = ta.trend || {};
-                const piv = ta.pivots || {};
-                const osc = ta.oscillators || {};
-                const vol = ta.volume || {};
-                const vs = d.volumeStats || {};
-                const v = d.valuation || {};
-                const sc = d.scores || {};
-                const tt = d.tickertrace || {};
-                const sig = tt.signal || null;
-                const holdings = (tt.detail || {}).holdings || [];
-                const price = d.currentPrice || 0;
-                const chg = d.priceChangePct || 0;
-                const isUp = chg >= 0;
-                const isUnder = (v.status || '').includes('UNDER');
-                const stack = (ta.ema_stack || 'N/A');
-                const rsi = parseFloat(osc.rsi_14) || 50;
+        function buildHUD(d) {
+            const ta = d.technical_analysis || {};
+            const ema = ta.ema || {};
+            const trend = ta.trend || {};
+            const piv = ta.pivots || {};
+            const osc = ta.oscillators || {};
+            const vol = ta.volume || {};
+            const vs = d.volumeStats || {};
+            const v = d.valuation || {};
+            const sc = d.scores || {};
+            const tt = d.tickertrace || {};
+            const sig = tt.signal || null;
+            const holdings = (tt.detail || {}).holdings || [];
+            const price = d.currentPrice || 0;
+            const chg = d.priceChangePct || 0;
+            const isUp = chg >= 0;
+            const isUnder = (v.status || '').includes('UNDER');
+            const isOver = (v.status || '').includes('OVER');
+            const stack = (ta.ema_stack || 'N/A');
+            const rsi = parseFloat(osc.rsi_14) || 50;
 
-                // EMA stack color
-                let emaClass = 'glow-amber';
-                if (stack.includes('BULL')) emaClass = 'glow-green';
-                else if (stack.includes('BEAR')) emaClass = 'glow-red';
+            // EMA stack color
+            let emaClass = 'glow-amber';
+            if (stack.includes('BULL')) emaClass = 'glow-green';
+            else if (stack.includes('BEAR')) emaClass = 'glow-red';
 
-                // Valuation gap bar
-                const gap = v.gap_pct || 0;
-                const gapClipped = Math.max(-60, Math.min(60, gap));
-                const gapPct = ((gapClipped + 60) / 120 * 100).toFixed(1);
+            // Valuation gap bar
+            const gap = v.gap_pct || 0;
+            const gapClipped = Math.max(-60, Math.min(60, gap));
+            const gapPct = ((gapClipped + 60) / 120 * 100).toFixed(1);
 
-                // Options bar
-                const totalVol = (vs.callVolume || 0) + (vs.putVolume || 0);
-                const callPct = totalVol > 0 ? ((vs.callVolume || 0) / totalVol * 100).toFixed(1) : 50;
+            // Options bar
+            const totalVol = (vs.callVolume || 0) + (vs.putVolume || 0);
+            const callPct = totalVol > 0 ? ((vs.callVolume || 0) / totalVol * 100).toFixed(1) : 50;
 
-                // Institutional signal
-                let instHTML = '<div class="neutral" style="font-size:9px;font-style:italic">No signal data</div>';
-                if (sig) {
-                    const isBuying = (sig.direction || '').toLowerCase().includes('buy');
-                    instHTML = `<div class="inst-signal ${isBuying ? 'buying' : 'selling'}">
+            // Institutional signal
+            let instHTML = '<div class="neutral" style="font-size:9px;font-style:italic">No signal data</div>';
+            if (sig) {
+                const isBuying = (sig.direction || '').toLowerCase().includes('buy');
+                instHTML = `<div class="inst-signal ${isBuying ? 'buying' : 'selling'}">
                     <strong style="text-transform:uppercase">${sig.direction}</strong>
                     <span style="color:var(--dim);font-size:9px;margin-left:6px">Conv: ${sig.conviction ? sig.conviction.toFixed(1) : 'N/A'}</span>
                 </div>`;
-                }
-                const fundRows = holdings.slice(0, 5).map(f =>
-                    `<div class="fund-row"><span style="color:var(--dim)">${f.fund}</span><span style="color:#aaa">${f.weight ? f.weight.toFixed(2) + '%' : '—'}</span></div>`
-                ).join('');
+            }
+            const fundRows = holdings.slice(0, 5).map(f =>
+                `<div class="fund-row"><span style="color:var(--dim)">${f.fund}</span><span style="color:#aaa">${f.weight ? f.weight.toFixed(2) + '%' : '—'}</span></div>`
+            ).join('');
 
-                // AI text — strip HTML tags for cleaner look
-                const aiRaw = (d.ai_analysis || 'No analysis').replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, '').slice(0, 220);
+            // AI text — strip HTML tags for cleaner look
+            const aiRaw = (d.ai_analysis || 'No analysis').replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, '').slice(0, 220);
 
-                // MA rows (price vs each EMA)
-                const maRows = [
-                    ['EMA 8', ema['8']], ['EMA 21', ema['21']], ['EMA 34', ema['34']], ['EMA 55', ema['55']], ['EMA 89', ema['89']],
-                    ['SMA 50', trend.sma_50], ['SMA 200', trend.sma_200]
-                ].map(([l, val]) => {
-                    if (!val) return '';
-                    const cls = price > parseFloat(val) ? 'up' : 'down';
-                    return `<div class="data-row"><span class="dl">${l}</span><span class="dv ${cls}">$${val}</span></div>`;
-                }).join('');
+            // MA rows (price vs each EMA)
+            const maRows = [
+                ['EMA 8', ema['8']], ['EMA 21', ema['21']], ['EMA 34', ema['34']], ['EMA 55', ema['55']], ['EMA 89', ema['89']],
+                ['SMA 50', trend.sma_50], ['SMA 200', trend.sma_200]
+            ].map(([l, val]) => {
+                if (!val) return '';
+                const cls = price > parseFloat(val) ? 'up' : 'down';
+                return `<div class="data-row"><span class="dl">${l}</span><span class="dv ${cls}">$${val}</span></div>`;
+            }).join('');
 
-                return `
+            return `
             <div class="ticker-header">
                 <div class="left">
                     <img src="${d.logo_url || ''}" alt="" onerror="this.style.display='none'">
@@ -617,7 +620,7 @@
                 </div>
                 <div class="sig-cell">
                     <div class="s-label">RSI (14)</div>
-                    <div class="s-val" style="color:${rsi > 70 ? 'var(--red)' : rsi < 30 ? 'var(--green)' : '#fff'}">${rsi.toFixed(1)}</div>
+                    <div class="s-val" style="color:${rsi > 70 ? 'var(--danger)' : rsi < 30 ? 'var(--green)' : '#fff'}">${rsi.toFixed(1)}</div>
                     <div class="s-sub">${rsi > 70 ? 'Overbought' : rsi < 30 ? 'Oversold' : 'Neutral'}</div>
                 </div>
                 <div class="sig-cell">
@@ -638,7 +641,7 @@
                     <div class="panel-title amber">Valuation // ${v.method || 'N/A'}</div>
                     <div class="val-status ${isUnder ? 'glow-green' : 'glow-red'}">${v.status || 'N/A'}</div>
                     <div class="gap-track">
-                        <div class="gap-dot" style="left:${gapPct}%;background:${isUnder ? 'var(--green)' : 'var(--red)'};box-shadow:0 0 6px ${isUnder ? 'rgba(0,255,65,0.5)' : 'rgba(240,180,0,0.5)'}"></div>
+                        <div class="gap-dot" style="left:${gapPct}%;background:${isUnder ? 'var(--green)' : isOver ? 'var(--danger)' : 'var(--red)'};box-shadow:0 0 6px ${isUnder ? 'rgba(0,255,65,0.5)' : isOver ? 'rgba(229,57,53,0.5)' : 'rgba(240,180,0,0.5)'}"></div>
                     </div>
                     <div class="val-row"><span class="lbl">Fair Value</span><span class="v">$${v.target_price || '—'}</span></div>
                     <div class="val-row"><span class="lbl">Gap</span><span class="v ${isUnder ? 'up' : 'down'}">${gap >= 0 ? '+' : ''}${gap.toFixed(1)}%</span></div>
@@ -719,43 +722,42 @@
                 </div>
             </div>
             `;
+        }
+
+        window.copyEmbed = function (t, btn) {
+            const url = `https://mphinance.github.io/mphinance/widgets/full-hud.html?t=${t}`;
+            const code = `<iframe src="${url}" width="700" height="760" frameborder="0" style="border-radius:6px;overflow:hidden;"></iframe>`;
+            navigator.clipboard.writeText(code).then(() => {
+                btn.textContent = '✓ Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => { btn.textContent = '</> Embed'; btn.classList.remove('copied'); }, 2000);
+            });
+        };
+
+        window.screenshotHUD = function (t, btn) {
+            const original = btn.innerHTML;
+            btn.innerHTML = '⏳ Capturing...';
+            btn.classList.add('capturing');
+            const el = document.getElementById('hud');
+            html2canvas(el, { backgroundColor: '#050508', scale: 2, useCORS: true, logging: false }).then(canvas => {
+                canvas.toBlob(blob => {
+                    const file = new File([blob], `${t}-alpha-hud.png`, { type: 'image/png' });
+                    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                        navigator.share({
+                            title: t + ' Alpha.HUD',
+                            text: 'Live trading HUD — mphinance.github.io/mphinance/widgets/',
+                            files: [file]
+                        }).then(() => done()).catch(() => dl(canvas, t, btn, original));
+                    } else { dl(canvas, t, btn, original); }
+                }, 'image/png');
+            }).catch(() => { btn.innerHTML = original; btn.classList.remove('capturing'); });
+
+            function done() { btn.innerHTML = '✓ Shared!'; btn.classList.remove('capturing'); btn.classList.add('done'); setTimeout(() => { btn.innerHTML = original; btn.classList.remove('done'); }, 2000); }
+            function dl(c, t, btn, orig) {
+                const a = document.createElement('a'); a.download = t + '-alpha-hud.png'; a.href = c.toDataURL('image/png'); a.click();
+                btn.innerHTML = '✓ Saved!'; btn.classList.remove('capturing'); btn.classList.add('done'); setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('done'); }, 2000);
             }
-
-            window.copyEmbed = function (t, btn) {
-                const url = `https://mphinance.github.io/mphinance/widgets/full-hud.html?t=${t}`;
-                const code = `<iframe src="${url}" width="700" height="760" frameborder="0" style="border-radius:6px;overflow:hidden;"></iframe>`;
-                navigator.clipboard.writeText(code).then(() => {
-                    btn.textContent = '✓ Copied!';
-                    btn.classList.add('copied');
-                    setTimeout(() => { btn.textContent = '</> Embed'; btn.classList.remove('copied'); }, 2000);
-                });
-            };
-
-            window.screenshotHUD = function (t, btn) {
-                const original = btn.innerHTML;
-                btn.innerHTML = '⏳ Capturing...';
-                btn.classList.add('capturing');
-                const el = document.getElementById('hud');
-                html2canvas(el, { backgroundColor: '#050508', scale: 2, useCORS: true, logging: false }).then(canvas => {
-                    canvas.toBlob(blob => {
-                        const file = new File([blob], `${t}-alpha-hud.png`, { type: 'image/png' });
-                        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                            navigator.share({
-                                title: t + ' Alpha.HUD',
-                                text: 'Live trading HUD — mphinance.github.io/mphinance/widgets/',
-                                files: [file]
-                            }).then(() => done()).catch(() => dl(canvas, t, btn, original));
-                        } else { dl(canvas, t, btn, original); }
-                    }, 'image/png');
-                }).catch(() => { btn.innerHTML = original; btn.classList.remove('capturing'); });
-
-                function done() { btn.innerHTML = '✓ Shared!'; btn.classList.remove('capturing'); btn.classList.add('done'); setTimeout(() => { btn.innerHTML = original; btn.classList.remove('done'); }, 2000); }
-                function dl(c, t, btn, orig) {
-                    const a = document.createElement('a'); a.download = t + '-alpha-hud.png'; a.href = c.toDataURL('image/png'); a.click();
-                    btn.innerHTML = '✓ Saved!'; btn.classList.remove('capturing'); btn.classList.add('done'); setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('done'); }, 2000);
-                }
-            };
-        })();
+        };
     </script>
 </body>
 
