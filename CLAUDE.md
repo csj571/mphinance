@@ -181,3 +181,34 @@ Run `/project-instructions` to see workspace constraints. Available workflows:
 - `/add-ticker` — add stock to watchlist
 - `/new-strategy` — create scanner module
 - `/deploy-landing` — rsync to Vultr
+
+---
+
+## REST API Inventory
+
+All FastAPI services expose Swagger docs at `/docs` and ReDoc at `/redoc`.
+
+| Service | Host | Swagger URL | Description |
+|---------|------|-------------|-------------|
+| **Alpha-Momentum API** | Venus (api.mphanko.com) | `https://api.mphanko.com/docs` | **30 endpoints** — main HUD backend |
+| **TickerTrace API** | Vultr | `https://api.tickertrace.pro/docs` | ETF holdings |
+| **Ghost Alpha Service** | Vultr :8002 | `http://mphinance.com:8002/docs` | Ticker dossier |
+| **Secrets Vault** | Local :8200 | `http://localhost:8200/docs` | API key store + MCP |
+
+### Alpha-Momentum Endpoints (api.mphanko.com)
+
+```
+GET  /api/health                GET  /api/market/indices
+GET  /api/market/crypto         GET  /api/market/news
+GET  /api/market/quotes         GET  /api/quote/{symbol}
+GET  /api/portfolio/tradier     GET  /api/trade/orders
+POST /api/trade/preview         POST /api/trade/execute
+GET  /api/scanner/results       POST /api/scanner/trigger
+GET  /api/screener/momentum     GET  /api/screener/miners
+GET  /api/vopr/scan             GET  /api/vopr/auto-scan
+GET  /api/vopr/batch-scan       GET  /api/vopr/volatility
+GET  /api/vopr/coil-scan        GET  /api/vopr/expirations
+GET  /api/vopr/history          POST /api/copilot
+GET  /api/picks/today           GET  /api/signals/history
+GET  /api/signals/stream
+```
