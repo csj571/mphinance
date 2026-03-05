@@ -691,8 +691,55 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
             dossiers.append(data)
     print(f"  {len(dossiers)} dossiers enriched")
 
-    # ── Stage 8b: Chart Generation ──
-    print("\n[8b/14] CHART GENERATION")
+    # ── Stage 8b: Momentum Picks ──
+    print("\n[8b/14] DAILY MOMENTUM PICKS")
+    momentum_picks = {}
+    try:
+        from dossier.momentum_picks import pick_daily_momentum, format_picks_text
+        # Build payloads from dossier data for scoring
+        # We need ticker pages' JSON format — use what we have
+        from dossier.pages.ticker_page import TICKER_OUTPUT_DIR
+        import json as _picks_json
+        
+        payloads_for_scoring = []
+        for d in dossiers:
+            ticker = d.get("ticker", "")
+            latest_json = TICKER_OUTPUT_DIR / ticker / "latest.json"
+            if latest_json.exists():
+                try:
+                    with open(latest_json) as pf:
+                        payloads_for_scoring.append(_picks_json.load(pf))
+                except Exception:
+                    pass
+        
+        # If no existing JSONs (first run), score from enriched data directly
+        if not payloads_for_scoring:
+            for d in dossiers:
+                tech = d.get("technicals", {})
+                scores = d.get("scores", {})
+                payloads_for_scoring.append({
+                    "ticker": d.get("ticker", ""),
+                    "currentPrice": d.get("price", 0),
+                    "priceChangePct": d.get("change_pct", 0),
+                    "trendOverall": "Bullish" if tech.get("ema_stack", "").startswith("FULL BULL") else "Bearish",
+                    "technical_analysis": {
+                        "ema_stack": tech.get("ema_stack", "UNKNOWN"),
+                        "ema": {"21": tech.get("ema_21")},
+                        "oscillators": {"rsi_14": tech.get("rsi_14"), "adx_14": tech.get("adx")},
+                        "volume": {"rel_vol": tech.get("rel_vol", 1.0)},
+                    },
+                    "scores": scores,
+                    "tickertrace": d.get("tickertrace", {}),
+                })
+        
+        momentum_picks = pick_daily_momentum(payloads_for_scoring, date)
+        picks_text = format_picks_text(momentum_picks)
+        print(f"  {picks_text}")
+    except Exception as e:
+        print(f"  [WARN] Momentum picks failed: {e}")
+
+    # ── Stage 8c: Chart Generation ──
+    print("\n[8c/14] CHART GENERATION")
     try:
         from dossier.charts import generate_charts_for_dossier
         chart_tickers = [d["ticker"] for d in dossiers[:5]]
@@ -750,6 +797,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         csp_setups=csp_setups,
         ghost_log=ghost_log,
         ghost_suggestions=ghost_suggestions,
+        momentum_picks=momentum_picks,
     )
 
     pdf_path = None
@@ -818,8 +866,12 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
 
         # Don't duplicate entries for the same period
         if not any(e.get("entry_key") == _entry_key for e in entries):
-            # Pick a chart ticker (most active from scanner)
-            chart_ticker = scanner_signals[0]["symbol"] if scanner_signals else ""
+            # Pick a chart ticker — prefer gold pick if available
+            chart_ticker = ""
+            if momentum_picks and momentum_picks.get("picks"):
+                chart_ticker = momentum_picks["picks"][0]["ticker"]
+            elif scanner_signals:
+                chart_ticker = scanner_signals[0]["symbol"]
 
             entries.append({
                 "date": date,
@@ -872,6 +924,9 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     print(f"  Dossiers: {len(dossiers)}")
     print(f"  Ticker Pages: {len(ticker_pages)}")
     print(f"  VIX: {market['vix']['vix_level']} ({market['vix']['regime_name']})")
+    if momentum_picks and momentum_picks.get("picks"):
+        gold = momentum_picks["picks"][0]
+        print(f"  🥇 GOLD PICK: {gold['ticker']} (Score: {gold['score']}/100)")
     print("=" * 72)
 
     return report_path

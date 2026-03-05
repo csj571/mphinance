@@ -27,6 +27,7 @@ def build_report(
     csp_setups: list = None,
     ghost_log: str = "",
     ghost_suggestions: str = "",
+    momentum_picks: dict = None,
 ) -> str:
     """Render the daily Alpha Dossier report as HTML. Returns path to HTML file."""
     env = Environment(
@@ -60,6 +61,7 @@ def build_report(
         csp_setups=csp_setups or [],
         ghost_log=ghost_log,
         ghost_suggestions=ghost_suggestions,
+        momentum_picks=momentum_picks or {},
         disclaimer=DISCLAIMER,
         pdf_filename=pdf_filename,
         md_filename=md_filename,
