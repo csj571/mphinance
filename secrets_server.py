@@ -20,6 +20,89 @@ from datetime import datetime
 
 SECRETS_FILE = Path(__file__).parent / "secrets.env"
 CATALOG_FILE = Path(__file__).parent / "secrets_catalog.json"
+FIREBASE_PROJECT = "studio-3669937961-ea8a7"
+FIRESTORE_COLLECTION = "secrets"
+
+# ═══ Firestore Cloud Sync ═══
+_firestore_db = None
+
+
+def _get_firestore():
+    """Initialize Firestore client (lazy, singleton)."""
+    global _firestore_db
+    if _firestore_db is not None:
+        return _firestore_db
+    try:
+        import firebase_admin
+        from firebase_admin import credentials, firestore
+
+        # Try Application Default Credentials first, fall back to project ID only
+        if not firebase_admin._apps:
+            try:
+                cred = credentials.ApplicationDefault()
+                firebase_admin.initialize_app(cred, {"projectId": FIREBASE_PROJECT})
+            except Exception:
+                # Fall back to just project ID (works with firebase CLI login)
+                firebase_admin.initialize_app(options={"projectId": FIREBASE_PROJECT})
+
+        _firestore_db = firestore.client()
+        return _firestore_db
+    except Exception as e:
+        print(f"  [WARN] Firestore unavailable: {e}")
+        return None
+
+
+def sync_up():
+    """Push local secrets.env → Firestore cloud."""
+    db = _get_firestore()
+    if not db:
+        print("  [ERROR] Firestore not available. Run: gcloud auth application-default login")
+        return False
+
+    secrets = _load_secrets()
+    collection = db.collection(FIRESTORE_COLLECTION)
+
+    for key, value in secrets.items():
+        collection.document(key).set({
+            "value": value,
+            "category": _build_catalog({key: value})[key]["category"],
+            "updated_at": datetime.now().isoformat(),
+            "source": "sam2",
+        })
+
+    print(f"  ✓ Synced {len(secrets)} secrets UP to Firestore ({FIREBASE_PROJECT})")
+    return True
+
+
+def sync_down():
+    """Pull Firestore cloud → local secrets.env."""
+    db = _get_firestore()
+    if not db:
+        print("  [ERROR] Firestore not available. Run: gcloud auth application-default login")
+        return False
+
+    collection = db.collection(FIRESTORE_COLLECTION)
+    docs = collection.stream()
+
+    cloud_secrets = {}
+    for doc in docs:
+        data = doc.to_dict()
+        cloud_secrets[doc.id] = data.get("value", "")
+
+    if not cloud_secrets:
+        print("  No secrets found in Firestore")
+        return False
+
+    # Merge: cloud values take priority for existing keys
+    local_secrets = _load_secrets()
+    merged = {**local_secrets, **cloud_secrets}
+    _save_secrets(merged)
+
+    new_keys = set(cloud_secrets.keys()) - set(local_secrets.keys())
+    print(f"  ✓ Synced {len(cloud_secrets)} secrets DOWN from Firestore")
+    if new_keys:
+        print(f"    New keys: {', '.join(sorted(new_keys))}")
+    return True
 
 
 def _load_secrets() -> dict:
@@ -158,6 +241,14 @@ def cli():
             key, value = sys.argv[idx + 1], sys.argv[idx + 2]
             set_secret(key, value)
             print(f"✓ Set {key}")
+        return
+
+    if "--sync-up" in sys.argv:
+        sync_up()
+        return
+
+    if "--sync-down" in sys.argv:
+        sync_down()
         return
 
     # Default: start FastAPI + MCP server
