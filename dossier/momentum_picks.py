@@ -275,7 +275,8 @@ def _save_picks(result: dict, date: str):
 
         medals = {0: "gold", 1: "silver", 2: "bronze"}
         api_picks = []
-        for i, pick in enumerate(result.get("picks", [])):
+        # Top 10 with full detail (podium is top 3, rest are "ranked")
+        for i, pick in enumerate(result.get("all_ranked", [])[:10]):
             api_picks.append({
                 "rank": i + 1,
                 "medal": medals.get(i, ""),
