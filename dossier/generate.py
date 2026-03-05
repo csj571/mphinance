@@ -753,6 +753,22 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     except Exception as e:
         print(f"  [WARN] Momentum picks failed: {e}")
 
+    # ── Stage 8d: Daily Trading Setups (3-Style) ──
+    print("\n[8d/14] DAILY TRADING SETUPS (Day Trade / Swing / CSP)")
+    daily_setups_data = {}
+    try:
+        from dossier.daily_setups import build_daily_setups, format_setups_text
+        # Reuse payloads from momentum scoring
+        daily_setups_data = build_daily_setups(
+            payloads_for_scoring if 'payloads_for_scoring' in dir() else [],
+            date,
+            csp_data=csp_setups,
+        )
+        setups_text = format_setups_text(daily_setups_data)
+        print(f"  {setups_text}")
+    except Exception as e:
+        print(f"  [WARN] Daily setups failed: {e}")
+
     # ── Stage 8c: Chart Generation ──
     print("\n[8c/14] CHART GENERATION")
     try:
