@@ -691,8 +691,23 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
             dossiers.append(data)
     print(f"  {len(dossiers)} dossiers enriched")
 
+    # ── Stage 8b: Chart Generation ──
+    print("\n[8b/14] CHART GENERATION")
+    try:
+        from dossier.charts import generate_charts_for_dossier
+        chart_tickers = [d["ticker"] for d in dossiers[:5]]
+        charts = generate_charts_for_dossier(chart_tickers, output_dir=str(OUTPUT_DIR.parent / "charts"), max_charts=5)
+        # Attach chart paths to dossier data
+        chart_map = {c["ticker"]: c["path"] for c in charts}
+        for d in dossiers:
+            d["chart_path"] = chart_map.get(d["ticker"], "")
+        print(f"  {len(charts)} charts generated")
+    except Exception as e:
+        print(f"  [WARN] Chart generation failed: {e}")
+        charts = []
+
     # ── Stage 9: AI Narrative ──
-    print("\n[9/11] AI NARRATIVE")
+    print("\n[9/14] AI NARRATIVE")
     from dossier.report.ai_narrative import generate_narrative
     ai_narrative = generate_narrative(market, institutional, scanner_signals, persistence, dossiers)
 
