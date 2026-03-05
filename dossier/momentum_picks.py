@@ -5,15 +5,19 @@ Ranks ALL dossier tickers by a momentum-specific composite score
 and returns the top 3. Unlike the general grade (A/B/C/D) which
 blends technical + fundamental, this is PURE momentum:
 
-Scoring factors (max 100):
-  EMA Stack alignment:   25 pts  (FULL BULL=25, PARTIAL BULL=15, TANGLED=5)
-  Trend direction:       15 pts  (Bullish=15, Bearish=0)
-  RSI sweet spot:        15 pts  (40-65 = max, <30 or >70 = low)
+Scoring factors (max 100 raw, then quality multiplied):
+  EMA Stack alignment:   20 pts  (FULL BULL=20, PARTIAL BULL=12, TANGLED=4)
+  Pullback Setup:        15 pts  (Bounce 2.0: EMA aligned + ADX>25 + Stoch<40 + near EMA21)
   ADX trend strength:    15 pts  (>25 = trending, >40 = strong trend)
+  RSI sweet spot:        10 pts  (40-65 = max, <30 or >70 = low)
+  Trend direction:       10 pts  (Bullish=10, Bearish=0)
   Relative Volume:       10 pts  (>1.5x = high interest)
   Price vs EMA 21:       10 pts  (within 2% above = perfect pullback)
-  Price change today:     5 pts  (positive movement)
+  MACD momentum:          5 pts  (histogram positive = accelerating)
   Institutional signal:   5 pts  (buying = bonus)
+
+Then: final_score = raw_score * (quality_score / 100)
+Quality filter penalizes SPACs, pinned acquisitions, junk bio, shells.
 """
 
 import json
@@ -43,32 +47,48 @@ def score_momentum(payload: dict) -> dict:
     trend = payload.get("trendOverall", "")
     rsi = float(osc.get("rsi_14") or 50)
     adx = float(osc.get("adx_14") or 0)
+    stoch_k = float(osc.get("stoch_k") or 50)
+    macd_hist = osc.get("macd_hist")
     rel_vol = float(vol.get("rel_vol") or 1.0)
 
-    # EMA values for price-vs-EMA calc
+    # EMA values
     ema_21 = ta.get("ema", {}).get("21")
 
     breakdown = {}
 
-    # 1. EMA Stack (25 pts)
-    ema_pts = {"FULL BULLISH": 25, "PARTIAL BULLISH": 15, "TANGLED": 5,
-               "PARTIAL BEARISH": 2, "FULL BEARISH": 0, "UNKNOWN": 5}
-    breakdown["ema_stack"] = ema_pts.get(ema_stack, 5)
+    # ── 1. EMA Stack (20 pts) ──
+    ema_pts = {"FULL BULLISH": 20, "PARTIAL BULLISH": 12, "TANGLED": 4,
+               "PARTIAL BEARISH": 2, "FULL BEARISH": 0, "UNKNOWN": 4}
+    breakdown["ema_stack"] = ema_pts.get(ema_stack, 4)
 
-    # 2. Trend direction (15 pts)
-    breakdown["trend"] = 15 if "Bullish" in trend else 0
+    # ── 2. Pullback Setup — Bounce 2.0 (15 pts) ──
+    # The money maker: EMA aligned + strong trend + pulling back
+    # FULL BULL + ADX>25 + Stoch<40 + near EMA21 = TEXTBOOK setup
+    pullback_score = 0
+    is_pullback = False
+    ema_aligned = ema_stack in ("FULL BULLISH", "PARTIAL BULLISH")
+    near_ema21 = False
+    if ema_21 and price:
+        pct_from_ema = ((price - float(ema_21)) / float(ema_21)) * 100
+        near_ema21 = -3 <= pct_from_ema <= 5
 
-    # 3. RSI sweet spot (15 pts) — momentum traders want 40-65 zone
-    if 40 <= rsi <= 65:
-        breakdown["rsi"] = 15
-    elif 30 <= rsi < 40 or 65 < rsi <= 70:
-        breakdown["rsi"] = 10
-    elif rsi < 30:
-        breakdown["rsi"] = 5   # oversold could bounce but risky
-    else:
-        breakdown["rsi"] = 2   # overbought >70
+    if ema_aligned and adx >= 25 and stoch_k <= 40 and near_ema21:
+        # Perfect Bounce 2.0
+        pullback_score = 15
+        is_pullback = True
+    elif ema_aligned and adx >= 20 and stoch_k <= 50 and near_ema21:
+        # Good pullback but not textbook
+        pullback_score = 10
+        is_pullback = True
+    elif ema_aligned and stoch_k <= 40:
+        # Has the pullback but maybe not near EMA21
+        pullback_score = 6
+    elif ema_aligned and adx >= 25:
+        # Strong trend but no pullback yet
+        pullback_score = 3
+    breakdown["pullback"] = pullback_score
 
-    # 4. ADX strength (15 pts)
+    # ── 3. ADX strength (15 pts) ──
     if adx >= 40:
         breakdown["adx"] = 15
     elif adx >= 30:
@@ -80,7 +100,20 @@ def score_momentum(payload: dict) -> dict:
     else:
         breakdown["adx"] = 0
 
-    # 5. Relative Volume (10 pts)
+    # ── 4. RSI sweet spot (10 pts) ──
+    if 40 <= rsi <= 65:
+        breakdown["rsi"] = 10
+    elif 30 <= rsi < 40 or 65 < rsi <= 70:
+        breakdown["rsi"] = 7
+    elif rsi < 30:
+        breakdown["rsi"] = 4   # oversold could bounce but risky
+    else:
+        breakdown["rsi"] = 1   # overbought >70
+
+    # ── 5. Trend direction (10 pts) ──
+    breakdown["trend"] = 10 if "Bullish" in trend else 0
+
+    # ── 6. Relative Volume (10 pts) ──
     if rel_vol >= 2.0:
         breakdown["rel_vol"] = 10
     elif rel_vol >= 1.5:
@@ -90,7 +123,7 @@ def score_momentum(payload: dict) -> dict:
     else:
         breakdown["rel_vol"] = 2
 
-    # 6. Price vs EMA 21 (10 pts) — want to be just above (pullback entry)
+    # ── 7. Price vs EMA 21 (10 pts) ──
     if ema_21 and price:
         pct_from_ema = ((price - float(ema_21)) / float(ema_21)) * 100
         if 0 <= pct_from_ema <= 2:
@@ -106,26 +139,47 @@ def score_momentum(payload: dict) -> dict:
     else:
         breakdown["price_vs_ema"] = 5
 
-    # 7. Today's price change (5 pts)
-    if change_pct >= 3:
-        breakdown["momentum"] = 5
-    elif change_pct >= 1:
-        breakdown["momentum"] = 4
-    elif change_pct >= 0:
-        breakdown["momentum"] = 2
+    # ── 8. MACD Momentum (5 pts) ──
+    if macd_hist is not None:
+        try:
+            mh = float(macd_hist)
+            if mh > 0:
+                breakdown["macd"] = 5   # Accelerating
+            elif mh > -0.5:
+                breakdown["macd"] = 3   # Flattening (potential turn)
+            else:
+                breakdown["macd"] = 0   # Decelerating
+        except (ValueError, TypeError):
+            breakdown["macd"] = 2
     else:
-        breakdown["momentum"] = 0
+        breakdown["macd"] = 2  # No data, neutral
 
-    # 8. Institutional signal (5 pts)
+    # ── 9. Institutional signal (5 pts) ──
     direction = (sig.get("direction") or "").upper()
     breakdown["institutional"] = 5 if "BUY" in direction else 0
 
-    total = sum(breakdown.values())
+    raw_total = sum(breakdown.values())
+
+    # ── Quality Multiplier ──
+    quality = {"quality_score": 100, "flags": {}, "reasons": [], "has_issues": False}
+    try:
+        from dossier.quality_filter import check_quality
+        quality = check_quality(payload)
+    except Exception:
+        pass
+
+    quality_score = quality["quality_score"]
+    final_score = round(raw_total * (quality_score / 100))
 
     return {
         "ticker": payload.get("ticker", ""),
-        "score": total,
+        "score": final_score,
+        "raw_score": raw_total,
+        "quality_score": quality_score,
+        "quality_flags": quality.get("flags", {}),
+        "quality_reasons": quality.get("reasons", []),
         "breakdown": breakdown,
+        "is_pullback_setup": is_pullback,
         "price": price,
         "change_pct": change_pct,
         "grade": scores_data.get("grade", ""),
@@ -134,6 +188,7 @@ def score_momentum(payload: dict) -> dict:
         "trend": trend,
         "rsi": round(rsi, 1),
         "adx": round(adx, 1),
+        "stoch_k": round(stoch_k, 1),
         "rel_vol": round(rel_vol, 2),
     }
 
@@ -213,18 +268,33 @@ def _save_picks(result: dict, date: str):
 
 
 def format_picks_text(picks_data: dict) -> str:
-    """Format picks as plain text for report inclusion."""
+    """Format picks as plain text with FULL factor breakdown for pipeline output."""
     if not picks_data or not picks_data.get("picks"):
         return "No momentum picks today."
 
-    lines = ["DAILY MOMENTUM PICKS", "=" * 40]
+    lines = ["", "DAILY MOMENTUM PICKS", "=" * 60]
     for p in picks_data["picks"]:
+        bd = p.get("breakdown", {})
+        pb_flag = " ⚡PULLBACK SETUP" if p.get("is_pullback_setup") else ""
+        q_flag = f" ⚠️Q:{p.get('quality_score', 100)}" if p.get("quality_score", 100) < 100 else ""
+
         lines.append(
-            f"{p['medal']}: {p['ticker']} "
-            f"(Score: {p['score']}/100, "
-            f"Grade: {p['grade']}, "
-            f"{p['ema_stack']}, "
-            f"RSI: {p['rsi']}, "
-            f"${p['price']:.2f} [{p['change_pct']:+.1f}%])"
+            f"\n{p['medal']}: {p['ticker']}  "
+            f"FINAL: {p['score']}/100  (Raw: {p.get('raw_score', p['score'])}){pb_flag}{q_flag}"
         )
+        lines.append(f"  ${p['price']:.2f}  [{p['change_pct']:+.1f}%]  Grade: {p['grade']}  {p['ema_stack']}")
+        lines.append(f"  ├─ EMA Stack:    {bd.get('ema_stack', '?'):>3}/20")
+        lines.append(f"  ├─ Pullback:     {bd.get('pullback', '?'):>3}/15" + (" ← Bounce 2.0!" if p.get("is_pullback_setup") else ""))
+        lines.append(f"  ├─ ADX ({p['adx']}):   {bd.get('adx', '?'):>3}/15")
+        lines.append(f"  ├─ RSI ({p['rsi']}):   {bd.get('rsi', '?'):>3}/10")
+        lines.append(f"  ├─ Trend:        {bd.get('trend', '?'):>3}/10")
+        lines.append(f"  ├─ Rel Vol:      {bd.get('rel_vol', '?'):>3}/10  ({p['rel_vol']}x)")
+        lines.append(f"  ├─ Price/EMA21:  {bd.get('price_vs_ema', '?'):>3}/10")
+        lines.append(f"  ├─ MACD:         {bd.get('macd', '?'):>3}/5")
+        lines.append(f"  └─ Institutional:{bd.get('institutional', '?'):>3}/5")
+        if p.get("quality_reasons"):
+            for r in p["quality_reasons"]:
+                lines.append(f"     ⚠️ {r}")
+
     return "\n".join(lines)
+
