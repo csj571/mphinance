@@ -433,6 +433,13 @@ def generate_ticker_page(ticker: str, enriched_data: dict, date: str,
     with open(latest_json, "w") as f:
         json.dump(payload, f, indent=2, default=str)
 
+    # ── Archive signals for backtesting ──
+    try:
+        from dossier.backtesting.signal_history import archive_signal
+        archive_signal(payload, date)
+    except Exception as e:
+        print(f"    [WARN] Signal archive skipped: {e}")
+
     # HTML — render template
     template_dir = Path(__file__).parent
     env = Environment(loader=FileSystemLoader(str(template_dir)))
