@@ -691,6 +691,21 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
             dossiers.append(data)
     print(f"  {len(dossiers)} dossiers enriched")
 
+    # ── Stage 8a: Market Regime Detection ──
+    print("\n[8a/14] MARKET REGIME DETECTION")
+    market_regime = {}
+    try:
+        from dossier.market_regime import detect_regime
+        market_regime = detect_regime()
+        regime = market_regime.get("regime", "UNKNOWN")
+        vix = market_regime.get("vix", 0)
+        print(f"  Regime: {regime} (VIX {vix:.1f})")
+        print(f"  {market_regime.get('market_context', '')}")
+        for s in market_regime.get("hedge_suggestions", []):
+            print(f"  → {s}")
+    except Exception as e:
+        print(f"  [WARN] Market regime detection failed: {e}")
+
     # ── Stage 8b: Momentum Picks ──
     print("\n[8b/14] DAILY MOMENTUM PICKS")
     momentum_picks = {}
@@ -798,6 +813,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         ghost_log=ghost_log,
         ghost_suggestions=ghost_suggestions,
         momentum_picks=momentum_picks,
+        market_regime=market_regime,
     )
 
     pdf_path = None
