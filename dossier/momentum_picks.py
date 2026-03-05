@@ -241,6 +241,21 @@ def pick_daily_momentum(ticker_payloads: list[dict], date: str) -> dict:
 
 def _save_picks(result: dict, date: str):
     """Append today's picks to the rolling picks file AND write API endpoint."""
+    # ── Regime Awareness ──
+    regime_data = {}
+    try:
+        from dossier.market_regime import detect_regime
+        regime_data = detect_regime()
+    except Exception as e:
+        print(f"    [WARN] Regime detection failed: {e}")
+
+    regime_name = regime_data.get("regime", "UNKNOWN")
+    regime_note = "✅ Market favorable for momentum entries"
+    if regime_name in ["FEAR", "PANIC"]:
+        regime_note = "⚠️ High VIX — reduce size, tighten stops"
+    elif regime_name == "ELEVATED":
+        regime_note = "🟡 Caution — prefer pullback setups only"
+
     try:
         PICKS_FILE.parent.mkdir(parents=True, exist_ok=True)
 
@@ -301,6 +316,7 @@ def _save_picks(result: dict, date: str):
                 "quality_flags": pick.get("quality_flags", {}),
                 "quality_reasons": pick.get("quality_reasons", []),
                 "tradingview_url": f"https://www.tradingview.com/symbols/{pick['ticker']}/",
+                "regime_note": regime_note,
             })
 
         # Full ranking (compact — just ticker + score + pullback flag)
@@ -317,6 +333,12 @@ def _save_picks(result: dict, date: str):
         api_payload = {
             "date": date,
             "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "market_regime": {
+                "regime": regime_name,
+                "vix": regime_data.get("vix", 0),
+                "hedge_suggestions": regime_data.get("hedge_suggestions", []),
+                "market_context": regime_data.get("market_context", ""),
+            },
             "picks": api_picks,
             "total_scored": len(result.get("all_ranked", [])),
             "all_ranked": all_ranked,

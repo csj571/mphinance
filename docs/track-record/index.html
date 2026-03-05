@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Record — mphinance</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e27;
+            --panel: rgba(15, 20, 40, 0.85);
+            --border: rgba(59, 130, 246, 0.12);
+            --text: #e0e0e0;
+            --text-dim: #a0a0a0;
+            --green: #00ff41;
+            --gold: #f0b400;
+            --red: #e53935;
+            --cyan: #00f3ff;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--cyan);
+            margin-bottom: 2rem;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 1000px;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--cyan);
+        }
+
+        .table-container {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--cyan);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        th:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .positive { color: var(--green); }
+        .negative { color: var(--red); }
+        .pullback { color: var(--gold); }
+        .unvalidated { color: var(--text-dim); font-style: italic; }
+
+        .chart-container {
+            width: 100%;
+            max-width: 1000px;
+            height: 200px;
+            margin-bottom: 2rem;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>TRACK RECORD</h1>
+
+    <div class="stats-container" id="stats">
+        <div class="stat-card">
+            <div class="stat-label">Total Picks</div>
+            <div class="stat-value" id="stat-total">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Validated</div>
+            <div class="stat-value" id="stat-validated">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Avg 5d Return</div>
+            <div class="stat-value" id="stat-avg">0.0%</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Win Rate</div>
+            <div class="stat-value" id="stat-winrate">0%</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Sharpe</div>
+            <div class="stat-value" id="stat-sharpe">0.0</div>
+        </div>
+    </div>
+
+    <div class="chart-container" id="chart-container">
+        <svg id="cumulative-chart" preserveAspectRatio="none"></svg>
+    </div>
+
+    <div class="table-container">
+        <table id="record-table">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">Date</th>
+                    <th onclick="sortTable(1)">Ticker</th>
+                    <th onclick="sortTable(2)">Score</th>
+                    <th onclick="sortTable(3)">Grade</th>
+                    <th onclick="sortTable(4)">1D %</th>
+                    <th onclick="sortTable(5)">5D %</th>
+                    <th onclick="sortTable(6)">10D %</th>
+                    <th onclick="sortTable(7)">21D %</th>
+                </tr>
+            </thead>
+            <tbody id="record-body">
+                <!-- Entries will be injected here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        async function loadData() {
+            try {
+                const response = await fetch('../backtesting/track_record.json');
+                const data = await response.json();
+                renderStats(data.stats);
+                renderTable(data.entries);
+                renderChart(data.entries);
+            } catch (e) {
+                console.error("Failed to load track record:", e);
+            }
+        }
+
+        function renderStats(stats) {
+            if (!stats) return;
+            document.getElementById('stat-total').textContent = stats.total_picks_tracked || 0;
+            document.getElementById('stat-validated').textContent = stats.total_validated || 0;
+            document.getElementById('stat-avg').textContent = (stats.avg_5d_return || 0) + '%';
+            document.getElementById('stat-winrate').textContent = (stats.win_rate_5d || 0) + '%';
+            document.getElementById('stat-sharpe').textContent = stats.sharpe_5d || 0.0;
+        }
+
+        function renderTable(entries) {
+            const body = document.getElementById('record-body');
+            body.innerHTML = '';
+
+            entries.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(e => {
+                const tr = document.createElement('tr');
+                if (e.is_pullback) tr.classList.add('pullback');
+
+                const formatRet = (val) => {
+                    if (val === undefined) return '<span class="unvalidated">--</span>';
+                    const cls = val > 0 ? 'positive' : 'negative';
+                    return `<span class="${cls}">${val > 0 ? '+' : ''}${val}%</span>`;
+                };
+
+                tr.innerHTML = `
+                    <td>${e.date}</td>
+                    <td style="font-weight:bold; color:var(--cyan)">${e.ticker}</td>
+                    <td>${e.score}</td>
+                    <td>${e.grade}</td>
+                    <td>${formatRet(e.fwd_1d)}</td>
+                    <td>${formatRet(e.fwd_5d)}</td>
+                    <td>${formatRet(e.fwd_10d)}</td>
+                    <td>${formatRet(e.fwd_21d)}</td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function renderChart(entries) {
+            const validated = entries
+                .filter(e => e.fwd_5d !== undefined)
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            if (validated.length < 2) return;
+
+            const svg = document.getElementById('cumulative-chart');
+            let cumulative = 0;
+            const points = validated.map((e, i) => {
+                cumulative += e.fwd_5d;
+                return { x: i, y: cumulative };
+            });
+
+            const minX = 0;
+            const maxX = points.length - 1;
+            const minY = Math.min(...points.map(p => p.y), 0);
+            const maxY = Math.max(...points.map(p => p.y), 1);
+
+            const padding = 20;
+            const w = svg.clientWidth;
+            const h = svg.clientHeight;
+
+            const getX = (x) => (x / maxX) * (w - 2 * padding) + padding;
+            const getY = (y) => h - ((y - minY) / (maxY - minY)) * (h - 2 * padding) - padding;
+
+            let pathData = `M ${getX(points[0].x)} ${getY(points[0].y)}`;
+            for (let i = 1; i < points.length; i++) {
+                pathData += ` L ${getX(points[i].x)} ${getY(points[i].y)}`;
+            }
+
+            svg.innerHTML = `
+                <path d="${pathData}" fill="none" stroke="var(--cyan)" stroke-width="2" />
+                ${points.map(p => `<circle cx="${getX(p.x)}" cy="${getY(p.y)}" r="3" fill="var(--cyan)" />`).join('')}
+            `;
+        }
+
+        function sortTable(n) {
+            // Simple sort logic could be added here
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
