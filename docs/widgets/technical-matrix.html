@@ -260,6 +260,11 @@
                 grid-template-columns: repeat(2, 1fr)
             }
         }
+    
+        .share-screenshot-btn{font-family:'JetBrains Mono',monospace;font-size:8px;padding:3px 10px;border:1px solid #333;color:#555;background:none;cursor:pointer;text-transform:uppercase;letter-spacing:0.1em;border-radius:2px;transition:all 0.2s;display:inline-flex;align-items:center;gap:4px}
+        .share-screenshot-btn:hover{color:#a855f7;border-color:#a855f7}
+        .share-screenshot-btn.capturing{color:#ffb000;border-color:#ffb000}
+        .share-screenshot-btn.done{color:#22c55e;border-color:#22c55e}
     </style>
 </head>
 
@@ -310,6 +315,7 @@
         <div class="footer">
             <a href="https://mphinance.github.io/mphinance/" class="brand" target="_blank">Alpha.HUD // mphinance</a>
             <button class="embed-btn" onclick="copyEmbed()">&lt;/&gt; Embed</button>
+            <button class="share-screenshot-btn" onclick="(function(btn){var t=(new URLSearchParams(location.search).get('t')||'TICKER');shareWidgetScreenshot('.widget',t,'technicals',btn);})(this)">📷 Share</button>
         </div>
     </div>
     <script>
@@ -390,6 +396,64 @@
                 });
             };
         })();
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+    window.shareWidgetScreenshot = function(widgetSelector, ticker, widgetName, btn) {
+        const original = btn.innerHTML;
+        btn.innerHTML = '⏳ Capturing...';
+        btn.classList.add('capturing');
+
+        const el = document.querySelector(widgetSelector || '.widget');
+        if (!el) { btn.innerHTML = original; return; }
+
+        html2canvas(el, {
+            backgroundColor: '#050508',
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            logging: false
+        }).then(function(canvas) {
+            canvas.toBlob(function(blob) {
+                const filename = (ticker || 'ticker') + '-' + (widgetName || 'widget') + '.png';
+                const file = new File([blob], filename, { type: 'image/png' });
+
+                // Try Web Share API first (mobile native share sheet)
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    navigator.share({
+                        title: (ticker || '') + ' Alpha.HUD Widget',
+                        text: 'Live trading data from Alpha.HUD — mphinance.github.io/mphinance/widgets/',
+                        files: [file]
+                    }).then(function() {
+                        btn.innerHTML = '✓ Shared!';
+                        btn.classList.remove('capturing');
+                        btn.classList.add('done');
+                        setTimeout(function() { btn.innerHTML = original; btn.classList.remove('done'); }, 2000);
+                    }).catch(function() {
+                        downloadImage(canvas, filename, btn, original);
+                    });
+                } else {
+                    // Fallback: download
+                    downloadImage(canvas, filename, btn, original);
+                }
+            }, 'image/png');
+        }).catch(function(e) {
+            console.error('html2canvas failed:', e);
+            btn.innerHTML = original;
+            btn.classList.remove('capturing');
+        });
+    };
+
+    function downloadImage(canvas, filename, btn, original) {
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        btn.innerHTML = '✓ Saved!';
+        btn.classList.remove('capturing');
+        btn.classList.add('done');
+        setTimeout(function() { btn.innerHTML = original; btn.classList.remove('done'); }, 2000);
+    }
     </script>
 </body>
 
