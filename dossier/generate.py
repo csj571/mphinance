@@ -840,6 +840,19 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
             print(f"  ✓ Blog entry added for {_entry_key} (chart: {chart_ticker})")
         else:
             print(f"  ✓ Blog entry already exists for {_entry_key}")
+
+        # Inline blog data into HTML to bypass proxy cache
+        blog_html = PROJECT_ROOT / "landing" / "blog" / "index.html"
+        if blog_html.exists() and entries:
+            html = blog_html.read_text()
+            # Remove old inline data if present
+            import re
+            html = re.sub(r'<script>window\.__BLOG_ENTRIES\s*=.*?</script>\n?', '', html, flags=re.DOTALL)
+            # Inject fresh data before </head>
+            inline_script = f'<script>window.__BLOG_ENTRIES = {_json.dumps(entries)};</script>\n'
+            html = html.replace('</head>', inline_script + '</head>')
+            blog_html.write_text(html)
+            print(f"  ✓ Inlined {len(entries)} entries into blog HTML")
     except Exception as e:
         print(f"  [WARN] Blog update failed: {e}")
 
