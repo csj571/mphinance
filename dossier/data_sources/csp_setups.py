@@ -44,6 +44,17 @@ def fetch_csp_setups(max_results: int = 8) -> list[dict]:
         try:
             df_trades = strategy.deep_dive(df.head(30), params)
             print(f"    Stage 3: {len(df_trades)} trade setups found")
+
+            # Stage 4: VoPR enrichment — add vol regime, VRP, delta, theta, grade
+            if not df_trades.empty:
+                try:
+                    from strategies.vopr_overlay import enrich_csp
+                    df_trades = enrich_csp(df_trades)
+                    a_count = len(df_trades[df_trades['VoPR_Grade'] == 'A'])
+                    b_count = len(df_trades[df_trades['VoPR_Grade'] == 'B'])
+                    print(f"    Stage 4: VoPR enriched — {a_count}A, {b_count}B grades")
+                except Exception as e:
+                    print(f"    [WARN] VoPR enrichment failed: {e}")
         except Exception as e:
             print(f"    [WARN] Deep dive failed: {e}")
             df_trades = df.head(max_results)
@@ -85,6 +96,13 @@ def fetch_csp_setups(max_results: int = 8) -> list[dict]:
                 "rsi": round(float(row.get("RSI", 0)), 1),
                 "has_trade": trade_info is not None,
                 "trade": trade_info,
+                # VoPR enrichment fields
+                "vopr_grade": str(row.get("VoPR_Grade", "")),
+                "vrp_ratio": row.get("VRP_Ratio"),
+                "vol_regime": str(row.get("Vol_Regime", "")),
+                "bs_delta": row.get("BS_Delta"),
+                "daily_theta": row.get("Daily_Theta"),
+                "composite_rv": row.get("Composite_RV"),
             })
 
         return results
