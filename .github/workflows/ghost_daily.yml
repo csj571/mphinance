@@ -2,8 +2,10 @@ name: Ghost Daily (Blog + Suggestions)
 
 on:
   schedule:
-    # Mon-Fri 5:30 AM CST (11:30 UTC) — 30 min before dossier
+    # Mon-Fri: Morning (5:30 AM CST), Midday (12:00 PM), Evening (5:00 PM)
     - cron: '30 11 * * 1-5'
+    - cron: '0 18 * * 1-5'
+    - cron: '0 23 * * 1-5'
   workflow_dispatch:  # Manual trigger
 
 permissions:
@@ -38,7 +40,17 @@ jobs:
           from datetime import datetime
           from pathlib import Path
 
-          DATE = datetime.utcnow().strftime("%Y-%m-%d")
+          now = datetime.utcnow()
+          DATE = now.strftime("%Y-%m-%d")
+          HOUR = now.hour
+          # Determine period: morning (<14 UTC), midday (14-20), evening (20+)
+          if HOUR < 14:
+              PERIOD = "morning"
+          elif HOUR < 20:
+              PERIOD = "midday"
+          else:
+              PERIOD = "evening"
+          ENTRY_KEY = f"{DATE}-{PERIOD}"
           BLOG_PATH = Path("landing/blog/blog_entries.json")
 
           # Load existing entries
@@ -47,9 +59,9 @@ jobs:
               with open(BLOG_PATH) as f:
                   entries = json.load(f)
 
-          # Don't duplicate
-          if any(e.get("date") == DATE for e in entries):
-              print(f"Entry for {DATE} already exists, skipping.")
+          # Don't duplicate same period
+          if any(e.get("entry_key") == ENTRY_KEY for e in entries):
+              print(f"Entry for {ENTRY_KEY} already exists, skipping.")
               sys.exit(0)
 
           # Gather git stats
@@ -116,6 +128,8 @@ jobs:
 
           entries.append({
               "date": DATE,
+              "entry_key": ENTRY_KEY,
+              "period": PERIOD,
               "ghost_log": ghost_log,
               "suggestions": suggestions,
               "commits": commit_count,

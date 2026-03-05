@@ -795,13 +795,21 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
             with open(blog_path) as bf:
                 entries = _json.load(bf)
 
-        # Don't duplicate entries for the same date
-        if not any(e.get("date") == date for e in entries):
+        # Determine period based on current hour (UTC)
+        from datetime import datetime as _dtm
+        _h = _dtm.utcnow().hour
+        _period = "morning" if _h < 14 else ("midday" if _h < 20 else "evening")
+        _entry_key = f"{date}-{_period}"
+
+        # Don't duplicate entries for the same period
+        if not any(e.get("entry_key") == _entry_key for e in entries):
             # Pick a chart ticker (most active from scanner)
             chart_ticker = scanner_signals[0]["symbol"] if scanner_signals else ""
 
             entries.append({
                 "date": date,
+                "entry_key": _entry_key,
+                "period": _period,
                 "ghost_log": ghost_log,
                 "suggestions": ghost_suggestions,
                 "commits": len(subprocess.run(
@@ -814,9 +822,9 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
 
             with open(blog_path, "w") as bf:
                 _json.dump(entries, bf, indent=2)
-            print(f"  ✓ Blog entry added for {date} (chart: {chart_ticker})")
+            print(f"  ✓ Blog entry added for {_entry_key} (chart: {chart_ticker})")
         else:
-            print(f"  ✓ Blog entry already exists for {date}")
+            print(f"  ✓ Blog entry already exists for {_entry_key}")
     except Exception as e:
         print(f"  [WARN] Blog update failed: {e}")
 
