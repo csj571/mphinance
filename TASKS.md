@@ -1,31 +1,28 @@
 ---
-phase: 01-level-up
+phase: 02-automation
 type: execute
 wave: 1
 depends_on: []
 autonomous: true
-requirements: ["ML-scoring", "crash-hedging", "pine-indicator"]
+requirements: ["auto-backtest", "track-record"]
 must_haves:
   truths:
-    - "market_regime.py prints current VIX regime and hedging suggestions"
-    - "feature_importance.json shows ranked scoring factors with accuracy"
-    - "bounce2_indicator.pine compiles in Pine Script v6"
+    - "Backtest auto-runs at end of pipeline and appends to rolling track record"
+    - "Track record page shows 90-day rolling leaderboard on GH Pages"
   artifacts:
-    - path: "dossier/market_regime.py"
-      provides: "VIX regime detection and hedging module"
+    - path: "dossier/backtesting/auto_backtest.py"
+      provides: "Daily auto-backtest that scores today's picks and logs previous picks' outcomes"
       min_lines: 80
-    - path: "docs/backtesting/feature_importance.json"
-      provides: "ML analysis of which scoring factors predict returns"
-    - path: "docs/pine/bounce2_indicator.pine"
-      provides: "Bounce 2.0 TradingView indicator"
-      min_lines: 100
+    - path: "docs/track-record/index.html"
+      provides: "Rolling leaderboard showing daily picks vs actual returns"
+      min_lines: 60
 ---
 
 <objective>
-Level up the mphinance momentum trading screener with ML analysis, crash detection, and TradingView presence.
+Automate backtesting as part of the daily pipeline and publish a rolling track record.
 
-Purpose: Turn our 9-factor scoring system into the most complete, validated, and automated momentum screener.
-Output: VIX regime module, ML feature rankings, Pine Script indicator.
+Purpose: Build public proof that the momentum scorer works. Every day's picks get validated against actual returns.
+Output: Auto-backtest module + public track record page.
 </objective>
 
 <context>
@@ -34,84 +31,88 @@ Project root: /home/sam/Antigravity/empty/mphinance
 
 Key files:
 
-- dossier/momentum_picks.py — 9-factor momentum scorer (score_momentum function)
-- dossier/quality_filter.py — SPAC/penny/bio/shell detector
-- data/screens_history/ — Historical scanner CSVs from Venus (37 days, Feb 6 → Mar 4)
-- docs/backtesting/screens_backtest.json — Existing backtest results (827 scored entries)
+- dossier/generate.py — 13-stage dossier pipeline, runs daily at 6AM CST
+- dossier/momentum_picks.py — 9-factor scorer (ML-calibrated weights as of today)
+- dossier/backtesting/screens_backtest.py — existing backtest against historical screens
+- docs/backtesting/screens_backtest.json — backtest results
+- docs/daily-picks.json — daily API output with top 10 picks
+
+Existing backtest results (for reference):
+
+- 827 scored, 754 with returns, 25 days
+- High 70+ = +1.9% avg, 66% win rate  
+- Gold pick 10-day = +1.8% avg, 70% win rate
 </context>
 
 <tasks>
 
 <task type="auto">
-  <name>Plan 1: VIX Regime & Crash Detection Module</name>
-  <files>dossier/market_regime.py</files>
+  <name>Plan 1: Auto-Backtest Module</name>
+  <files>dossier/backtesting/auto_backtest.py</files>
   <action>
-  Read TASK_vix_regime.md for full specs. Create dossier/market_regime.py that:
+  Create a module that:
   
-  1. Uses yfinance to fetch ^VIX, ^VIX3M, ^VVIX, SPY
-  2. Classifies market into: CALM (VIX<15), NORMAL (15-20), ELEVATED (20-25), FEAR (25-35), PANIC (>35)
-  3. Computes VIX/VIX3M ratio (backwardation = fear signal)
-  4. Checks SPY vs 20/50/200 SMA
-  5. Returns regime + hedge suggestions + market context string
+  1. Reads `docs/daily-picks.json` for today's scored picks (top 10)
+  2. Reads `docs/backtesting/track_record.json` for the rolling log of previous picks
+  3. For picks that are 5+ trading days old, fetch their actual forward returns via yfinance
+  4. Append validated entries to the track record with: ticker, date, score, predicted_grade, fwd_1d, fwd_5d, fwd_10d, fwd_21d
+  5. Calculate running stats: avg_return_5d, win_rate_5d, sharpe_ratio, best_pick, worst_pick
+  6. Save updated `docs/backtesting/track_record.json`
   
-  Must run standalone: python3 dossier/market_regime.py → prints current regime
+  Make it work as both standalone AND importable:
+
+  ```python
+  if __name__ == "__main__":
+      update_track_record()
+  ```
+  
+  Rate limiting: batch 50 tickers with 1s sleep between batches.
   </action>
-  <verify>/home/sam/Antigravity/empty/mphinance/venv/bin/python3 dossier/market_regime.py</verify>
-  <done>Module prints current VIX regime, hedge suggestions, and market context. No errors.</done>
+  <verify>/home/sam/Antigravity/empty/mphinance/venv/bin/python3 dossier/backtesting/auto_backtest.py</verify>
+  <done>track_record.json exists and contains validated entries with forward returns</done>
 </task>
 
 <task type="auto">
-  <name>Plan 2: ML Feature Importance Analysis</name>
-  <files>docs/backtesting/feature_importance.json</files>
+  <name>Plan 2: Track Record Leaderboard Page</name>
+  <files>docs/track-record/index.html</files>
   <action>
-  Read TASK_feature_importance.md for full specs. Write a script that:
+  Create a dark-themed HTML page that fetches and displays the track record:
   
-  1. Loads History CSVs from data/screens_history/ (skip Fake_Strategy_History.csv)
-  2. For each row, extracts features: ADX, RSI, Stoch_K, relative_volume_10d_calc, EMA alignment
-  3. Fetches 5-day forward returns via yfinance (batch 50, sleep 1s between batches)
-  4. Trains RandomForestClassifier to predict positive_5d_return (binary)
-  5. Saves feature importances to docs/backtesting/feature_importance.json:
-     {"features_ranked": [{"name": "adx", "importance": 0.23}], "accuracy": 0.67, "n_samples": 400}
+  1. Reads `../backtesting/track_record.json` via fetch
+  2. Shows summary stats at top: total picks tracked, avg 5d return, win rate, sharpe
+  3. Sortable table of all picks: date, ticker, score, grade, 1d/5d/10d/21d returns
+  4. Color-code returns (green positive, red negative)
+  5. Chart showing cumulative return over time (simple SVG or canvas line)
+  6. Match the existing site style (dark HUD terminal aesthetic)
   
-  Use scikit-learn from the venv.
-  </action>
-  <verify>cat docs/backtesting/feature_importance.json | python3 -m json.tool</verify>
-  <done>feature_importance.json exists with ranked features and accuracy score</done>
-</task>
+  Style requirements:
 
-<task type="auto">
-  <name>Plan 3: TradingView Pine Script — Bounce 2.0</name>
-  <files>docs/pine/bounce2_indicator.pine</files>
-  <action>
-  Read TASK_pine_script.md for full specs. Write Pine Script v6 that:
-  
-  1. Plots EMA ribbon: 8 (cyan), 21 (yellow), 34 (orange), 55 (red), 89 (purple)
-  2. Detects Bounce 2.0: FULL BULLISH stack + ADX>=25 + Stoch_K<=40 + price near EMA21
-  3. Shows "⚡ B2.0" label below bar when signal fires
-  4. Adds alertcondition() for alerts
-  5. Score table in top-right showing factor breakdown
-  
-  indicator("Bounce 2.0 — mph1nance", overlay=true)
+- Background: #0a0e27
+- Text: white/gray  
+- Accent: #00ff41 (green), #f0b400 (gold), #e53935 (red)
+- Font: monospace
+- No external libraries — vanilla HTML/CSS/JS only
   </action>
-  <verify>cat docs/pine/bounce2_indicator.pine | head -5</verify>
-  <done>Pine Script file exists with v6 header, EMA plots, and Bounce 2.0 detection</done>
+
+  <verify>ls -la docs/track-record/index.html</verify>
+  <done>HTML page loads and displays track record data in dark HUD style</done>
 </task>
 
 </tasks>
 
 <verification>
 Before declaring complete:
-- [ ] dossier/market_regime.py runs and prints current regime
-- [ ] docs/backtesting/feature_importance.json is valid JSON with feature rankings
-- [ ] docs/pine/bounce2_indicator.pine has Pine Script v6 header and compiles conceptually
-- [ ] No modifications to existing files (momentum_picks.py, quality_filter.py, etc.)
+- [ ] auto_backtest.py runs standalone without errors
+- [ ] track_record.json is valid JSON with entry structure
+- [ ] index.html renders in browser with dark theme and data table
+- [ ] No modifications to existing files
 </verification>
 
 <success_criteria>
 
-- All three plans completed independently
-- Each output file exists and passes its verification check
-- Git commit with descriptive emoji-prefixed message
+- Both plans completed
+- Output files exist and pass verification
+- Commit with descriptive emoji-prefixed message
 </success_criteria>
 
 <output>

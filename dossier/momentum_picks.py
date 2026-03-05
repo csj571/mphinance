@@ -56,14 +56,17 @@ def score_momentum(payload: dict) -> dict:
 
     breakdown = {}
 
-    # ── 1. EMA Stack (20 pts) ──
-    ema_pts = {"FULL BULLISH": 20, "PARTIAL BULLISH": 12, "TANGLED": 4,
-               "PARTIAL BEARISH": 2, "FULL BEARISH": 0, "UNKNOWN": 4}
-    breakdown["ema_stack"] = ema_pts.get(ema_stack, 4)
+    # ── WEIGHTS CALIBRATED FROM ML FEATURE IMPORTANCE (2026-03-05) ──
+    # Stoch (0.22) > ADX (0.19) > RelVol (0.19) > RSI (0.18) > EMA21 prox (0.16)
+    # EMA alignment (0.03) proved less predictive than oscillators
+
+    # ── 1. EMA Stack (10 pts — was 20, ML says 0.03 importance) ──
+    ema_pts = {"FULL BULLISH": 10, "PARTIAL BULLISH": 6, "TANGLED": 2,
+               "PARTIAL BEARISH": 1, "FULL BEARISH": 0, "UNKNOWN": 2}
+    breakdown["ema_stack"] = ema_pts.get(ema_stack, 2)
 
     # ── 2. Pullback Setup — Bounce 2.0 (15 pts) ──
-    # The money maker: EMA aligned + strong trend + pulling back
-    # FULL BULL + ADX>25 + Stoch<40 + near EMA21 = TEXTBOOK setup
+    # Composite of stoch + adx + proximity — the textbook setup
     pullback_score = 0
     is_pullback = False
     ema_aligned = ema_stack in ("FULL BULLISH", "PARTIAL BULLISH")
@@ -88,52 +91,52 @@ def score_momentum(payload: dict) -> dict:
         pullback_score = 3
     breakdown["pullback"] = pullback_score
 
-    # ── 3. ADX strength (15 pts) ──
+    # ── 3. ADX strength (18 pts — was 15, ML importance 0.19) ──
     if adx >= 40:
-        breakdown["adx"] = 15
+        breakdown["adx"] = 18
     elif adx >= 30:
-        breakdown["adx"] = 12
+        breakdown["adx"] = 14
     elif adx >= 25:
-        breakdown["adx"] = 8
+        breakdown["adx"] = 10
     elif adx >= 15:
-        breakdown["adx"] = 4
+        breakdown["adx"] = 5
     else:
         breakdown["adx"] = 0
 
-    # ── 4. RSI sweet spot (10 pts) ──
+    # ── 4. RSI sweet spot (15 pts — was 10, ML importance 0.18) ──
     if 40 <= rsi <= 65:
-        breakdown["rsi"] = 10
+        breakdown["rsi"] = 15
     elif 30 <= rsi < 40 or 65 < rsi <= 70:
-        breakdown["rsi"] = 7
+        breakdown["rsi"] = 10
     elif rsi < 30:
-        breakdown["rsi"] = 4   # oversold could bounce but risky
+        breakdown["rsi"] = 6   # oversold could bounce but risky
     else:
         breakdown["rsi"] = 1   # overbought >70
 
-    # ── 5. Trend direction (10 pts) ──
-    breakdown["trend"] = 10 if "Bullish" in trend else 0
+    # ── 5. Trend direction (5 pts — was 10, correlated with EMA stack) ──
+    breakdown["trend"] = 5 if "Bullish" in trend else 0
 
-    # ── 6. Relative Volume (10 pts) ──
+    # ── 6. Relative Volume (15 pts — was 10, ML importance 0.19) ──
     if rel_vol >= 2.0:
-        breakdown["rel_vol"] = 10
+        breakdown["rel_vol"] = 15
     elif rel_vol >= 1.5:
-        breakdown["rel_vol"] = 8
+        breakdown["rel_vol"] = 12
     elif rel_vol >= 1.0:
-        breakdown["rel_vol"] = 5
+        breakdown["rel_vol"] = 7
     else:
         breakdown["rel_vol"] = 2
 
-    # ── 7. Price vs EMA 21 (10 pts) ──
+    # ── 7. Price vs EMA 21 (12 pts — was 10, ML importance 0.16) ──
     if ema_21 and price:
         pct_from_ema = ((price - float(ema_21)) / float(ema_21)) * 100
         if 0 <= pct_from_ema <= 2:
-            breakdown["price_vs_ema"] = 10  # Perfect pullback zone
+            breakdown["price_vs_ema"] = 12  # Perfect pullback zone
         elif 0 <= pct_from_ema <= 5:
-            breakdown["price_vs_ema"] = 7   # Healthy above
+            breakdown["price_vs_ema"] = 9   # Healthy above
         elif pct_from_ema > 5:
             breakdown["price_vs_ema"] = 3   # Extended
         elif -2 <= pct_from_ema < 0:
-            breakdown["price_vs_ema"] = 6   # Testing support
+            breakdown["price_vs_ema"] = 8   # Testing support
         else:
             breakdown["price_vs_ema"] = 1   # Below EMA 21
     else:
