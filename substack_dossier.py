@@ -6,12 +6,14 @@ Reads the pipeline's daily output (daily-picks.json, daily-setups.json,
 the MD report) and creates a rich Substack draft using rawHtml.
 
 KEY GOTCHAS (Hall of Shame):
-  1. ProseMirror nodes (paragraph, bulletList, etc.) silently create invalid
-     documents. ONLY use rawHtml wrapping. See substack_poster.py.
-  2. EMOJI CHARACTERS IN rawHtml BREAK THE EDITOR. Substack's ProseMirror
-     chokes on Unicode emoji (📊🧠🏆⚡🥇 etc.) inside rawHtml content.
-     All emoji must be stripped or replaced with ASCII before sending.
-     This cost us 6 broken drafts before we figured it out.
+  1. Substack's `rawHtml` node type is BROKEN/DEPRECATED (March 2026).
+     Even simple `<p>Hello</p>` payload causes the editor to silent fail
+     with "Something has gone wrong". DO NOT USE rawHtml.
+  2. The `body_html` top-level field creates drafts, but the content is EMPTY.
+  3. The ONLY working approach is generating pure native ProseMirror JSON
+     (`{'type': 'paragraph'}`, `{'type': 'heading'}`).
+  4. Even with native nodes, EMOJI and non-ASCII chars can cause editor bugs.
+     Strip them with `_ascii_safe()`.
 
 Usage:
   python3 substack_dossier.py                  # Create draft from today's data
@@ -188,14 +190,21 @@ def p(*texts):
 def h(level, text):
     return {'type': 'heading', 'attrs': {'level': level}, 'content': [{'type': 'text', 'text': str(text)}]}
 
+def _add_mark(node_or_text, mark):
+    if isinstance(node_or_text, dict):
+        node = dict(node_or_text)
+        node['marks'] = node.get('marks', []) + [mark]
+        return node
+    return {'type': 'text', 'text': str(node_or_text), 'marks': [mark]}
+
 def bold(text):
-    return {'type': 'text', 'text': str(text), 'marks': [{'type': 'bold'}]}
+    return _add_mark(text, {'type': 'bold'})
 
 def italic(text):
-    return {'type': 'text', 'text': str(text), 'marks': [{'type': 'italic'}]}
+    return _add_mark(text, {'type': 'italic'})
 
 def link(text, url):
-    return {'type': 'text', 'text': str(text), 'marks': [{'type': 'link', 'attrs': {'href': url}}]}
+    return _add_mark(text, {'type': 'link', 'attrs': {'href': url}})
 
 def img(url, alt):
     # Depending on schema, images might be different, but text link is safer
