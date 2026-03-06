@@ -604,6 +604,39 @@
             </div>
         </div>
 
+        <!-- Live Setups — FIRST THING THEY SEE -->
+        <section>
+            <div class="section-label">// Live Data · Cash-Secured Puts Only</div>
+            <h2>Today's VoPR-Graded Setups</h2>
+            <p class="desc">
+                These are real, live setups from today's pipeline run. Sorted by VoPR Grade then weekly ROC.
+                All positions are <strong>short puts</strong> (cash-secured) — you're selling premium, not buying it.
+            </p>
+            <div style="overflow-x: auto;">
+                <table class="setup-table" id="csp-table">
+                    <thead>
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Price</th>
+                            <th>Strike</th>
+                            <th>Exp</th>
+                            <th>Premium</th>
+                            <th>ROC/wk</th>
+                            <th>VoPR</th>
+                            <th>VRP</th>
+                            <th>Regime</th>
+                        </tr>
+                    </thead>
+                    <tbody id="csp-body">
+                        <tr>
+                            <td colspan="9" style="text-align:center;color:var(--text-dim);padding:24px;">Loading
+                                setups...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
         <!-- The Problem -->
         <section>
             <div class="section-label">// The Problem</div>
@@ -845,38 +878,7 @@
             </div>
         </section>
 
-        <!-- Live Setups -->
-        <section>
-            <div class="section-label">// Live Data · Cash-Secured Puts Only</div>
-            <h2>Today's VoPR-Graded Setups</h2>
-            <p class="desc">
-                These are real, live setups from today's pipeline run. Sorted by VoPR Grade then weekly ROC.
-                All positions are <strong>short puts</strong> (cash-secured) — you're selling premium, not buying it.
-            </p>
-            <div style="overflow-x: auto;">
-                <table class="setup-table" id="csp-table">
-                    <thead>
-                        <tr>
-                            <th>Ticker</th>
-                            <th>Price</th>
-                            <th>Strike</th>
-                            <th>Exp</th>
-                            <th>Premium</th>
-                            <th>ROC/wk</th>
-                            <th>VoPR</th>
-                            <th>VRP</th>
-                            <th>Regime</th>
-                        </tr>
-                    </thead>
-                    <tbody id="csp-body">
-                        <tr>
-                            <td colspan="9" style="text-align:center;color:var(--text-dim);padding:24px;">Loading live
-                                data...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+
 
         <!-- API -->
         <!-- Full Stack -->
@@ -934,8 +936,12 @@
 
     <script>
         (function () {
-            fetch('http://mphinance.com:8002/alpha/api/csp')
-                .then(r => r.json())
+            // Use same-origin static JSON (avoids HTTPS->HTTP mixed content block)
+            var STATIC = 'api/csp-setups.json?t=' + Date.now();
+            var API = 'http://mphinance.com:8002/alpha/api/csp';
+            // Try static first (works on GH Pages), fall back to live API
+            fetch(STATIC).then(r => { if (!r.ok) throw new Error('static'); return r.json(); })
+                .catch(() => fetch(API).then(r => r.json()))
                 .then(data => {
                     const tbody = document.getElementById('csp-body');
                     const count = document.getElementById('setup-count');
@@ -943,7 +949,7 @@
                     count.textContent = setups.length;
 
                     if (!setups.length) {
-                        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-dim);padding:24px;">No setups available. Pipeline runs at 6AM CST.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-dim);padding:24px;">No setups available. Pipeline runs at 5AM CST.</td></tr>';
                         return;
                     }
 
