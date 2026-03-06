@@ -56,15 +56,36 @@ def get_user_id():
     # Try /user/self first
     r = session.get("https://substack.com/api/v1/user/self", headers=HEADERS, timeout=15)
     if r.status_code == 200:
-        return r.json().get("id")
-    
+        try:
+            return r.json().get("id")
+        except Exception:
+            pass
+
     # Fallback: get from publication bylines
     r2 = session.get(f"https://{PUB}/api/v1/publication", headers=HEADERS, timeout=15)
     if r2.status_code == 200:
         bylines = r2.json().get("bylines", [])
         if bylines:
             return bylines[0].get("id")
-    
+
+    # Fallback: get from existing drafts
+    r3 = session.get(f"https://{PUB}/api/v1/drafts?limit=1", headers=HEADERS, timeout=15)
+    if r3.status_code == 200:
+        drafts = r3.json()
+        if isinstance(drafts, list) and drafts:
+            bylines = drafts[0].get("publishedBylines") or drafts[0].get("draft_bylines") or []
+            if bylines:
+                return bylines[0].get("id")
+
+    # Fallback: get from published posts
+    r4 = session.get(f"https://{PUB}/api/v1/archive?sort=new&limit=1", headers=HEADERS, timeout=15)
+    if r4.status_code == 200:
+        posts = r4.json()
+        if posts:
+            bylines = posts[0].get("publishedBylines", [])
+            if bylines:
+                return bylines[0].get("id")
+
     return None
 
 
