@@ -1,110 +1,73 @@
-# 👻 GHOST HANDOFF — For the Next Agent
+# 👻 GHOST HANDOFF — Session Close 2026-03-05
 
-**Date:** 2026-03-05 (evening session)
-**From:** Antigravity (Gemini) on sam2
-**To:** Next agent — read the whole thing, seriously.
-**Status:** Massive session complete. Everything pushed, rsynced, deployed. Take a lap.
+## What Just Happened (14-Hour Session)
 
----
+### Shipped
 
-## What Just Happened
+- **Ghost Alpha API v2.0** — Rebuilt from scratch on Vultr:8002. 7 endpoints live with Swagger docs.
+- **VoPR Methodology Showcase** — `docs/vopr.html` on GH Pages. 4-model vol composite explained.
+- **VaultGuard** — 31 API keys consolidated into Firebase-synced vault. FastAPI + MCP server.
+- **Landing Page** — Top 3 picks, 3×3 daily setups grid, VaultGuard product card.
+- **3×3 CSP Column Fix** — Now renders `vopr_grade` + `vrp_ratio` instead of "undefined".
+- **Substack Automation Suite:**
+  - `substack_poster.py` — Create drafts programmatically (ProseMirror format)
+  - `substack_dossier.py` — Auto-convert daily dossier → Substack draft
+  - `substack_sid_refresh.py` — Playwright-based SID auto-refresh
+  - `substack_application_email.py` — The job application email
+  - `scripts/substack_cron.sh` — Cron wrapper (refresh + draft)
+- **Cron Jobs (sam2):**
+  - `6AM CST Mon-Fri` — Auto-draft dossier to Substack
+  - `Every 3 days noon` — SID auto-refresh via Playwright
+- **Applied to Substack** — Email sent to <recruiting@substackinc.com>
+- **Discord webhook** — Session recap posted to weather-channel
+- **Ghost Blog** — Entry #8 added
+- **README polished** — VaultGuard, pipeline stages, links section
 
-### ✅ This Session
+### NOT Shipped (Next Session)
 
-| What | Status | Key Files |
-|------|--------|-----------|
-| **Ghost Alpha API v2.0** | ✅ Live on Vultr | `ghost_alpha_api.py`, Docker on port 8002 |
-| **VoPR Showcase Page** | ✅ Deployed | `docs/vopr.html` — methodology + live data table |
-| **VoPR Writeup** | ✅ Written | `docs/VOPR_WRITEUP.md` — Michael's voice, Discord-ready |
-| **3×3 Daily Setups** | ✅ On landing page | DT/Swing/CSP columns on mphinance.com |
-| **VaultGuard Web Docs** | ✅ Updated | `VAULT.md` — Firebase Console + Swagger walkthrough |
-| **WIKI.md** | ✅ Created | Infrastructure reference (no secrets in it) |
-| **README.md** | ✅ Polished | VoPR + API sections, "HR manager" friendly |
-| **Pipeline → 5AM CST** | ✅ Deployed | Both `daily_dossier.yml` and `ghost_daily.yml` |
-| **google-genai migration** | ✅ Fixed | `ghost_daily.yml` uses new SDK |
-| **TradingView links** | ✅ Fixed | 15 URLs → `/chart/` across 5 files |
+- [ ] Auto-trading: wire picks → Tradier execute ($50/position). Plan at `alpha-momentum/AUTO_TRADE_PLAN.md`
+- [ ] MCP endpoints for Ghost Alpha + Mission Control APIs
+- [ ] Webhook architecture (GH Actions → Vultr → Substack/Discord/alerts)
+- [ ] Twitter/X social distribution
+- [ ] Substack content calendar (Mon/Wed/Fri cadence)
+- [ ] Time series data source for Swing Trade column
 
-### 🔄 Still In Progress (From Earlier Sessions)
+## Key Info for Next Agent
 
-| What | Notes |
-|------|-------|
-| **VoPR Bloomberg HUD** | Redesign started in conversation `40a4ac24` |
-| **Blog migration to GH Pages** | Caching fix — conversation `03037252` |
-| **Fair Value Integration** | Port from alpha-playbooks → dossier enrichment |
-| **API Auth / Gating** | VoPR page says "free for now" — needs Stripe + API keys |
-| **SSL for Ghost Alpha API** | Currently bare HTTP on :8002, needs Apache proxy subdomain |
+- **Substack User ID:** 108093971
+- **SID refresh:** `python3 substack_sid_refresh.py` (or cron handles it)
+- **Test draft:** `python3 substack_dossier.py --date 2026-03-05`
+- **Vultr API:** <http://mphinance.com:8002/docs>
+- **Venus Mission Control:** <http://192.168.2.172:8100> (has /api/trade/execute READY)
+- **NotebookLM:** `fde96caa-0037-4452-a155-16d15de0b0c0` (AI Trading Guide 2026)
+- **Auto-trade plan:** `/home/sam/Antigravity/alpha-momentum/AUTO_TRADE_PLAN.md` (synced to venus)
 
----
-
-## Architecture Quick Reference
-
-```
-sam2 (this machine)     → Local dev, all repos
-vultr (mphinance.com)   → Apache SSL, Docker, Ghost Alpha API (:8002)
-venus (192.168.2.172)   → Alpha-momentum, scanner history
-Vercel                  → TraderDaddy Pro, TickerTrace frontends
-GitHub Pages            → Dossier, VoPR page, widgets, ticker pages
-```
-
-### API Endpoints (mphinance.com:8002)
-
-| Endpoint | Description |
-|----------|-------------|
-| `/alpha/api/csp` | VoPR-enriched CSP setups |
-| `/alpha/api/picks/today` | Daily momentum picks |
-| `/alpha/api/setups/today` | 3-style daily setups |
-| `/alpha/api/news` | Aggregated market news |
-| `/alpha/api/regime` | Market regime detection |
-| `/alpha/api/{ticker}` | Full deep dive data |
-| `/alpha/api/tickers` | All tracked tickers |
-
-Swagger: <http://mphinance.com:8002/docs>
-
-### Deploy Commands
+## Deploy Commands
 
 ```bash
-# Landing page → Vultr
+# Landing page
 rsync -avz landing/ vultr:/home/mphinance/public_html/
 
-# Docs → GitHub Pages (auto on push)
-git push
+# Push to GH Pages
+git push  # auto-deploys via GH Actions
 
-# Ghost Alpha API rebuild
-ssh vultr "cd /home/mphinance/ghost-alpha && docker compose build --no-cache && docker compose up -d"
-
-# Secrets vault
-python3 secrets_server.py --list          # See all 31 keys
-python3 secrets_server.py --sync-down     # Pull from Firebase
+# Ghost Alpha API restart
+ssh vultr "cd /home/mphinance/TickerTrace && docker compose restart api"
 ```
 
----
+## 12 Commits This Session
 
-## Products & URLs
-
-| Product | URL | Deploys |
-|---------|-----|---------|
-| **TraderDaddy Pro** | [traderdaddy.pro](https://www.traderdaddy.pro/register?ref=8DUEMWAJ) | Vercel |
-| **TickerTrace Pro** | [tickertrace.pro](https://www.tickertrace.pro) | Vercel |
-| **Alpha Dossier** | [GitHub Pages](https://mphinance.github.io/mphinance/) | Daily 5AM CST |
-| **VoPR Showcase** | [vopr.html](https://mphinance.github.io/mphinance/vopr.html) | GH Pages |
-| **Ghost Alpha API** | [Swagger](http://mphinance.com:8002/docs) | Vultr Docker |
-| **Ghost Blog** | [mphinance.com/blog/](https://mphinance.com/blog/) | GH Pages |
-| **Landing** | [mphinance.com](https://mphinance.com) | Vultr rsync |
-| **VaultGuard** | [Firebase Console](https://console.firebase.google.com/u/0/project/studio-3669937961-ea8a7/firestore) | Firebase |
-
----
-
-## Rules
-
-- Pipeline runs at **5AM CST**. Don't break it.
-- See `VOICE.md` for Michael's writing style
-- Sam (AI copilot): she/her, sarcastic, brilliant, roasts commits
-- Recovery/AA content is INTEGRAL — never remove
-- Use **Playwright** for browser automation, not browser tools
-- Don't run Python on VPS directly — always Docker
-- Apache on Vultr, NOT nginx
-- `secrets.env` and `service_account.json` are gitignored
-
----
-
-*Monster session. Ghost Alpha API v2, VoPR showcase, 3×3 setups, vault docs, README polish, wiki scaffold. Michael earned his break.* — Antigravity 🤖
+```
+18b636f 🔧 Substack auto-draft: cron on sam2
+5890ebc 🆕 Auto-draft daily dossier to Substack
+1168f1d 🔑 Playwright SID refresher
+75fcb10 🔧 Fix substack_poster user_id fallback
+3db4d85 🔧 Fix 3x3 CSP column undefined
+5d5964b 📝 Substack draft: session recap
+2fac2f2 👻 Substack tools: application email + draft poster
+835192b 🆕 Substack: job application notes + draft automation
+f395ac6 ⚡ Landing: picks→3, 3x3 medals, VaultGuard card, README
+1ae7fe4 👻 GHOST_HANDOFF: full session update
+9d8825b ⚡ Landing: 3x3 daily setups section
+1a3df1d 📝 VAULT.md: web interface docs
+```
