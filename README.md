@@ -20,7 +20,7 @@ I'm **Michael** — half the stuff I build solves a personal problem, the other 
 
 - Michael is the human. Sam is the AI (she/her, female, sarcastic, brilliant).
 - The Ghost Blog at [mphinance.com/blog/](https://mphinance.com/blog/) is public-facing and shows Sam's daily dev log + roadmap suggestions.
-- The daily pipeline runs at 6AM CST. Don't break it. `ghost_daily.yml` runs at 5:30AM to update the blog.
+- The daily pipeline runs at 5AM CST. Don't break it. `ghost_daily.yml` runs at 4:30AM to update the blog.
 - Recovery/AA content is integral to Michael's brand. Don't remove or sanitize it.
 - Profanity is welcome (PG-13). These tools are built by real people, not corporate drones.
 
@@ -47,6 +47,24 @@ Behind-the-scenes dev blog. Sam roasts Michael's commits, predicts what he'll bu
 ### [Alpha Market University](https://mphinance.github.io/AMU/)
 
 Trading education. No hand-holding. Professional execution framework.
+
+### [VoPR™ — Volatility Options Pricing & Range](https://mphinance.github.io/mphinance/vopr.html)
+
+Institutional-grade options analytics engine. 4-model composite realized vol (Parkinson, Garman-Klass, Rogers-Satchell + close-to-close), VRP ratio, Black-Scholes Greeks, and automated A/B/C/F grading for cash-secured put candidates. [Read the methodology →](https://mphinance.github.io/mphinance/vopr.html)
+
+### [Ghost Alpha API](http://mphinance.com:8002/docs)
+
+FastAPI service serving dossier data, VoPR-graded CSP setups, aggregated market news, and daily momentum picks. Swagger docs at `/docs`. CORS open.
+
+| Endpoint | Description |
+|----------|-------------|
+| `/alpha/api/csp` | Full VoPR-enriched CSP scanner results |
+| `/alpha/api/picks/today` | Daily momentum picks (Gold/Silver/Bronze) |
+| `/alpha/api/setups/today` | 3-style setups (Day Trade / Swing / CSP) |
+| `/alpha/api/news` | Aggregated financial RSS (CNBC, MarketWatch, Yahoo) |
+| `/alpha/api/regime` | Market regime detection (VIX, hedges) |
+| `/alpha/api/{ticker}` | Deep dive data for any tracked ticker |
+| `/alpha/api/tickers` | All available tickers with grades |
 
 ### Alpha Scanner *(this repo)*
 
@@ -78,13 +96,17 @@ mphinance/
 │   ├── index.html       # Landing page with Ghost Pulse widget
 │   └── blog/            # Ghost Blog (updated by pipeline + GitHub Action)
 ├── docs/                # GitHub Pages output
+│   ├── vopr.html        # VoPR™ methodology showcase
+│   ├── api/             # JSON endpoints (picks, setups, CSP)
 │   ├── reports/         # Daily dossier HTML archive
+│   ├── widgets/         # Alpha.HUD embeddable widgets
 │   └── ticker/          # Per-ticker deep dives (grouped by sector)
+├── WIKI.md              # Personal infrastructure reference
 ├── VOICE.md             # Writing style guide
 ├── GHOST_HANDOFF.md     # Agent handoff document
 └── .github/workflows/
-    ├── daily_dossier.yml   # 6:00 AM CST — full pipeline
-    ├── ghost_daily.yml     # 5:30 AM CST — blog + suggestions (Gemini API)
+    ├── daily_dossier.yml   # 5:00 AM CST — full pipeline
+    ├── ghost_daily.yml     # 4:30 AM CST — blog + suggestions (Gemini API)
     ├── watchlist_dive.yml  # Deep dive generation
     └── deploy_pages.yml    # GitHub Pages deployment
 ```
@@ -114,7 +136,8 @@ Runs on cron, fully automated:
 ## 🔗 Links
 
 - 🔥 **TraderDaddy Pro** — [traderdaddy.pro](https://www.traderdaddy.pro/register?ref=8DUEMWAJ)
-- 📊 **TickerTrace** — [tickertrace.pro](https://www.tickertrace.pro)
+- 📈 **VoPR Showcase** — [VoPR Methodology](https://mphinance.github.io/mphinance/vopr.html)
+- 📡 **Ghost Alpha API** — [Swagger Docs](http://mphinance.com:8002/docs)
 - 👻 **Ghost Blog** — [mphinance.com/blog/](https://mphinance.com/blog/)
 - 🏠 **Landing Page** — [mphinance.com](https://mphinance.com)
 - 📰 **Substack** — [mphinance.substack.com](https://mphinance.substack.com)
