@@ -953,9 +953,9 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         print("\n[14/14] SUBSTACK DRAFT")
         try:
             from substack_dossier import build_dossier_doc, SubstackClient
-            title, subtitle, doc = build_dossier_doc(date)
             client = SubstackClient()
             if client.authenticate():
+                title, subtitle, doc = build_dossier_doc(date, client=client)
                 result = client.create_draft(title, subtitle, doc)
                 if result:
                     draft_id = result.get("id")

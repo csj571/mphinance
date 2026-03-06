@@ -41,8 +41,29 @@ def _para(*children):
 def _heading(level, *children):
     return {"type": "heading", "attrs": {"level": level}, "content": list(children)}
 
-def _li(*paras):
-    return {"type": "listItem", "content": [_para(*p) if isinstance(p, (list, tuple)) else p for p in paras]}
+def _li(*children):
+    # ProseMirror requires: listItem → paragraph → text (never text directly under listItem)
+    # If all children are inline nodes (text dicts), wrap them in one paragraph
+    # If children are already block-level (paragraphs, lists), pass through
+    if all(isinstance(c, dict) and c.get("type") == "text" for c in children):
+        return {"type": "listItem", "content": [_para(*children)]}
+    # Mixed or block-level content
+    content = []
+    inline_buffer = []
+    for c in children:
+        if isinstance(c, dict) and c.get("type") == "text":
+            inline_buffer.append(c)
+        else:
+            if inline_buffer:
+                content.append(_para(*inline_buffer))
+                inline_buffer = []
+            if isinstance(c, (list, tuple)):
+                content.append(_para(*c))
+            else:
+                content.append(c)
+    if inline_buffer:
+        content.append(_para(*inline_buffer))
+    return {"type": "listItem", "content": content}
 
 def _bullet(*items):
     return {"type": "bulletList", "content": list(items)}
@@ -150,12 +171,30 @@ class SubstackClient:
 # Dossier → ProseMirror Converter
 # ═══════════════════════════════════════════════
 
-def build_dossier_doc(date: str) -> tuple[str, str, dict]:
+def _capture_report_screenshot(report_html_path: str) -> str | None:
+    """Capture a screenshot of the HTML report using Playwright. Returns path or None."""
+    try:
+        from playwright.sync_api import sync_playwright
+        screenshot_path = report_html_path.replace(".html", "_preview.png")
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            page = browser.new_page(viewport={"width": 1200, "height": 800})
+            page.goto(f"file://{report_html_path}", wait_until="networkidle", timeout=15000)
+            page.screenshot(path=screenshot_path, full_page=False)
+            browser.close()
+        return screenshot_path
+    except Exception as e:
+        print(f"  [WARN] Screenshot capture failed: {e}")
+        return None
+
+
+def build_dossier_doc(date: str, client=None) -> tuple[str, str, dict]:
     """Read today's pipeline data and build a Substack-ready doc."""
 
     picks_path = DOCS / "api" / "daily-picks.json"
     setups_path = DOCS / "api" / "daily-setups.json"
     report_path = DOCS / "reports" / f"{date}_alpha_dossier.md"
+    report_html = DOCS / "reports" / f"{date}_alpha_dossier.html"
 
     picks_data = json.loads(picks_path.read_text()) if picks_path.exists() else {}
     setups_data = json.loads(setups_path.read_text()) if setups_path.exists() else {}
@@ -177,13 +216,27 @@ def build_dossier_doc(date: str) -> tuple[str, str, dict]:
     swings = setups_data.get("swing", {}).get("picks", [])[:3]
     csps = setups_data.get("csp", {}).get("picks", [])[:3]
 
+    report_url = f"https://mphinance.github.io/mphinance/reports/{date}_alpha_dossier.html"
+
     # ── Build document nodes ──
     nodes = []
 
-    # Title meta
+    # Screenshot of the report (if Playwright available)
+    if report_html.exists() and client:
+        print("  📸 Capturing report screenshot...")
+        screenshot_path = _capture_report_screenshot(str(report_html))
+        if screenshot_path:
+            img_url = client.upload_image(screenshot_path)
+            if img_url:
+                nodes.append(_image(img_url, f"Alpha Dossier {date}"))
+
+    # Prominent report link
     nodes.append(_para(
-        _italic(f"Sam the Quant Ghost · {date} · "),
-        _link("Full Report →", f"https://mphinance.github.io/mphinance/reports/{date}_alpha_dossier.html")
+        _text("📊 "),
+        _link(f"View Full Interactive Report → {date}", report_url),
+    ))
+    nodes.append(_para(
+        _italic(f"Sam the Quant Ghost · {date} · VIX {vix_val} ({vix_regime})")
     ))
 
     # AI Synthesis
@@ -368,7 +421,18 @@ def main():
 
     print(f"📰 Building dossier draft for {args.date}...")
 
-    title, subtitle, doc = build_dossier_doc(args.date)
+    # Auth first so we can pass client for screenshot upload
+    client = None
+    if not args.dry_run:
+        client = SubstackClient()
+        print("🔑 Authenticating...")
+        if not client.authenticate():
+            print("❌ Auth failed — refresh your SID")
+            print("   python3 substack_sid_refresh.py")
+            return
+        print(f"✅ Authenticated as user {client.user_id}")
+
+    title, subtitle, doc = build_dossier_doc(args.date, client=client)
     print(f"   Title: {title}")
     print(f"   Subtitle: {subtitle}")
     print(f"   Nodes: {len(doc['content'])}")
@@ -378,14 +442,7 @@ def main():
         print(json.dumps(doc, indent=2)[:2000])
         return
 
-    client = SubstackClient()
-    print("🔑 Authenticating...")
-    if not client.authenticate():
-        print("❌ Auth failed — refresh your SID")
-        print("   python3 substack_sid_refresh.py")
-        return
 
-    print(f"✅ Authenticated as user {client.user_id}")
 
     # Upload any images if they exist
     chart_path = DOCS / "reports" / f"{args.date}_charts"
