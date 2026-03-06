@@ -140,13 +140,13 @@ def build_markdown(
         lines.append("**🟢 Top Buying:**")
         for s in buying[:5]:
             funds = ", ".join(s.get("funds", [])[:3])
-            lines.append(f"- [{s.get('ticker', '')}](https://www.tradingview.com/symbols/{s.get('ticker', '')}/) — {s.get('name', '')} ({funds}) Conv: {s.get('conviction', 0)}")
+            lines.append(f"- [{s.get('ticker', '')}](https://www.tradingview.com/symbols/{s.get('ticker', '')}/chart/) — {s.get('name', '')} ({funds}) Conv: {s.get('conviction', 0)}")
         lines.append("")
     if selling:
         lines.append("**🔴 Top Selling:**")
         for s in selling[:5]:
             funds = ", ".join(s.get("funds", [])[:3])
-            lines.append(f"- [{s.get('ticker', '')}](https://www.tradingview.com/symbols/{s.get('ticker', '')}/) — {s.get('name', '')} ({funds}) Conv: {s.get('conviction', 0)}")
+            lines.append(f"- [{s.get('ticker', '')}](https://www.tradingview.com/symbols/{s.get('ticker', '')}/chart/) — {s.get('name', '')} ({funds}) Conv: {s.get('conviction', 0)}")
         lines.append("")
 
     # Scanner Signals
@@ -155,7 +155,7 @@ def build_markdown(
         for s in scanner_signals[:15]:
             emoji = "🟢" if s.get("direction") == "BULLISH" else "🔴" if s.get("direction") == "BEARISH" else "⚪"
             rationale = " · ".join(s.get("rationale", []))
-            lines.append(f"- {emoji} [{s.get('symbol', '')}](https://www.tradingview.com/symbols/{s.get('symbol', '')}/) — {s.get('strategy', '')} | {rationale} | Score: {s.get('score', 0)}")
+            lines.append(f"- {emoji} [{s.get('symbol', '')}](https://www.tradingview.com/symbols/{s.get('symbol', '')}/chart/) — {s.get('strategy', '')} | {rationale} | Score: {s.get('score', 0)}")
         lines.append("")
 
     # Technical Setups
@@ -164,7 +164,7 @@ def build_markdown(
         for s in technical_setups:
             status = s.get("trend_status", "")
             stack = s.get("data_sack", {}).get("ema_stack", "")
-            lines.append(f"- [{s.get('ticker', '')}](https://www.tradingview.com/symbols/{s.get('ticker', '')}/) — {status} | EMA Stack: {stack}")
+            lines.append(f"- [{s.get('ticker', '')}](https://www.tradingview.com/symbols/{s.get('ticker', '')}/chart/) — {status} | EMA Stack: {stack}")
         lines.append("")
 
     # Top Dossiers
@@ -172,7 +172,7 @@ def build_markdown(
         lines.append("## Top Dossier Breakdowns\n")
         for d in dossiers:
             tech = d.get("technicals", {})
-            lines.append(f"### [{d.get('ticker', '')}](https://www.tradingview.com/symbols/{d.get('ticker', '')}/) — {d.get('name', '')}")
+            lines.append(f"### [{d.get('ticker', '')}](https://www.tradingview.com/symbols/{d.get('ticker', '')}/chart/) — {d.get('name', '')}")
             lines.append(f"**${d.get('price', 'N/A')}** | Grade: {d.get('scores', {}).get('grade', 'N/A')} | {d.get('verdict', '')}")
             lines.append(f"- Trend: {tech.get('trend', '')} | EMA Stack: {tech.get('ema_stack', '')}")
             lines.append(f"- RSI: {tech.get('rsi_14', 'N/A')} | ADX: {tech.get('adx', 'N/A')} | ATR: {tech.get('atr', 'N/A')}")
