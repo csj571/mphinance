@@ -955,8 +955,8 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
             from substack_dossier import build_dossier_doc, SubstackClient
             client = SubstackClient()
             if client.authenticate():
-                title, subtitle, doc = build_dossier_doc(date, client=client)
-                result = client.create_draft(title, subtitle, doc)
+                title, subtitle, body_html = build_dossier_doc(date, client=client)
+                result = client.create_draft(title, subtitle, body_html)
                 if result:
                     draft_id = result.get("id")
                     print(f"  ✓ Substack draft created! Edit: https://{client.pub}/publish/post/{draft_id}")

@@ -27,23 +27,35 @@ from datetime import datetime
 PROJECT_ROOT = Path(__file__).resolve().parent
 
 
-def _strip_emojis(text: str) -> str:
-    """Remove emoji characters that break Substack's ProseMirror editor.
+def _ascii_safe(text: str) -> str:
+    """Convert ALL non-ASCII characters to safe ASCII equivalents.
     
-    Substack's rawHtml node silently fails when the HTML contains Unicode
-    emoji characters (U+1F300-1FFFF, U+2600-27BF, etc.). The editor shows
-    'Something has gone wrong' with no useful error message.
+    Substack's rawHtml ProseMirror node breaks on ANY non-ASCII character
+    including emoji, em-dashes, middle dots, arrows, etc. The editor shows
+    'Something has gone wrong' with no useful error.
     
-    This was discovered after 6 broken drafts on 2026-03-06.
+    Discovered 2026-03-06 after 6+ broken drafts. The ONLY safe approach
+    is pure ASCII in rawHtml content.
     """
-    return re.sub(
-        r'[\U0001F300-\U0001FFFF\U00002702-\U000027B0\U0000FE00-\U0000FE0F'
-        r'\U0001F900-\U0001F9FF\U0001FA00-\U0001FA6F\U0001FA70-\U0001FAFF'
-        r'\U00002600-\U000026FF\U0000200D\U00002B50\U00002B55\U0000231A-\U0000231B'
-        r'\U00002934-\U00002935\U000025AA-\U000025AB\U000025FB-\U000025FE'
-        r'\U00003030\U0000303D\U00003297\U00003299]+',
-        '', text
-    ).strip()
+    # Common substitutions
+    replacements = {
+        '\u2014': '--',   # em-dash
+        '\u2013': '-',    # en-dash
+        '\u2192': '->',   # right arrow
+        '\u2190': '<-',   # left arrow
+        '\u00b7': '|',    # middle dot
+        '\u2022': '*',    # bullet
+        '\u2018': "'",    # left single quote
+        '\u2019': "'",    # right single quote
+        '\u201c': '"',    # left double quote
+        '\u201d': '"',    # right double quote
+        '\u2026': '...',  # ellipsis
+        '\u00a0': ' ',    # non-breaking space
+    }
+    for char, replacement in replacements.items():
+        text = text.replace(char, replacement)
+    # Strip anything remaining above ASCII
+    return text.encode('ascii', 'ignore').decode('ascii')
 DOCS = PROJECT_ROOT / "docs"
 
 
@@ -116,12 +128,17 @@ class SubstackClient:
             print(f"  ⚠️ Image upload error: {e}")
         return None
 
-    def create_draft(self, title: str, subtitle: str, doc: dict) -> dict | None:
-        """Create a draft post with ProseMirror document."""
+    def create_draft(self, title: str, subtitle: str, body_html: str) -> dict | None:
+        """Create a draft post using body_html field.
+        
+        NOTE: Do NOT use draft_body with ProseMirror JSON / rawHtml nodes.
+        The rawHtml node type is broken/deprecated as of 2026-03 -- even
+        trivial content causes 'Something has gone wrong'. Use body_html.
+        """
         payload = {
             "draft_title": title,
             "draft_subtitle": subtitle,
-            "draft_body": json.dumps(doc),
+            "body_html": body_html,
             "draft_bylines": [{"id": self.user_id, "is_guest": False}],
             "type": "newsletter",
             "audience": "everyone",
@@ -130,7 +147,7 @@ class SubstackClient:
                              json=payload, headers=self.headers, timeout=30)
         if r.status_code in (200, 201):
             return r.json()
-        print(f"  ❌ Draft creation failed ({r.status_code}): {r.text[:200]}")
+        print(f"  Failed ({r.status_code}): {r.text[:200]}")
         return None
 
 
@@ -317,19 +334,13 @@ def build_dossier_doc(date: str, client=None) -> tuple[str, str, dict]:
 
     body_html = "\n".join(html)
 
-    # CRITICAL: Strip any remaining emoji — they break Substack's ProseMirror
-    body_html = _strip_emojis(body_html)
-
-    # Wrap in rawHtml ProseMirror node (ONLY approach that works reliably)
-    doc = {
-        "type": "doc",
-        "content": [{"type": "rawHtml", "attrs": {"html": body_html}}]
-    }
+    # Force pure ASCII -- non-ASCII can cause issues in Substack
+    body_html = _ascii_safe(body_html)
 
     title = f"ALPHA.DOSSIER // {date}"
     subtitle = f"Sam the Quant Ghost | VIX {vix_val} ({vix_regime}) | {len(picks)} scored tickers"
 
-    return title, subtitle, doc
+    return title, subtitle, body_html
 
 
 # ═══════════════════════════════════════════════
@@ -356,37 +367,26 @@ def main():
             return
         print(f"✅ Authenticated as user {client.user_id}")
 
-    title, subtitle, doc = build_dossier_doc(args.date, client=client)
+    title, subtitle, body_html = build_dossier_doc(args.date, client=client)
     print(f"   Title: {title}")
     print(f"   Subtitle: {subtitle}")
-    print(f"   Nodes: {len(doc['content'])}")
+    print(f"   HTML: {len(body_html)} chars")
 
     if args.dry_run:
         print("\n[DRY RUN] Would create draft:")
-        # Show the HTML for debugging
-        html = doc["content"][0]["attrs"]["html"]
-        print(html[:2000])
+        print(body_html[:2000])
         return
 
-    # Upload any chart images if they exist
-    chart_path = DOCS / "reports" / f"{args.date}_charts"
-    if chart_path.exists():
-        for img_file in sorted(chart_path.glob("*.png")):
-            print(f"📸 Uploading {img_file.name}...")
-            url = client.upload_image(str(img_file))
-            if url:
-                print(f"   → {url}")
-
     # Create draft
-    print("📝 Creating draft...")
-    result = client.create_draft(title, subtitle, doc)
+    print("Creating draft...")
+    result = client.create_draft(title, subtitle, body_html)
     if result:
         draft_id = result.get("id")
-        print(f"✅ Draft created!")
+        print(f"Draft created!")
         print(f"   Edit: https://{client.pub}/publish/post/{draft_id}")
-        print(f"   Preview, review, and PUBLISH from your dashboard 🚀")
+        print(f"   Preview, review, and PUBLISH from your dashboard")
     else:
-        print("❌ Failed to create draft")
+        print("Failed to create draft")
 
 
 if __name__ == "__main__":
