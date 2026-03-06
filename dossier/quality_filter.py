@@ -29,6 +29,22 @@ JUNK_BIO_INDUSTRIES = [
     "diagnostics & research",
 ]
 
+# ETF provider prefixes/keywords — we don't want to score ETFs as momentum picks
+ETF_KEYWORDS = [
+    "ishares", "vanguard", "spdr", "proshares", "invesco",
+    "direxion", "wisdomtree", "schwab", "first trust",
+    "ark ", "global x", " etf", " fund", "exchange traded",
+]
+
+# Common ETF ticker patterns (3-4 letter tickers ending in specific patterns)
+ETF_TICKER_SUFFIXES = ["X", "Q", "J", "K"]
+
+# ADR indicators
+ADR_KEYWORDS = [
+    "adr", "american depositary", "sponsored adr",
+    "unsponsored adr", "depositary receipt",
+]
+
 
 def check_quality(payload: dict) -> dict:
     """
@@ -44,6 +60,9 @@ def check_quality(payload: dict) -> dict:
         "is_shell": False,
         "is_low_liquidity": False,
         "is_penny": False,
+        "is_etf": False,
+        "is_adr": False,
+        "is_recent_ipo": False,
     }
     reasons = []
     penalty = 0  # Points to subtract from 100
@@ -81,6 +100,45 @@ def check_quality(payload: dict) -> dict:
         avg_vol = _parse_vol_string(avg_vol)
 
     rel_vol = vol_data.get("rel_vol") or 1.0
+
+    # ── ETF Detection ──
+    for kw in ETF_KEYWORDS:
+        if kw in name:
+            flags["is_etf"] = True
+            penalty += 80  # Heavy penalty — ETFs shouldn't be in momentum picks
+            reasons.append(f"ETF detected: '{kw}' in name")
+            break
+    # Also check quoteType if available
+    quote_type = (payload.get("quoteType") or "").lower()
+    if quote_type == "etf" and not flags["is_etf"]:
+        flags["is_etf"] = True
+        penalty += 80
+        reasons.append("ETF detected via quoteType")
+
+    # ── ADR Detection ──
+    for kw in ADR_KEYWORDS:
+        if kw in name:
+            flags["is_adr"] = True
+            penalty += 20  # Moderate penalty — ADRs can be ok but data is unreliable
+            reasons.append(f"ADR detected: '{kw}' in name")
+            break
+
+    # ── Recent IPO Detection ──
+    ipo_date_str = payload.get("ipoDate") or fundamentals.get("ipoDate") or ""
+    if ipo_date_str:
+        try:
+            from datetime import datetime
+            ipo_date = datetime.strptime(str(ipo_date_str)[:10], "%Y-%m-%d")
+            days_since_ipo = (datetime.now() - ipo_date).days
+            if days_since_ipo < 180:  # < 6 months
+                flags["is_recent_ipo"] = True
+                penalty += 30
+                reasons.append(f"Recent IPO ({days_since_ipo}d ago) — unreliable technicals")
+            elif days_since_ipo < 365:  # < 1 year
+                penalty += 10
+                reasons.append(f"IPO less than 1 year ago ({days_since_ipo}d)")
+        except (ValueError, TypeError):
+            pass
 
     # ── SPAC Detection ──
     for kw in SPAC_KEYWORDS:
