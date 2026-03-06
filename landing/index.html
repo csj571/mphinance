@@ -635,6 +635,149 @@
             </div>
         </section>
 
+        <!-- ═══ DAILY 3x3 SETUPS ═══ -->
+        <section id="daily-setups" style="padding:30px 0 20px;">
+            <div class="section-label" style="color:var(--neon-amber);">// daily 3-style setups — day trade · swing ·
+                income
+            </div>
+            <h2 class="section-title">⚡ Today's 3×3 Setups</h2>
+            <p
+                style="text-align:center;color:#666;font-size:0.82rem;max-width:580px;margin:0 auto 28px;line-height:1.6;">
+                Three trading styles, three top picks each. Day trade breakouts, swing pullbacks,
+                and income (CSP) plays — all ranked by our scoring engine.
+            </p>
+            <div id="setups-container"
+                style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;max-width:960px;margin:0 auto;">
+                <div
+                    style="text-align:center;color:#333;font-family:'JetBrains Mono',monospace;font-size:0.75rem;padding:40px;grid-column:1/-1;">
+                    Loading setups from pipeline...
+                </div>
+            </div>
+        </section>
+
+        <style>
+            .setup-column {
+                background: var(--panel);
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                overflow: hidden;
+            }
+
+            .setup-column-header {
+                padding: 16px 20px;
+                border-bottom: 1px solid var(--border);
+                font-family: 'JetBrains Mono', monospace;
+            }
+
+            .setup-column-header h3 {
+                font-size: 0.85rem;
+                font-weight: 700;
+                margin-bottom: 4px;
+            }
+
+            .setup-column-header p {
+                font-size: 0.65rem;
+                color: var(--text-dim, #777);
+                line-height: 1.4;
+            }
+
+            .setup-column.dt .setup-column-header {
+                border-top: 3px solid var(--neon-blue);
+            }
+
+            .setup-column.sw .setup-column-header {
+                border-top: 3px solid var(--neon-amber);
+            }
+
+            .setup-column.csp .setup-column-header {
+                border-top: 3px solid var(--neon-green);
+            }
+
+            .setup-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 14px 20px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+                transition: background 0.2s;
+            }
+
+            .setup-row:hover {
+                background: rgba(255, 255, 255, 0.02);
+            }
+
+            .setup-row:last-child {
+                border-bottom: none;
+            }
+
+            .setup-row .rank {
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 0.65rem;
+                color: #444;
+                width: 20px;
+            }
+
+            .setup-row .info {
+                flex: 1;
+                margin-left: 8px;
+            }
+
+            .setup-row .info .ticker-name {
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 0.9rem;
+                font-weight: 700;
+                color: #fff;
+                text-decoration: none;
+            }
+
+            .setup-row .info .ticker-name:hover {
+                color: var(--neon-blue);
+            }
+
+            .setup-row .info .company {
+                font-size: 0.6rem;
+                color: #555;
+                margin-top: 1px;
+            }
+
+            .setup-row .score-box {
+                text-align: right;
+                font-family: 'JetBrains Mono', monospace;
+            }
+
+            .setup-row .score-num {
+                font-size: 1.1rem;
+                font-weight: 800;
+            }
+
+            .setup-row .score-num.high {
+                color: var(--neon-green);
+            }
+
+            .setup-row .score-num.mid {
+                color: var(--neon-amber);
+            }
+
+            .setup-row .score-num.low {
+                color: #777;
+            }
+
+            .setup-row .score-grade {
+                font-size: 0.55rem;
+                color: #555;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+            }
+
+            .setup-row .why-text {
+                font-size: 0.55rem;
+                color: #555;
+                margin-top: 3px;
+                max-width: 180px;
+                line-height: 1.3;
+            }
+        </style>
+
         <style>
             .pick-card {
                 background: var(--panel);
@@ -1321,7 +1464,66 @@
                 })
                 .catch(function () {
                     document.getElementById('picks-container').innerHTML =
-                        '<div style="text-align:center;color:#444;font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;padding:30px;grid-column:1/-1;">Pipeline hasn\'t run yet today. Check back after 6 AM CST.</div>';
+                        '<div style="text-align:center;color:#444;font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;padding:30px;grid-column:1/-1;">Pipeline hasn\'t run yet today. Check back after 5 AM CST.</div>';
+                });
+        })();
+
+        // ═══ Daily 3x3 Setups — Fetch from GH Pages API ═══
+        (function () {
+            var API = 'https://mphinance.github.io/mphinance/api/daily-setups.json?t=' + Date.now();
+
+            function buildColumn(data, cssClass, fallbackTitle, fallbackDesc) {
+                var title = (data && data.title) || fallbackTitle;
+                var desc = (data && data.description) || fallbackDesc;
+                var picks = (data && data.picks) || [];
+
+                var html = '<div class="setup-column ' + cssClass + '">';
+                html += '<div class="setup-column-header">';
+                html += '<h3>' + title + '</h3>';
+                html += '<p>' + desc + '</p>';
+                html += '</div>';
+
+                if (!picks.length) {
+                    html += '<div class="setup-row" style="justify-content:center;color:#444;font-size:0.7rem;">No setups today</div>';
+                } else {
+                    picks.forEach(function (p) {
+                        var scoreClass = p.score >= 70 ? 'high' : p.score >= 50 ? 'mid' : 'low';
+                        var tv = p.tradingview || ('https://www.tradingview.com/symbols/' + p.ticker + '/chart/');
+                        html += '<div class="setup-row">';
+                        html += '<span class="rank">#' + p.rank + '</span>';
+                        html += '<div class="info">';
+                        html += '<a href="' + tv + '" target="_blank" class="ticker-name">' + p.ticker + '</a>';
+                        if (p.company) html += '<div class="company">' + p.company + '</div>';
+                        if (p.why) {
+                            var shortWhy = p.why.length > 60 ? p.why.substring(0, 60) + '…' : p.why;
+                            html += '<div class="why-text">' + shortWhy + '</div>';
+                        }
+                        html += '</div>';
+                        html += '<div class="score-box">';
+                        html += '<div class="score-num ' + scoreClass + '">' + p.score + '</div>';
+                        html += '<div class="score-grade">' + (p.grade || '') + ' · ' + (p.ema_stack || '') + '</div>';
+                        html += '</div>';
+                        html += '</div>';
+                    });
+                }
+
+                html += '</div>';
+                return html;
+            }
+
+            fetch(API)
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    var container = document.getElementById('setups-container');
+                    var html = '';
+                    html += buildColumn(data.day_trade, 'dt', '🥇 Day Trade', 'Intraday momentum plays');
+                    html += buildColumn(data.swing, 'sw', '🥈 Swing Trade', 'Multi-day momentum pullbacks');
+                    html += buildColumn(data.csp, 'csp', '🥉 Income — CSP', 'Cash-secured put premium');
+                    container.innerHTML = html;
+                })
+                .catch(function () {
+                    document.getElementById('setups-container').innerHTML =
+                        '<div style="text-align:center;color:#444;font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;padding:30px;grid-column:1/-1;">Setups not available. Pipeline runs at 5 AM CST.</div>';
                 });
         })();
     </script>
