@@ -17,6 +17,8 @@ from datetime import datetime
 GA4_PROPERTIES = {
     "mphinance": {"property_id": "527334613", "measurement_id": "G-KTHVTFX699"},
     "traderdaddy": {"property_id": "527410613", "measurement_id": "G-FWSFCJKYEV"},
+    "tickertrace": {"property_id": "526490745", "measurement_id": "G-SYRWGDY0Y3"},
+    "substack": {"property_id": "358732142", "measurement_id": "G-LNLQLK7H8B"},
 }
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
