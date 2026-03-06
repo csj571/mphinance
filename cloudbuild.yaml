@@ -13,9 +13,8 @@
 
 substitutions:
   _REGION: us-central1
-  _PROJECT_ID: studio-3669937961-ea8a7
-  _IMAGE: us-central1-docker.pkg.dev/${_PROJECT_ID}/mphinance/pipeline
-  _SA_EMAIL: mphinance-pipeline@${_PROJECT_ID}.iam.gserviceaccount.com
+  _REPO: us-central1-docker.pkg.dev/studio-3669937961-ea8a7/mphinance-docker
+  _TAG: latest
 
 steps:
   # ── Step 1: Build the pipeline Docker image ──
@@ -25,9 +24,7 @@ steps:
       - -f
       - Dockerfile.cloud
       - -t
-      - ${_IMAGE}:${SHORT_SHA}
-      - -t
-      - ${_IMAGE}:latest
+      - ${_REPO}/pipeline:${_TAG}
       - .
     id: build-image
 
@@ -35,8 +32,7 @@ steps:
   - name: gcr.io/cloud-builders/docker
     args:
       - push
-      - --all-tags
-      - ${_IMAGE}
+      - ${_REPO}/pipeline:${_TAG}
     id: push-image
     waitFor: [build-image]
 
@@ -48,7 +44,7 @@ steps:
       - jobs
       - replace
       - batch-scanner
-      - --image=${_IMAGE}:${SHORT_SHA}
+      - --image=${_REPO}/pipeline:${_TAG}
       - --region=${_REGION}
       - --command=python
       - --args=batch_scanner.py
@@ -56,8 +52,6 @@ steps:
       - --cpu=2
       - --task-timeout=30m
       - --max-retries=1
-      - --set-secrets=TRADIER_API_KEY=tradier-api-key:latest,GEMINI_API_KEY=gemini-api-key:latest
-      - --service-account=${_SA_EMAIL}
     id: deploy-batch-scanner
     waitFor: [push-image]
 
@@ -69,7 +63,7 @@ steps:
       - jobs
       - replace
       - dossier-pipeline
-      - --image=${_IMAGE}:${SHORT_SHA}
+      - --image=${_REPO}/pipeline:${_TAG}
       - --region=${_REGION}
       - --command=python
       - --args=-m,dossier.generate,--no-pdf
@@ -77,15 +71,12 @@ steps:
       - --cpu=2
       - --task-timeout=45m
       - --max-retries=1
-      - --set-secrets=TRADIER_API_KEY=tradier-api-key:latest,GEMINI_API_KEY=gemini-api-key:latest,GCS_BUCKET=gcs-bucket-name:latest
-      - --service-account=${_SA_EMAIL}
     id: deploy-dossier-pipeline
     waitFor: [push-image]
 
 # Store images in Artifact Registry
 images:
-  - ${_IMAGE}:${SHORT_SHA}
-  - ${_IMAGE}:latest
+  - ${_REPO}/pipeline:${_TAG}
 
 options:
   logging: CLOUD_LOGGING_ONLY
