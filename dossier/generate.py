@@ -911,11 +911,14 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
                 "period": _period,
                 "ghost_log": ghost_log,
                 "suggestions": ghost_suggestions,
-                "commits": len(subprocess.run(
-                    ["git", "log", "--since=1 day ago", "--oneline"],
+                "commits": len([l for l in subprocess.run(
+                    ["git", "log", "--since=7 days ago", "--oneline"],
                     cwd=str(PROJECT_ROOT), capture_output=True, text=True
-                ).stdout.strip().split("\n")),
-                "files_changed": len(dossiers),
+                ).stdout.strip().split("\n") if l.strip()]),
+                "files_changed": len(set(l.strip() for l in subprocess.run(
+                    ["git", "log", "--since=7 days ago", "--name-only", "--pretty=format:"],
+                    cwd=str(PROJECT_ROOT), capture_output=True, text=True
+                ).stdout.strip().split("\n") if l.strip())),
                 "chart_ticker": chart_ticker,
             })
 
@@ -929,7 +932,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
 
     # ── Stage 13: Git Push ──
     if not dry_run:
-        print("\n[13/13] GIT PUSH")
+        print("\n[13/14] GIT PUSH")
         print("  Committing to Git...")
         try:
             subprocess.run(["git", "add", "docs/", "dossier/persistence/", "landing/blog/"],
@@ -944,6 +947,25 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
             print(f"  [WARN] Git push failed: {e}")
     else:
         print("\n[SKIP] Dry run — skipping git push")
+
+    # ── Stage 14: Substack Draft ──
+    if not dry_run:
+        print("\n[14/14] SUBSTACK DRAFT")
+        try:
+            from substack_dossier import build_dossier_doc, SubstackClient
+            title, subtitle, doc = build_dossier_doc(date)
+            client = SubstackClient()
+            if client.authenticate():
+                result = client.create_draft(title, subtitle, doc)
+                if result:
+                    draft_id = result.get("id")
+                    print(f"  ✓ Substack draft created! Edit: https://{client.pub}/publish/post/{draft_id}")
+                else:
+                    print("  [WARN] Substack draft creation failed")
+            else:
+                print("  [WARN] Substack auth failed — refresh SID")
+        except Exception as e:
+            print(f"  [WARN] Substack draft failed: {e}")
 
     # ── Summary ──
     print("\n" + "=" * 72)
