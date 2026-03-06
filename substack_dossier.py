@@ -128,17 +128,16 @@ class SubstackClient:
             print(f"  ⚠️ Image upload error: {e}")
         return None
 
-    def create_draft(self, title: str, subtitle: str, body_html: str) -> dict | None:
-        """Create a draft post using body_html field.
+    def create_draft(self, title: str, subtitle: str, doc: dict) -> dict | None:
+        """Create a draft post with ProseMirror doc.
         
-        NOTE: Do NOT use draft_body with ProseMirror JSON / rawHtml nodes.
-        The rawHtml node type is broken/deprecated as of 2026-03 -- even
-        trivial content causes 'Something has gone wrong'. Use body_html.
+        NOTE: Uses native ProseMirror nodes (paragraph, heading).
+        rawHtml and body_html fields are deprecated/broken in Substack API.
         """
         payload = {
             "draft_title": title,
             "draft_subtitle": subtitle,
-            "body_html": body_html,
+            "draft_body": json.dumps(doc),
             "draft_bylines": [{"id": self.user_id, "is_guest": False}],
             "type": "newsletter",
             "audience": "everyone",
@@ -174,17 +173,40 @@ def _capture_report_screenshot(report_html_path: str) -> str | None:
 
 
 # ═══════════════════════════════════════════════
-# Dossier → HTML → rawHtml ProseMirror Doc
+# Dossier → ProseMirror Doc
 # ═══════════════════════════════════════════════
+
+def p(*texts):
+    content = []
+    for t in texts:
+        if isinstance(t, dict):
+            content.append(t)
+        else:
+            content.append({'type': 'text', 'text': str(t)})
+    return {'type': 'paragraph', 'content': content}
+
+def h(level, text):
+    return {'type': 'heading', 'attrs': {'level': level}, 'content': [{'type': 'text', 'text': str(text)}]}
+
+def bold(text):
+    return {'type': 'text', 'text': str(text), 'marks': [{'type': 'bold'}]}
+
+def italic(text):
+    return {'type': 'text', 'text': str(text), 'marks': [{'type': 'italic'}]}
+
+def link(text, url):
+    return {'type': 'text', 'text': str(text), 'marks': [{'type': 'link', 'attrs': {'href': url}}]}
+
+def img(url, alt):
+    # Depending on schema, images might be different, but text link is safer
+    return p(link(f"[IMAGE: {alt}]", url))
 
 def build_dossier_doc(date: str, client=None) -> tuple[str, str, dict]:
     """Read today's pipeline data and build a Substack-ready doc.
 
-    Uses rawHtml ProseMirror node to wrap generated HTML.
-    This is the ONLY reliable approach — ProseMirror node-by-node
-    causes "Something has gone wrong" errors in Substack's editor.
+    Uses native ProseMirror nodes (paragraph, heading) as rawHtml
+    and body_html are broken/deprecated in Substack's API.
     """
-
     picks_path = DOCS / "api" / "daily-picks.json"
     setups_path = DOCS / "api" / "daily-setups.json"
     report_path = DOCS / "reports" / f"{date}_alpha_dossier.md"
@@ -196,7 +218,7 @@ def build_dossier_doc(date: str, client=None) -> tuple[str, str, dict]:
 
     # Extract AI narrative
     ai_narrative = ""
-    narrative_match = re.search(r'## 🧠 AI Synthesis\n\n(.*?)(?=\n## )', report_md, re.DOTALL)
+    narrative_match = re.search(r'## \S*AI Synthesis\n\n(.*?)(?=\n## )', report_md, re.DOTALL)
     if narrative_match:
         ai_narrative = narrative_match.group(1).strip()
 
@@ -212,8 +234,7 @@ def build_dossier_doc(date: str, client=None) -> tuple[str, str, dict]:
 
     report_url = f"https://mphinance.github.io/mphinance/reports/{date}_alpha_dossier.html"
 
-    # ── Build HTML ──
-    html = []
+    nodes = []
 
     # Screenshot (if Playwright available and client provided)
     if report_html_path.exists() and client:
@@ -222,125 +243,108 @@ def build_dossier_doc(date: str, client=None) -> tuple[str, str, dict]:
         if screenshot_path:
             img_url = client.upload_image(screenshot_path)
             if img_url:
-                html.append(f'<img src="{img_url}" alt="Alpha Dossier {date}" />')
+                nodes.append(img(img_url, f"Alpha Dossier {date}"))
 
-    # Prominent report link (NO EMOJI — breaks Substack rawHtml)
-    html.append(f'<p><a href="{report_url}"><strong>View Full Interactive Report -- {date}</strong></a></p>')
-    html.append(f'<p><em>Sam the Quant Ghost | {date} | VIX {vix_val} ({vix_regime})</em></p>')
+    # Prominent report link
+    nodes.append(p(bold(link(f"View Full Interactive Report -- {date}", report_url))))
+    nodes.append(p(italic(f"Sam the Quant Ghost | {date} | VIX {vix_val} ({vix_regime})")))
 
     # AI Synthesis
-    html.append('<h2>AI Synthesis</h2>')
+    nodes.append(h(2, "AI Synthesis"))
     if ai_narrative:
         for para in ai_narrative.split("\n\n"):
-            cleaned = para.strip()
+            cleaned = _ascii_safe(para.strip())
             if cleaned:
-                cleaned = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', cleaned)
-                html.append(f'<p>{cleaned}</p>')
+                # Basic bold text support only (split by **)
+                parts = re.split(r'\*\*(.*?)\*\*', cleaned)
+                children = []
+                for i, part in enumerate(parts):
+                    if i % 2 == 0:
+                        if part: children.append(part)
+                    else:
+                        children.append(bold(part))
+                if children:
+                    nodes.append(p(*children))
     else:
-        html.append('<p><em>AI narrative not available for this report.</em></p>')
-
-    html.append('<hr />')
+        nodes.append(p(italic("AI narrative not available for this report.")))
 
     # Market Pulse
-    html.append(f'<h2>Market Pulse -- VIX {vix_val} ({vix_regime})</h2>')
     pulse_match = re.search(r'## Market Pulse\n\n(.*?)(?=\n## )', report_md, re.DOTALL)
     if pulse_match:
-        html.append('<ul>')
+        nodes.append(h(2, f"Market Pulse -- VIX {vix_val} ({vix_regime})"))
         for line in pulse_match.group(1).strip().split("\n"):
             if line.startswith("- "):
-                html.append(f'<li>{line[2:]}</li>')
-        html.append('</ul>')
-
-    html.append('<hr />')
+                nodes.append(p("• ", _ascii_safe(line[2:])))
 
     # Top Momentum Picks
-    html.append("<h2>Today's Top Setups</h2>")
+    nodes.append(h(2, "Today's Top Setups"))
     if picks:
         medal_map = {1: "#1 GOLD", 2: "#2 SILVER", 3: "#3 BRONZE"}
-        html.append('<ul>')
-        for p in picks:
-            rank = p.get("rank", 0)
+        for pk in picks:
+            rank = pk.get("rank", 0)
             medal = medal_map.get(rank, f"#{rank}")
-            ticker = p["ticker"]
-            score = p.get("score", 0)
-            grade = p.get("grade", "?")
-            price = p.get("price", 0)
-            ema = p.get("ema_stack", "")
-            company = p.get("company", "")
-
-            line = f'<strong>{medal} {ticker}</strong>'
-            if company:
-                line += f' — {company}'
-            line += f' · ${price:.2f} · Score: {score} · Grade: {grade}'
-            if ema:
-                line += f' · {ema}'
-            html.append(f'<li>{line}</li>')
-        html.append('</ul>')
+            ticker = pk["ticker"]
+            score = pk.get("score", 0)
+            grade = pk.get("grade", "?")
+            price = pk.get("price", 0)
+            ema = pk.get("ema_stack", "")
+            company = pk.get("company", "")
+            line = f"{medal} {ticker}"
+            if company: line += f" -- {company}"
+            line += f" | ${price:.2f} | Score: {score} | Grade: {grade}"
+            if ema: line += f" | {ema}"
+            nodes.append(p(bold(_ascii_safe(line))))
     else:
-        html.append('<p><em>No scored picks today.</em></p>')
-
-    html.append('<hr />')
+        nodes.append(p(italic("No scored picks today.")))
 
     # 3×3 Setups
-    html.append('<h2>3-Style Setups</h2>')
+    nodes.append(h(2, "3-Style Setups"))
     for label, emoji, style_picks in [
         ("Day Trade -- Breakout", ">>", day_trades),
         ("Swing Trade -- Pullback", "<<", swings),
         ("Cash-Secured Put -- Wheel", "$$", csps),
     ]:
-        html.append(f'<h3>{emoji} {label}</h3>')
+        nodes.append(h(3, _ascii_safe(f"{emoji} {label}")))
         if style_picks:
-            html.append('<ul>')
-            for p in style_picks:
-                ticker = p.get("ticker", "?")
-                why = p.get("why", "")
-                if p.get("vopr_grade"):
-                    detail = f"VoPR: {p['vopr_grade']}"
-                    if p.get("vrp_ratio"):
-                        detail += f" · VRP {p['vrp_ratio']:.2f}"
+            for sp in style_picks:
+                ticker = sp.get("ticker", "?")
+                why = _ascii_safe(sp.get("why", ""))
+                if sp.get("vopr_grade"):
+                    detail = f"VoPR: {sp['vopr_grade']}"
+                    if sp.get("vrp_ratio"):
+                        detail += f" | VRP {sp['vrp_ratio']:.2f}"
                 else:
-                    score = p.get("score", "")
-                    grade = p.get("grade", "")
-                    detail = f"Score: {score} · {grade}" if score else ""
-
-                line = f'<strong>{ticker}</strong>'
-                if detail:
-                    line += f' — {detail}'
-                if why:
-                    line += f' <em>({why})</em>'
-                html.append(f'<li>{line}</li>')
-            html.append('</ul>')
+                    score = sp.get("score", "")
+                    grade = sp.get("grade", "")
+                    detail = f"Score: {score} | Grade: {grade}" if score else ""
+                
+                parts = [bold(_ascii_safe(ticker))]
+                if detail: parts.append(f" -- {detail}")
+                if why: parts.append(italic(f" ({why})"))
+                nodes.append(p(*parts))
         else:
-            html.append('<p><em>No setups today</em></p>')
-
-    html.append('<hr />')
+            nodes.append(p(italic("No setups today")))
 
     # Institutional Signals
-    inst_buy_match = re.findall(r'\[(\w+)\].*?— (.*?)(?:\(|Conv)', report_md)
+    inst_buy_match = re.findall(r'\[(\w+)\].*?(?:—|--) (.*?)(?:\(|Conv)', report_md)
     if inst_buy_match:
-        html.append('<h2>Institutional Flow (TickerTrace)</h2>')
-        html.append('<ul>')
+        nodes.append(h(2, "Institutional Flow (TickerTrace)"))
         for ticker, name in inst_buy_match[:5]:
-            html.append(f'<li><a href="https://www.tradingview.com/symbols/{ticker}/chart/">{ticker}</a> — {name.strip()}</li>')
-        html.append('</ul>')
-        html.append('<hr />')
+            nodes.append(p("• ", link(ticker, f"https://www.tradingview.com/symbols/{ticker}/chart/"), f" -- {_ascii_safe(name.strip())}"))
 
     # Footer
-    html.append(f'<p><em>This report is for informational and educational purposes only. Not financial advice. '
-                f'<a href="{report_url}">Full dossier →</a></em></p>')
-    html.append(f'<p>— <a href="https://mphinance.com">mphinance.com</a> · '
-                f'<a href="https://github.com/mphinance/mphinance">GitHub</a> · '
-                f'<a href="http://mphinance.com:8002/docs">API Docs</a></p>')
-
-    body_html = "\n".join(html)
-
-    # Force pure ASCII -- non-ASCII can cause issues in Substack
-    body_html = _ascii_safe(body_html)
+    nodes.append(p(italic("This report is for informational and educational purposes only. Not financial advice. "),
+                   link("Full dossier ->", report_url)))
+    nodes.append(p("-- ", link("mphinance.com", "https://mphinance.com"),
+                   " | ", link("GitHub", "https://github.com/mphinance/mphinance"),
+                   " | ", link("API Docs", "http://mphinance.com:8002/docs")))
 
     title = f"ALPHA.DOSSIER // {date}"
     subtitle = f"Sam the Quant Ghost | VIX {vix_val} ({vix_regime}) | {len(picks)} scored tickers"
+    
+    doc = {"type": "doc", "content": nodes}
 
-    return title, subtitle, body_html
+    return title, subtitle, doc
 
 
 # ═══════════════════════════════════════════════
@@ -367,19 +371,19 @@ def main():
             return
         print(f"✅ Authenticated as user {client.user_id}")
 
-    title, subtitle, body_html = build_dossier_doc(args.date, client=client)
+    title, subtitle, doc = build_dossier_doc(args.date, client=client)
     print(f"   Title: {title}")
     print(f"   Subtitle: {subtitle}")
-    print(f"   HTML: {len(body_html)} chars")
+    print(f"   Nodes: {len(doc['content'])}")
 
     if args.dry_run:
         print("\n[DRY RUN] Would create draft:")
-        print(body_html[:2000])
+        print(json.dumps(doc, indent=2)[:2000])
         return
 
     # Create draft
     print("Creating draft...")
-    result = client.create_draft(title, subtitle, body_html)
+    result = client.create_draft(title, subtitle, doc)
     if result:
         draft_id = result.get("id")
         print(f"Draft created!")
