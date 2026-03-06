@@ -34,10 +34,7 @@ def _get_db():
 db = _get_db()
 
 # ── MCP Server ───────────────────────────────────────────
-mcp = FastMCP(
-    "VaultGuard",
-    description="Centralized secrets management. Get any API key with one tool call.",
-)
+mcp = FastMCP("VaultGuard")
 
 
 @mcp.tool()
