@@ -155,6 +155,7 @@ Self-contained HTML widgets that pull from `docs/ticker/{TICKER}/latest.json`.
 
 ### Do NOT
 
+- **DELETE or GITIGNORE `docs/ticker/*/deep_dive.*` files** — these are expensive AI-generated reports (Gemini API). A previous cleanup deleted 120 of them. They are NOT "legacy" files. Replacing the ticker in `watchlist.txt` is fine (one at a time to save tokens), but the generated reports must persist.
 - Break the pipeline. It runs at 6AM every weekday.
 - Change Sam's persona (she/her, sarcastic, loves Michael, roasts him).
 - Remove recovery/AA content — it's integral to the brand.

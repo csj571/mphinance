@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POET Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for POET.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+@media(max-width:640px){
+  .vol-row,.osc-row{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row{grid-template-columns:1fr}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/POET/" target="_blank">POET</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Technology &#xB7; Semiconductors &#xB7; 2026-03-04</div>
+  </div>
+  <div>
+    <div class="pr">$7.04</div>
+    <div class="ch pos">+1.88%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[POET] Deep Dive: The Photon's Edge – From Zero to Hero, Or Just Hype?</h2>
+<p><strong>Date:</strong> 2026-03-04</p>
+<p><strong>Price:</strong> ~$7.04 | <strong>Verdict:</strong> Aggressive Buy</p>
+
+<p>Alright, you degenerate gamblers of the stock market, Sam the Quant Ghost is back, and today we're shining a light on POET Technologies. This isn't your grandma's value stock; this is a micro-cap semiconductor play with rocket-ship revenue growth and zero profit. The question is: are you ready to ride the photonics wave, or will you get burned by the light?</p>
+
+<h3>The Core Thesis</h3>
+<p>The market sees POET as a high-growth, speculative bet in the increasingly critical world of integrated photonics, primarily targeting the exploding data center and AI/ML markets. They're making waves with their Optical Interposer platform, aiming to miniaturize and optimize data transmission, which is basically catnip for anyone building next-gen hyperscale infrastructure.</p>
+
+<p>What the market often <em>misses</em> – or conveniently glosses over – is that 8000% revenue growth isn't sustainable forever, and turning groundbreaking tech into consistent, <em>profitable</em> revenue is a whole different beast. Right now, POET is pouring every cent back into R&D and scaling, which is why we're staring at a beautiful goose egg for profit margin. This isn't a profit story yet; it's an adoption story, a future-potential narrative. If they nail execution and secure significant design wins, the current price is just a whisper. If they fumble, well, you know the drill.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<p>Let's cut the fluff and dive into the digits that matter for a company at this stage:</p>
+
+<ul>
+<li><strong>Market Cap:</strong> A lean $1.08B. Small enough for massive swings, big enough to attract institutional eyes.</li>
+<li><strong>Revenue Growth:</strong> A staggering <strong>7998.6%</strong>. Let that sink in. This isn't incremental; this is a company hitting its stride and likely onboarding significant orders or new product lines. It screams "disruptor trying to disrupt."</li>
+<li><strong>Profit Margin:</strong> <strong>0%</strong>. Yes, zero. They're not making money yet. Every dollar of revenue is getting reinvested. This isn't inherently bad for a high-growth tech company, but it means profitability is a future aspiration, not a present reality.</li>
+</ul>
+<p><em>   <strong>P/E & Forward P/E:</strong> None (current) and <strong>-37.05</strong> (forward). This confirms our profit margin observation: investors are betting on </em>future* earnings, not current ones. A negative Fwd P/E implies analysts expect continued losses for now.</p>
+<ul>
+<li><strong>Beta:</strong> 0.36. While in semiconductors, it's surprisingly low, suggesting less volatility relative to the overall market. Don't let that fool you; small caps can still get rocked.</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Explosive Adoption in Data Centers/AI:</strong> That near-8000% revenue growth isn't a typo. It indicates a significant ramp-up in product adoption, likely fueled by the insatiable demand for high-bandwidth, low-latency solutions in AI infrastructure and hyperscale data centers. POET's Optical Interposer could be a key enabling technology.</li>
+<li><strong>Strategic Industry Position:</strong> As a semiconductor company focused on integrated photonics, POET is at the nexus of several massive growth trends. The need for faster, more power-efficient data transmission <em>within</em> chips and modules is only intensifying. If their tech becomes a standard or a preferred solution, the revenue runway is enormous.</li>
+<li><strong>Path to Profitability via Scale:</strong> While currently unprofitable, the immense revenue growth suggests they're gaining traction. With sufficient scale, operational leverage should kick in, potentially turning that 0% profit margin into something positive. The aggressive growth is a necessary step towards future profitability.</li>
+<li><strong>Analyst Validation & Valuation:</strong> The street has an Analyst Target of <strong>$7.65</strong>, with a "FAIR VALUE" assessment matching that, implying an 8.7% gap from current price. This indicates that professional analysts see intrinsic value beyond the current trading price.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Profitability Desert:</strong> A 0% profit margin and negative forward P/E mean POET is a cash burner. While necessary for growth, sustained losses can lead to dilution through capital raises or liquidity issues if growth slows down.</li>
+<li><strong>Execution Risk in a Hyper-Competitive Market:</strong> The semiconductor industry is brutal. POET needs to execute flawlessly on manufacturing, secure design wins, and fend off larger, more established players with deeper pockets. Any misstep could be costly.</li>
+<li><strong>Overbought Technicals & Pullback Risk:</strong> The RSI at <strong>70.55</strong> signals POET is currently in overbought territory. While a strong trend can keep it there, it increases the probability of a sharp pullback or consolidation in the near term, especially given the rapid recent ascent.</li>
+</ul>
+
+<h3>📉 The Technicals</h3>
+<p>POET is looking interesting on the charts, but with caveats.</p>
+<ul>
+<li><strong>Trend:</strong> The overall trend is <strong>Bullish</strong> with a confirmed <strong>Golden Cross</strong>. This is a strong indicator of long-term momentum shifting upwards.</li>
+<li><strong>EMAs:</strong> We're in a <strong>TANGLED</strong> EMA stack (8: $6.37, 21: $6.19, 34: $6.25). This suggests recent consolidation or a tight fight for control, but the current price of $7.04 is significantly above all three, implying recent strength breaking out of that tangle.</li>
+<li><strong>SMAs:</strong> The price is well above the <strong>SMA 50 ($6.6)</strong>, reinforcing the bullish short-to-medium term trend. No SMA 200 available, which often happens with younger or highly volatile stocks.</li>
+<li><strong>RSI(14): 70.55</strong>. This is officially in overbought territory. While strong trends can ignore RSI for a while, it's a flashing yellow light for a potential correction or at least a pause.</li>
+<li><strong>ADX: 28.76</strong>. This indicates a moderately strong trend is in play, consistent with the Golden Cross.</li>
+<li><strong>Pivots:</strong> Current price $7.04 is above the <strong>PP ($6.58)</strong> but below <strong>R1 ($7.25)</strong>. This puts it in a strong position, but resistance is just above. Key support levels are S1 ($6.24) and S2 ($5.57).</li>
+<li><strong>Volatility:</strong> The <strong>ATR of 0.46</strong> means it moves about $0.46 on average daily. That's decent volatility for traders.</li>
+<li><strong>Relative Volume:</strong> <strong>2.44x</strong> normal volume. This indicates significant interest and buying pressure, backing up the recent price action.</li>
+<li><strong>52W Range:</strong> Currently trading at $7.04, it's well above its 52-week low of $3.87 but still has room to run to its high of $9.41.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>If POET can sustain buying pressure and clear <strong>R1 at $7.25</strong> with conviction, the next target becomes <strong>R2 at $7.59</strong>, pushing right up against the analyst target of $7.65. Keep an eye on RSI; if it continues higher on heavy volume, the breakout could be legitimate. A stop-loss just below R1 ($7.20) for early profit protection, or below the daily low for more room.</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Given the overbought RSI (70.55) and the recent run, a pullback is a high probability. My preferred entry would be a dip toward key support levels. Look for a bounce off the <strong>Pivot Point (PP) at $6.58</strong>, or ideally, a retest of the <strong>SMA 50 ($6.60)</strong> or the tangled EMA stack, specifically the <strong>8 EMA ($6.37)</strong>. The strongest support lies at <strong>S1 ($6.24)</strong>. A buy near these levels with confirmation of a bounce could offer a better risk/reward entry. Set a stop-loss just below S1 ($6.20).</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>If POET breaks below <strong>S1 ($6.24)</strong> and starts trading consistently below the <strong>8, 21, and 34 EMAs</strong>, the bullish momentum is likely failing. A breach of <strong>S2 ($5.57)</strong> would confirm a significant trend reversal, suggesting the initial breakout was a head-fake. In this scenario, cutting losses or even looking for short opportunities on a retest of S1 might be prudent, especially if volume remains high on the downside.</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>POET is a high-octane speculative play with incredible growth but unproven profitability. This stock is an <strong>Aggressive Buy</strong> for those who stomach risk for potential exponential rewards, with a price target of <strong>$7.65</strong> within the next 3-6 months.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">0.0%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">103.9%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val dim">N/A</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">N/A%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">TANGLED</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$5.92</div><div class="ma-d pos">+18.9%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$6.60</div><div class="ma-d pos">+6.7%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$6.42</div><div class="ma-d pos">+9.7%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">TANGLED</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$6.37</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$6.19</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$6.25</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neg">71</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">86/81</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm pos">+0.18</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">28.8</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$3.87</span><span>$7.04 (57%)</span><span>$9.41</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:57%"></div><div class="rng-dot" style="left:57%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$8.10</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$7.29</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$6.64</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$5.99</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$6.90</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$4.94</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$0.46</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">2.44x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$7.59 &#xB7; R1=$7.25 &#xB7; PP=$6.58 &#xB7; S1=$6.24 &#xB7; S2=$5.57
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-03-04 08:24 AM EST</div>
+</div>
+</body>
+</html>
