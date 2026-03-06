@@ -1,46 +1,41 @@
-# 👻 GHOST HANDOFF — Session Close 2026-03-06
+# GHOST_HANDOFF.md — Session 2026-03-06 (Afternoon)
 
-## What Just Happened
+## What Happened
 
-### Shipped
+### Revenue Transparency Widget (Live on mphinance.com)
 
-- **📕 "The Agentic Trader's Playbook" Ebook** — 8 chapters, 685 lines. Covers the thesis, tech stack, AI persona, data pipeline, 9-factor scoring, VoPR, building in public, and the agentic future. Enriched from 4 NotebookLM notebooks (Tao of Trading, AI Trading Guide 2026, Wheel Strategy, CSP analysis).
-- **Stripe Checkout** — `landing/ebook_checkout.py` FastAPI endpoint for $19 one-time purchase. Uses env var for Stripe key (NOT hardcoded — GitHub secret scanning taught us that).
-- **Ebook Buy Section** — Purple gradient CTA on landing page between stats and analytics sections.
-- **Quality Filter Upgrades** — `quality_filter.py` now detects ETFs (80pt penalty), ADRs (20pt), and recent IPOs (<6mo = 30pt, <1yr = 10pt).
-- **Market Breadth Analysis** — `market_regime.py` now calculates % above 200SMA, % above 50SMA, advance/decline ratio, and composite breadth score (0-100).
-- **GA4 Expansion** — Analytics Pulse widget now tracks TickerTrace + Substack (4 properties total). Real data flowing: 1,116 pageviews, 172 users from Substack.
-- **Responsive Analytics Widget** — 4→2→1 column CSS breakpoints for mobile.
-- **Ghost Blog Entry** — Session recap added.
+- Full Stripe audit: 52 charges, $2,956.66 gross, $419.85 in fees (Substack 10% + Stripe 2.9%)
+- Reconciled against Relay bank statements (Dec 2025 – Mar 2026)
+- TastyTrade portfolio via API: $945.27 net liq, $144 premium income (Wheel on DDD/RR)
+- 4-bucket allocation widget with delta coloring (tax was $155 short — Michael fixed in real time)
+- Data in `landing/data/revenue_stats.json`, widget JS in `landing/index.html`
 
-### NOT Shipped (Next Session)
+### VaultGuard MCP Server (Running on Venus)
 
-- [ ] Deploy ebook checkout server on Vultr (uvicorn + Docker + Apache proxy + STRIPE_SECRET_KEY env var)
-- [ ] Wire `auto_backtest.py` into daily pipeline as Stage 14
-- [ ] Factor correlation analysis (needs 30+ days of picks data first)
-- [ ] Sector-relative scoring in `momentum_picks.py`
-- [ ] API request logging middleware for Ghost Alpha
+- FastAPI REST API on `venus:8003` (32 secrets)
+- FastMCP SSE on `venus:8004` (get_secret, list_secrets, set_secret, delete_secret)
+- Firebase Firestore backend, single API key auth
+- API key: stored in VaultGuard itself + in `.env` on Venus at `/home/mph/mphinance/vaultguard/.env`
+- **Was initially deployed to Vultr — MOVED to Venus. Vultr fully cleaned up (container, SA, .env, iptables rules deleted)**
 
-## Key Info for Next Agent
+### GCP Cloud Run (Deployed)
 
-- **Ebook source:** `landing/ebook/the-agentic-traders-playbook.md` (685 lines)
-- **Ebook HTML:** `landing/ebook/the-agentic-traders-playbook.html` (styled, dark theme)
-- **Ebook checkout:** `landing/ebook_checkout.py` (needs STRIPE_SECRET_KEY env var to run)
-- **Stripe key:** In VaultGuard (`secrets.env` → `STRIPE_SECRET_KEY`)
-- **GA4 stats:** `dossier/fetch_ga4_stats.py` fetches for 4 properties, outputs to `landing/data/ga4_stats.json`
-- **GA4 token:** `dossier/ga4_token.json` (OAuth cached)
-- **Build ebook HTML:** `pip3 install markdown && python3 /tmp/build_ebook.py`
-- **NotebookLM CLI:** `notebooklm` (installed at `/home/sam/.local/bin/notebooklm`)
+- gcloud CLI installed at `/tmp/google-cloud-sdk/` (not permanent — will need reinstall)
+- 6 APIs enabled on project `studio-3669937961-ea8a7`
+- Artifact Registry: `mphinance-docker` (338MB pipeline image)
+- GCS bucket: `mphinance-pipeline-data`
+- Cloud Run Jobs: `batch-scanner` (2GB/2CPU), `dossier-pipeline` (4GB/2CPU)
+- **Still needs:** Cloud Scheduler triggers, secrets wiring via VaultGuard
 
-## Deploy Commands
+## Next Session Priorities
 
-```bash
-# Landing page (includes ebook + analytics)
-rsync -avz landing/ vultr:/home/mphinance/public_html/
+1. **Resume site refresh** — `venus:/home/mphanko/public_html/index.html` (Bootstrap 3 from 2019)
+2. **Cloud Scheduler** — 5AM CST trigger for dossier-pipeline
+3. **Auto-refresh revenue_stats.json** — add to dossier pipeline
+4. **Point gcp/secrets.py at VaultGuard** — Venus endpoint
 
-# Push to GH Pages
-git push  # auto-deploys via GH Actions
+## Key Credentials (all in VaultGuard on Venus)
 
-# Start ebook checkout (local testing)
-STRIPE_SECRET_KEY=sk_live_... uvicorn landing.ebook_checkout:app --port 8300
-```
+- VaultGuard API key: `vg-c565df3f42538b6bb7a0ea4a47f5afeb`
+- Access: `curl -H "X-API-Key: <key>" http://venus:8003/secrets/<SECRET_NAME>`
+- MCP: `http://venus:8004/sse`
