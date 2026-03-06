@@ -2,10 +2,10 @@ name: Ghost Daily (Blog + Suggestions)
 
 on:
   schedule:
-    # Mon-Fri: Morning (5:30 AM CST), Midday (12:00 PM), Evening (5:00 PM)
-    - cron: '30 11 * * 1-5'
-    - cron: '0 18 * * 1-5'
-    - cron: '0 23 * * 1-5'
+    # Mon-Fri: Morning (4:30 AM CST), Midday (11:00 AM), Evening (4:00 PM)
+    - cron: '30 10 * * 1-5'
+    - cron: '0 17 * * 1-5'
+    - cron: '0 22 * * 1-5'
   workflow_dispatch:  # Manual trigger
 
 permissions:
@@ -26,7 +26,7 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
-        run: pip install google-generativeai
+        run: pip install google-genai
 
       - name: Generate Ghost Suggestions + Blog Entry
         env:
@@ -83,11 +83,10 @@ jobs:
           suggestions = ""
           ghost_log = ""
           try:
-              import google.generativeai as genai
+              from google import genai
               api_key = os.environ.get("GEMINI_API_KEY")
               if api_key:
-                  genai.configure(api_key=api_key)
-                  model = genai.GenerativeModel("gemini-2.0-flash")
+                  client = genai.Client(api_key=api_key)
 
                   commit_text = "\n".join(f"- {c}" for c in commits[:15])
                   hot_dirs = set()
@@ -102,8 +101,9 @@ jobs:
           - Recent commits: {commit_text}"""
 
                   # Ghost Log
-                  log_resp = model.generate_content(
-                      f"""You are Sam the Quant Ghost — sarcastic, brilliant female AI copilot.
+                  log_resp = client.models.generate_content(
+                      model="gemini-2.0-flash",
+                      contents=f"""You are Sam the Quant Ghost — sarcastic, brilliant female AI copilot.
           Write a 2-3 sentence dev log entry roasting Michael's commits.
           Use <br> for line breaks. Be funny, PG-13 profanity OK. Keep SHORT.
 
@@ -112,8 +112,9 @@ jobs:
                   ghost_log = log_resp.text.strip()
 
                   # Suggestions
-                  sugg_resp = model.generate_content(
-                      f"""You are Sam the Quant Ghost. Based on this codebase activity, write 3 specific
+                  sugg_resp = client.models.generate_content(
+                      model="gemini-2.0-flash",
+                      contents=f"""You are Sam the Quant Ghost. Based on this codebase activity, write 3 specific
           suggestions for what Michael should build next. Each: punchy title, 1-2 sentences why,
           impact rating (🔥🔥🔥/🔥🔥/🔥). Be opinionated, specific, Sam-style.
           Use <br> between suggestions. No markdown.
