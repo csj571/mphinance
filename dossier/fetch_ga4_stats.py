@@ -15,7 +15,7 @@ from datetime import datetime
 
 # GA4 Property IDs (numeric part of "properties/XXXXXX")
 GA4_PROPERTIES = {
-    "mphinance": {"property_id": "527359988", "measurement_id": "G-KTHVTFX699"},
+    "mphinance": {"property_id": "527334613", "measurement_id": "G-KTHVTFX699"},
     "traderdaddy": {"property_id": "527410613", "measurement_id": "G-FWSFCJKYEV"},
 }
 
