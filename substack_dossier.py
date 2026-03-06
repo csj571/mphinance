@@ -283,7 +283,28 @@ def build_dossier_doc(date: str, client=None) -> tuple[str, str, dict]:
         nodes.append(h(2, f"Market Pulse -- VIX {vix_val} ({vix_regime})"))
         for line in pulse_match.group(1).strip().split("\n"):
             if line.startswith("- "):
-                nodes.append(p("• ", _ascii_safe(line[2:])))
+                text = line[2:]
+                circle = ""
+                # Extract emoji circle if present (🟢, 🔴, ⚪)
+                if text.startswith("🟢 ") or text.startswith("🔴 ") or text.startswith("⚪ "):
+                    circle = text[:2]
+                    text = text[2:]
+                
+                cleaned = _ascii_safe(text)
+                parts = re.split(r'\*\*(.*?)\*\*', cleaned)
+                
+                children = ["• "]
+                if circle:
+                    children.append(circle)
+                
+                for i, part in enumerate(parts):
+                    if i % 2 == 0:
+                        if part: children.append(part)
+                    else:
+                        children.append(bold(part))
+                
+                if children:
+                    nodes.append(p(*children))
 
     # Top Momentum Picks
     nodes.append(h(2, "Today's Top Setups"))

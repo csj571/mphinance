@@ -123,8 +123,12 @@ def build_markdown(
     if market_pulse:
         lines.append("## Market Pulse\n")
         for m in market_pulse:
-            change_str = f"{m.get('change_pct', 0):+.2f}%" if m.get('change_pct') else ""
-            lines.append(f"- **{m.get('name', '')}**: ${m.get('price', 'N/A')} {change_str}")
+            pct = m.get('pct_change')
+            change_str = f"({pct:+.2f}%)" if pct is not None else ""
+            circle = "⚪"
+            if pct is not None:
+                circle = "🟢" if pct > 0 else "🔴" if pct < 0 else "⚪"
+            lines.append(f"- {circle} **{m.get('name', '')}**: ${m.get('price', 'N/A')} {change_str}")
         lines.append("")
 
     # VIX
