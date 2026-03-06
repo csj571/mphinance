@@ -827,7 +827,7 @@ a{{color:inherit;text-decoration:none}}
 
 <div class="hud hdr">
   <div>
-    <h1><a href="https://www.tradingview.com/symbols/{ticker}/" target="_blank">{ticker}</a> <span class="amb">DEEP.DIVE</span></h1>
+    <h1><a href="https://www.tradingview.com/symbols/{ticker}/chart/" target="_blank">{ticker}</a> <span class="amb">DEEP.DIVE</span></h1>
     <div class="sub">{data.get("sector","N/A")} &#xB7; {data.get("industry","N/A")} &#xB7; {data.get("date","")}</div>
   </div>
   <div>

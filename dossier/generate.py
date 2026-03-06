@@ -436,7 +436,7 @@ def _update_index_page():
                                 <span class="view-badge" data-ticker="{w['ticker']}">—</span>
                             </div>
                             <div class="flex gap-2">
-                                <a href="https://www.tradingview.com/symbols/{w['ticker']}/" target="_blank" class="text-[9px] text-gray-400 border border-gray-700 px-1.5 py-0.5 rounded hover:text-neon-blue hover:border-neon-blue/30 transition-colors">TV</a>
+                                <a href="https://www.tradingview.com/symbols/{w['ticker']}/chart/" target="_blank" class="text-[9px] text-gray-400 border border-gray-700 px-1.5 py-0.5 rounded hover:text-neon-blue hover:border-neon-blue/30 transition-colors">TV</a>
                                 <a href="{w['md_path']}" download class="text-[9px] text-gray-400 border border-gray-700 px-1.5 py-0.5 rounded hover:text-white hover:border-gray-500 transition-colors">MD</a>
                                 <a href="{w['json_path']}" class="text-[9px] text-gray-400 border border-gray-700 px-1.5 py-0.5 rounded hover:text-white hover:border-gray-500 transition-colors">JSON</a>
                             </div>

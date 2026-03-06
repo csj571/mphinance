@@ -146,7 +146,7 @@ def build_daily_setups(ticker_payloads: list[dict], date: str,
             "rel_vol": p.get("rel_vol", 1.0),
             "is_pullback": p.get("is_pullback_setup", False),
             "why": why,
-            "tradingview": f"https://www.tradingview.com/symbols/{p['ticker']}/",
+            "tradingview": f"https://www.tradingview.com/symbols/{p['ticker']}/chart/",
         }
 
     # ── DAY TRADE PICKS (top 3 breakouts) ──
@@ -207,7 +207,7 @@ def build_daily_setups(ticker_payloads: list[dict], date: str,
                 "vol_regime": c.get("vol_regime", ""),
                 "trade": trade,
                 "why": why,
-                "tradingview": f"https://www.tradingview.com/symbols/{c['ticker']}/",
+                "tradingview": f"https://www.tradingview.com/symbols/{c['ticker']}/chart/",
             })
 
     # ── Regime context ──
