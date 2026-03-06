@@ -1,0 +1,92 @@
+# ═══════════════════════════════════════════════════════════════
+# Cloud Build — mphinance Pipeline
+#
+# Builds the pipeline Docker image and deploys two Cloud Run Jobs:
+#   1. batch-scanner — runs all 6 scanning strategies
+#   2. dossier-pipeline — full 13-stage daily report generator
+#
+# Trigger manually:
+#   gcloud builds submit --config cloudbuild.yaml .
+#
+# Or set up a Cloud Build Trigger on push to main.
+# ═══════════════════════════════════════════════════════════════
+
+substitutions:
+  _REGION: us-central1
+  _PROJECT_ID: studio-3669937961-ea8a7
+  _IMAGE: us-central1-docker.pkg.dev/${_PROJECT_ID}/mphinance/pipeline
+  _SA_EMAIL: mphinance-pipeline@${_PROJECT_ID}.iam.gserviceaccount.com
+
+steps:
+  # ── Step 1: Build the pipeline Docker image ──
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - Dockerfile.cloud
+      - -t
+      - ${_IMAGE}:${SHORT_SHA}
+      - -t
+      - ${_IMAGE}:latest
+      - .
+    id: build-image
+
+  # ── Step 2: Push to Artifact Registry ──
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - --all-tags
+      - ${_IMAGE}
+    id: push-image
+    waitFor: [build-image]
+
+  # ── Step 3: Deploy Batch Scanner Job ──
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - jobs
+      - replace
+      - batch-scanner
+      - --image=${_IMAGE}:${SHORT_SHA}
+      - --region=${_REGION}
+      - --command=python
+      - --args=batch_scanner.py
+      - --memory=2Gi
+      - --cpu=2
+      - --task-timeout=30m
+      - --max-retries=1
+      - --set-secrets=TRADIER_API_KEY=tradier-api-key:latest,GEMINI_API_KEY=gemini-api-key:latest
+      - --service-account=${_SA_EMAIL}
+    id: deploy-batch-scanner
+    waitFor: [push-image]
+
+  # ── Step 4: Deploy Dossier Pipeline Job ──
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - jobs
+      - replace
+      - dossier-pipeline
+      - --image=${_IMAGE}:${SHORT_SHA}
+      - --region=${_REGION}
+      - --command=python
+      - --args=-m,dossier.generate,--no-pdf
+      - --memory=4Gi
+      - --cpu=2
+      - --task-timeout=45m
+      - --max-retries=1
+      - --set-secrets=TRADIER_API_KEY=tradier-api-key:latest,GEMINI_API_KEY=gemini-api-key:latest,GCS_BUCKET=gcs-bucket-name:latest
+      - --service-account=${_SA_EMAIL}
+    id: deploy-dossier-pipeline
+    waitFor: [push-image]
+
+# Store images in Artifact Registry
+images:
+  - ${_IMAGE}:${SHORT_SHA}
+  - ${_IMAGE}:latest
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8
