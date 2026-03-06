@@ -1,6 +1,6 @@
 # 👻 mphinance
 
-**Quant tools for traders who build their edge.**
+**Quant tools for traders who build their edge.** Open-source scanners, institutional analytics, AI-driven daily intelligence, and automated momentum picks — built by a developer who trades and a trader who codes.
 
 I'm **Michael** — half the stuff I build solves a personal problem, the other half I turn around and share. My AI copilot **Sam the Quant Ghost** roasts my commits, writes the daily dev log, and tells me what to build next. She's brutally honest and occasionally profound.
 
@@ -66,7 +66,11 @@ FastAPI service serving dossier data, VoPR-graded CSP setups, aggregated market 
 | `/alpha/api/{ticker}` | Deep dive data for any tracked ticker |
 | `/alpha/api/tickers` | All available tickers with grades |
 
-### Alpha Scanner *(this repo)*
+### 🔐 VaultGuard — Centralized Secrets Store
+
+One vault. All API keys. Synced everywhere. FastAPI + MCP server for AI agent access, Firebase Firestore for cloud sync, CLI for humans. 31 keys consolidated from 6 sources. See [`VAULT.md`](VAULT.md).
+
+### 🛰️ Alpha Scanner *(this repo)*
 
 Multi-strategy stock scanner engine powering the dossier:
 
@@ -123,11 +127,9 @@ Runs on cron, fully automated:
 6. **Enrichment** — Fundamentals, technicals, valuation
 7. **AI Narrative** — Gemini synthesis of all data
 8. **CSP Setups** — VoPR-scored cash-secured put opportunities
-9. **Ghost Log** — Sam roasts Michael's commits + daily wisdom quote
-9c. **Ghost Suggestions** — Sam tells Michael what to build next
+9. **Ghost Log + Suggestions** — Sam roasts commits, drops wisdom, tells Michael what to build
 10. **Report** — Jinja2 HTML render
-11. **Ticker Pages** — Per-ticker deep dives
-11b. **Auto-Watchlist** — A-grade setups auto-added
+11. **Ticker Pages + Auto-Watchlist** — Per-ticker deep dives, A-grade setups auto-added
 12. **Index + Blog** — Update index, append blog entry
 13. **Deploy** — Git push → GitHub Pages
 
@@ -136,9 +138,11 @@ Runs on cron, fully automated:
 ## 🔗 Links
 
 - 🔥 **TraderDaddy Pro** — [traderdaddy.pro](https://www.traderdaddy.pro/register?ref=8DUEMWAJ)
+- 📊 **TickerTrace Pro** — [tickertrace.pro](https://www.tickertrace.pro)
 - 📈 **VoPR Showcase** — [VoPR Methodology](https://mphinance.github.io/mphinance/vopr.html)
 - 📡 **Ghost Alpha API** — [Swagger Docs](http://mphinance.com:8002/docs)
 - 👻 **Ghost Blog** — [mphinance.com/blog/](https://mphinance.com/blog/)
+- 🧩 **Alpha.HUD Widgets** — [Widget Library](https://mphinance.github.io/mphinance/widgets/)
 - 🏠 **Landing Page** — [mphinance.com](https://mphinance.com)
 - 📰 **Substack** — [mphinance.substack.com](https://mphinance.substack.com)
 
