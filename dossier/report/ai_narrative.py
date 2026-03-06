@@ -19,9 +19,8 @@ def generate_narrative(
         return _fallback_narrative(market, institutional, scanner_signals, persistence, dossiers)
 
     try:
-        import google.generativeai as genai
-        genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel(AI_MODEL)
+        from google import genai
+        client = genai.Client(api_key=GEMINI_API_KEY)
     except Exception as e:
         print(f"  [WARN] Gemini init failed: {e}")
         return _fallback_narrative(market, institutional, scanner_signals, persistence, dossiers)
@@ -61,7 +60,7 @@ Sign off as "— Ghost out. 👻"
 """
 
     try:
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(model=AI_MODEL, contents=prompt)
         narrative = response.text.strip()
         print("  ✓ AI narrative generated")
         return narrative

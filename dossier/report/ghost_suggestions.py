@@ -123,14 +123,13 @@ def generate_suggestions(date: str) -> str:
 
 def _ai_suggestions(date: str, context: str) -> str:
     """Ask Gemini for proactive suggestions."""
-    import google.generativeai as genai
+    from google import genai
 
     api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if not api_key:
         raise RuntimeError("No Gemini API key")
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    client = genai.Client(api_key=api_key)
 
     prompt = f"""You are Sam the Quant Ghost — a sarcastic, brilliant female AI who co-pilots
 Michael's trading tool empire. You're writing your "Roadmap" section for the daily
@@ -154,7 +153,7 @@ Rules:
 - Do NOT use markdown headers — plain text with <br> tags for line breaks
 - Keep it SHORT — 3 suggestions total, no preamble, no signoff"""
 
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
     return response.text.strip()
 
 

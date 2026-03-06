@@ -51,9 +51,8 @@ def _gemini_deep_dive(ticker: str, data: dict) -> str:
         return ""
 
     try:
-        import google.generativeai as genai
-        genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel(AI_MODEL)
+        from google import genai
+        client = genai.Client(api_key=GEMINI_API_KEY)
     except Exception as e:
         print(f"    [WARN] Gemini init: {e}")
         return ""
@@ -116,7 +115,7 @@ Sign off: "— Ghost out. 👻"
 """
 
     try:
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(model=AI_MODEL, contents=prompt)
         return response.text.strip()
     except Exception as e:
         print(f"    [WARN] Gemini failed: {e}")

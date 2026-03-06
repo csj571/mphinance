@@ -77,15 +77,14 @@ def generate_ghost_log(date: str) -> str:
 
 def _ai_roast(date: str, commits: list[str], stats: str) -> str:
     """Ask Gemini to roast Sam's commits."""
-    import google.generativeai as genai
+    from google import genai
     import os
 
     api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if not api_key:
         raise RuntimeError("No Gemini API key")
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    client = genai.Client(api_key=api_key)
 
     commit_text = "\n".join(f"- {c}" for c in commits)
 
@@ -108,7 +107,7 @@ Write a 2-4 sentence dev log entry. Rules:
 - Keep it SHORT — this is a changelog entry, not an essay
 - You're proud of the work even if you roast it"""
 
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
     return response.text.strip()
 
 
