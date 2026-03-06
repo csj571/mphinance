@@ -5,6 +5,8 @@ Tracks which tickers appear in scans over time to identify:
 - Lifers: 20+ consecutive days (strong institutional commitment)
 - High Conviction: 10-19 days (sustained interest)
 - New Signals: 1-3 days
+
+Storage: GCS bucket (cloud) with local filesystem fallback (dev).
 """
 
 import json
@@ -13,10 +15,23 @@ from dossier.config import PERSISTENCE_DIR
 
 
 PERSISTENCE_FILE = PERSISTENCE_DIR / "signal_history.json"
+# GCS path is relative — used when running in Cloud Run
+GCS_PATH = "dossier/persistence/data/signal_history.json"
 WINDOW_DAYS = 21
 
 
 def _load_history() -> dict:
+    """Load signal history from GCS, falling back to local file."""
+    # Try GCS first
+    try:
+        from gcp.storage import gcs_read_json
+        data = gcs_read_json(GCS_PATH, fallback_local=False)
+        if data is not None:
+            return data
+    except ImportError:
+        pass
+
+    # Local fallback
     if PERSISTENCE_FILE.exists():
         try:
             with open(PERSISTENCE_FILE) as f:
@@ -27,6 +42,17 @@ def _load_history() -> dict:
 
 
 def _save_history(history: dict):
+    """Save signal history to both GCS and local file."""
+    # Write to GCS (also writes local as backup)
+    try:
+        from gcp.storage import gcs_write_json
+        gcs_write_json(GCS_PATH, history, also_local=True)
+        return
+    except ImportError:
+        pass
+
+    # Pure local fallback
+    PERSISTENCE_FILE.parent.mkdir(parents=True, exist_ok=True)
     with open(PERSISTENCE_FILE, "w") as f:
         json.dump(history, f, indent=2)
 
