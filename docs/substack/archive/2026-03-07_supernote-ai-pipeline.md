@@ -1,6 +1,6 @@
 # I Taught My AI to Read My Handwriting (From an AA Meeting Notebook)
 
-*Michael's Musings — March 7, 2026*
+*Michael's Musings  - March 7, 2026*
 
 ---
 
@@ -20,25 +20,25 @@ So I did what any reasonable person would do. I built a pipeline.
 
 Here's what my actual notes look like. This is the raw handwriting my AI reads:
 
-![My actual Supernote to-do page — handwritten tags in the right column route tasks to different systems](images/supernote_todo_page.png)
+![My actual Supernote to-do page  - handwritten tags in the right column route tasks to different systems](images/supernote_todo_page.png)
 
 Here's the flow:
 
-1. **I write in Supernote** — normal handwritten notes, like a human being
-2. **I tag things in the right column** — "Sam" (for my AI copilot to handle), "Blog" (content idea), "Gemini Agent" (calendar/scheduling for my phone)
+1. **I write in Supernote**  - normal handwritten notes, like a human being
+2. **I tag things in the right column**  - "Sam" (for my AI copilot to handle), "Blog" (content idea), "Gemini Agent" (calendar/scheduling for my phone)
 3. **The PDFs auto-export to Google Drive**
-4. **My AI reads them** — downloads the PDFs, renders the pages as images (because handwriting isn't OCR-able text), and literally looks at my handwriting to transcribe it
-5. **Tags get routed** — Sam items become to-do tasks. Blog items become Substack draft seeds. Gemini Agent items become calendar events on my phone.
+4. **My AI reads them**  - downloads the PDFs, renders the pages as images (because handwriting isn't OCR-able text), and literally looks at my handwriting to transcribe it
+5. **Tags get routed**  - Sam items become to-do tasks. Blog items become Substack draft seeds. Gemini Agent items become calendar events on my phone.
 
 ---
 
-Today's notes were from this morning's AA meeting. Art — one of those old-timers who's been sober since before you were probably born — talked about character.
+Today's notes were from this morning's AA meeting. Art  - one of those old-timers who's been sober since before you were probably born  - talked about character.
 
 The cliche was "alcohol doesn't change who you are when you're sober." And Art's take was that sobriety doesn't fix your character. It just removes the excuse. You still have to do the actual work of becoming a better person.
 
 Here are the actual meeting notes from that day:
 
-![AA District Meeting notes — handwritten on Supernote, exported as PDF, read by AI](images/supernote_aa_meeting.png)
+![AA District Meeting notes  - handwritten on Supernote, exported as PDF, read by AI](images/supernote_aa_meeting.png)
 
 That turned into a whole thing (separate post coming) about how the exact same principle applies to money. Lottery winners. Day traders who blow up accounts. The amount doesn't matter if the character behind it hasn't changed.
 
@@ -61,17 +61,17 @@ The notebook → pipeline → content → products loop is real. And it starts w
 
 ---
 
-I keep saying "radical transparency" but this is something else. This is **radical integration.** The meetings, the trading, the building, the writing — it's all one thing. Recovery teaches you to live an integrated life. No compartments. No "work me" vs "real me."
+I keep saying "radical transparency" but this is something else. This is **radical integration.** The meetings, the trading, the building, the writing  - it's all one thing. Recovery teaches you to live an integrated life. No compartments. No "work me" vs "real me."
 
 So yeah. My AA notes feed my trading blog feed my ebook feed my AI system. And somehow that makes perfect sense.
 
 ---
 
-*If you want to build something like this, the entire system is open source. The Supernote reader, the draft manager, the RSS dedup checker — it's all at [github.com/mphinance](https://github.com/mphinance/mphinance). And before you ask: yes, the AI can read my terrible handwriting. It's better at it than most pharmacists.*
+*If you want to build something like this, the entire system is open source. The Supernote reader, the draft manager, the RSS dedup checker  - it's all at [github.com/mphinance](https://github.com/mphinance/mphinance). And before you ask: yes, the AI can read my terrible handwriting. It's better at it than most pharmacists.*
 
 ---
 
-<!-- PAYWALL BREAK — Everything below is for paid subscribers -->
+<!-- PAYWALL BREAK  - Everything below is for paid subscribers -->
 <!-- On Substack: Insert paywall divider here -->
 
 ## 🔒 For Paid Subscribers: The Technical Blueprint
@@ -88,22 +88,22 @@ Here's the exact architecture if you want to build your own notebook → AI pipe
 - **Draft System:** Markdown files on GitHub Pages with RSS dedup against Substack feed
 - **Calendar:** Tags marked "Gemini Agent" → task file → Gemini Android app reads from repo
 
-**The Code:** `scripts/substack_draft_manager.py` — fuzzy matches draft titles against your Substack RSS feed at 55% similarity threshold. When you publish, it auto-archives the draft and promotes the next one.
+**The Code:** `scripts/substack_draft_manager.py`  - fuzzy matches draft titles against your Substack RSS feed at 55% similarity threshold. When you publish, it auto-archives the draft and promotes the next one.
 
-**Cost:** $0. The AI agent, the pipeline, the hosting — all free tier or self-hosted. The only cost is the Supernote tablet itself.
+**Cost:** $0. The AI agent, the pipeline, the hosting  - all free tier or self-hosted. The only cost is the Supernote tablet itself.
 
 ---
 
 ## Speaking of Tools That Pay for Themselves
 
-![TraderDaddy Pro — AI-powered options dashboard](images/traderdaddy_hero.png)
+![TraderDaddy Pro  - AI-powered options dashboard](images/traderdaddy_hero.png)
 
-Everything I build eventually feeds into the trading. [**TraderDaddy Pro**](https://www.traderdaddy.pro/register?ref=8DUEMWAJ) is the dashboard where it all comes together — unusual options activity, real-time scanning, AI copilot. The same AI that reads my handwriting also picks my trades.
+Everything I build eventually feeds into the trading. [**TraderDaddy Pro**](https://www.traderdaddy.pro/register?ref=8DUEMWAJ) is the dashboard where it all comes together  - unusual options activity, real-time scanning, AI copilot. The same AI that reads my handwriting also picks my trades.
 
 ---
 
-— Michael
+ - Michael
 
-*Momentum Phinance — [mphinance.com](https://mphinance.com)*
-*TraderDaddy Pro — [traderdaddy.pro](https://www.traderdaddy.pro/register?ref=8DUEMWAJ)*
-*Ghost Alpha Dossier — [Daily AI Report](https://mphinance.github.io/mphinance/)*
+*Momentum Phinance  - [mphinance.com](https://mphinance.com)*
+*TraderDaddy Pro  - [traderdaddy.pro](https://www.traderdaddy.pro/register?ref=8DUEMWAJ)*
+*Ghost Alpha Dossier  - [Daily AI Report](https://mphinance.blog)*

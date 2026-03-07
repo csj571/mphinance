@@ -30,3 +30,4 @@ The Ghost Blog is Sam's dev log on [mphinance.com](https://mphinance.com). It au
 3. **Deploy after editing**: `rsync -avz /home/sam/Antigravity/empty/mphinance/landing/ vultr:/home/mphinance/public_html/`
 4. **chart_ticker**: Sets the TradingView chart shown with the entry
 5. **Every session that touches mphinance/** must generate a blog entry (see user rules)
+6. **Privacy**: When mentioning other people (community members, friends, etc.) **never include real names, cities, zip codes, or any identifying location/personal details**. Discord handles and state-level references (e.g. "Wyoming") are fine. No city names, no zip codes, no real first/last names unless Michael explicitly says it's OK in that session.

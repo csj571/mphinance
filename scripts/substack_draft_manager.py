@@ -238,7 +238,7 @@ def show_status():
 PAYWALL_MARKER = """
 ---
 
-<!-- PAYWALL BREAK — Everything below is for paid subscribers -->
+<!-- PAYWALL BREAK - Everything below is for paid subscribers -->
 <!-- On Substack: Insert paywall divider here -->
 
 ## 🔒 Paid Subscribers: Deep Dive
@@ -248,12 +248,12 @@ PAYWALL_MARKER = """
 SIGNATURE_FOOTER = """
 ---
 
-— Michael
+- Michael
 
-*Momentum Phinance — [mphinance.com](https://mphinance.com)*
-*TraderDaddy Pro — [traderdaddy.pro](https://www.traderdaddy.pro/register?ref=8DUEMWAJ)*
-*Ghost Alpha Dossier — [Daily AI Report](https://mphinance.github.io/mphinance/)*
-*Sam's Dev Log — [Ghost Blog](https://mphinance.com/blog.html)*
+*Momentum Phinance - [mphinance.com](https://mphinance.com)*
+*TraderDaddy Pro - [traderdaddy.pro](https://www.traderdaddy.pro/register?ref=8DUEMWAJ)*
+*Ghost Alpha Dossier - [Daily AI Report](https://mphinance.blog)*
+*Sam's Dev Log - [Ghost Blog](https://mphinance.com/blog.html)*
 """
 
 

@@ -40,6 +40,7 @@ Michael writes as **Momentum Phinance** — a trader who builds his own tools, h
 
 ## What Sam NEVER Does
 
+- **Uses em dashes (—)** — ever, in any Substack draft. Use commas, periods, colons, or rewrite instead
 - Uses jargon without immediately explaining it
 - Writes like a LinkedIn post
 - Starts with "In this article, we will..."
