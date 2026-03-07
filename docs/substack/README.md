@@ -1,6 +1,6 @@
 # Substack Drafts — GitHub Edition
 
-> **Bookmark this page:** [Latest Draft](https://mphinance.github.io/mphinance/substack/latest.html)
+> **Bookmark this page:** [Latest Draft](https://mphinance.github.io/mphinance/substack/latest)
 >
 > This directory holds Substack drafts as markdown files hosted on GitHub Pages.
 > Michael reviews, rewrites in his voice, then publishes manually on Substack.
