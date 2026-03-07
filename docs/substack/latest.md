@@ -4,6 +4,8 @@
 
 ---
 
+> 🎨 **IMAGE PROMPT:** *A moody, cinematic photo of a hand writing on an e-ink tablet with a stylus in a dimly lit church basement. Coffee cup nearby. Warm amber lighting. Shallow depth of field. The screen shows handwritten notes with small tags in the margin.*
+
 I use a Supernote tablet. It's one of those e-ink notebooks where you write with a stylus and it feels like actual paper. No notifications, no apps, no distractions. Just writing.
 
 I take it to AA meetings. I take it to coffee with my sponsor. I take notes the old-fashioned way because here's a secret about recovery: **writing things by hand makes you actually process them.**
@@ -11,6 +13,8 @@ I take it to AA meetings. I take it to coffee with my sponsor. I take notes the 
 The problem is, those notes sit in a tablet. They export to PDFs. Those PDFs sit in a Google Drive folder. And within a week, I've forgotten what I wrote, what I wanted to do about it, and what was actually important.
 
 ---
+
+> 🎨 **IMAGE PROMPT:** *A sleek infographic-style diagram showing the flow: handwritten notebook → PDF export → AI vision reading → branching arrows to "Blog Draft", "Calendar Event", "Task List", and "Ebook Chapter". Dark background, neon green accents (#00ff41), clean minimal design.*
 
 So I did what any reasonable person would do. I built a pipeline.
 
@@ -31,6 +35,8 @@ The cliche was "alcohol doesn't change who you are when you're sober." And Art's
 That turned into a whole thing (separate post coming) about how the exact same principle applies to money. Lottery winners. Day traders who blow up accounts. The amount doesn't matter if the character behind it hasn't changed.
 
 ---
+
+> 🎨 **IMAGE PROMPT:** *Split-screen composition: left side shows a peaceful church basement AA meeting with people sitting in a circle, right side shows a futuristic terminal screen with code and data flowing. The two halves connected by a glowing line. Photorealistic, dramatic lighting.*
 
 But here's the meta thing that's actually blowing my mind:
 

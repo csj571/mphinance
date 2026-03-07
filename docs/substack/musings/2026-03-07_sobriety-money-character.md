@@ -4,6 +4,8 @@
 
 ---
 
+> 🎨 **IMAGE PROMPT:** *A cracked mirror reflecting two different scenes: on one side a whiskey glass, on the other side stacks of cash. Both sides cracked and distorted. Dark moody lighting, photorealistic, shallow depth of field. The mirror frame is ornate and old.*
+
 Saturday morning AA. The topic was "101 Common Cliches of Alcoholics Anonymous," and Art gets up first. I love when Art shares. He's been sober longer than I've been alive and he still talks like a guy who figured something out yesterday.
 
 Today he talked about people and money. And I can't stop thinking about it.
@@ -20,6 +22,8 @@ He said the problem isn't that alcohol *makes* you an asshole. The problem is th
 
 ---
 
+> 🎨 **IMAGE PROMPT:** *A lottery winner holding a giant oversized check, but the photo is aged and yellowed like it's from years ago. Behind them, a "FOR SALE" sign on a mansion. Bittersweet, documentary-style photography.*
+
 And here's where it gets interesting for money.
 
 Look at lottery winners. Study after study shows that people who win millions are broke within 5 years at astronomical rates. We all know this. We shake our heads. "How do you blow $100 million?"
@@ -29,6 +33,8 @@ Same way an alcoholic with 30 days sober blows their sobriety. **The money didn'
 You give $10 million to someone who doesn't know how to manage $1,000, and they don't suddenly learn. They just make $10 million worth of the same mistakes. Bigger house, same habits. Nicer car, same impulse control. More zeros, same relationship with spending.
 
 ---
+
+> 🎨 **IMAGE PROMPT:** *A minimalist trading terminal showing a small account balance of $100, but the screen is surrounded by carefully organized notebooks, charts, and a written money plan. Clean desk, intentional setup. The contrast between the small number and the professional preparation tells the story.*
 
 I see this in trading too. Not with millions — with hundreds.
 
