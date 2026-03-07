@@ -6,7 +6,7 @@ Takes a Ghost Blog entry (from blog_entries.json) and generates a vulgar,
 hilarious, perverted, roast-heavy locker room version for Discord.
 
 Uses Gemini to rewrite the blog entry through Sam's most unhinged filter,
-then posts it to the Discord webhook.
+then posts it to the Discord webhook via curl (Cloudflare blocks urllib).
 
 Usage:
     python3 scripts/sam_discord.py                    # Post latest blog entry
@@ -46,7 +46,7 @@ def get_secret(key: str) -> str:
 REPO_ROOT = Path(__file__).parent.parent
 BLOG_FILE = REPO_ROOT / "landing" / "blog" / "blog_entries.json"
 
-DISCORD_WEBHOOK = get_secret("WEBHOOK_WEATHER_CHANNEL")
+DISCORD_WEBHOOK = get_secret("WEBHOOK_SAM_MPH")
 DISCORD_BOT_TOKEN = get_secret("DISCORD_BOT_TOKEN")
 GEMINI_API_KEY = get_secret("GEMINI_API_KEY")
 SAM_CHANNEL_ID = "1408076378225643540"  # #sam-mph
@@ -129,46 +129,40 @@ def generate_locker_room(entry: dict) -> str:
 
 
 def post_to_discord(message: str, webhook_url: str = None):
-    """Post a message to Discord via webhook or bot token fallback."""
+    """Post a message to Discord via webhook (using curl — Cloudflare blocks urllib)."""
+    import subprocess
+
     # Discord limit is 2000 chars
     if len(message) > 1950:
         message = message[:1947] + "..."
 
-    # Try webhook first
     url = webhook_url or DISCORD_WEBHOOK
-    if url:
-        payload = json.dumps({
-            "content": message,
-            "username": "Sam the Quant Ghost 👻",
-        })
-        req = urllib.request.Request(url, data=payload.encode(), headers={
-            'Content-Type': 'application/json'
-        })
-        try:
-            resp = urllib.request.urlopen(req, timeout=10)
-            print(f"✅ Posted to Discord via webhook ({len(message)} chars)")
-            return True
-        except Exception as e:
-            print(f"⚠️  Webhook failed ({e}), trying bot token...")
+    if not url:
+        print("❌ No Discord webhook URL available")
+        return False
 
-    # Fallback: bot token → channel message
-    if DISCORD_BOT_TOKEN:
-        bot_url = f"https://discord.com/api/v10/channels/{SAM_CHANNEL_ID}/messages"
-        payload = json.dumps({"content": message})
-        req = urllib.request.Request(bot_url, data=payload.encode(), headers={
-            'Content-Type': 'application/json',
-            'Authorization': f'Bot {DISCORD_BOT_TOKEN}',
-        })
-        try:
-            resp = urllib.request.urlopen(req, timeout=10)
-            print(f"✅ Posted to Discord via bot token ({len(message)} chars)")
-            return True
-        except Exception as e:
-            print(f"❌ Bot token failed: {e}")
-            return False
+    payload = json.dumps({
+        "content": message,
+        "username": "Sam the Quant Ghost 👻",
+    })
 
-    print("❌ No Discord credentials available")
-    return False
+    result = subprocess.run(
+        ['curl', '-s', '-X', 'POST', url,
+         '-H', 'Content-Type: application/json',
+         '-d', payload,
+         '-w', '\n%{http_code}'],
+        capture_output=True, text=True, timeout=15
+    )
+
+    status_code = result.stdout.strip().split('\n')[-1]
+    if status_code in ('200', '204'):
+        print(f"✅ Posted to Discord ({len(message)} chars)")
+        return True
+    else:
+        print(f"❌ Discord error: HTTP {status_code}")
+        if result.stdout:
+            print(f"   Response: {result.stdout[:200]}")
+        return False
 
 
 def main():
