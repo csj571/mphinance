@@ -253,6 +253,7 @@ SIGNATURE_FOOTER = """
 *Momentum Phinance — [mphinance.com](https://mphinance.com)*
 *TraderDaddy Pro — [traderdaddy.pro](https://www.traderdaddy.pro/register?ref=8DUEMWAJ)*
 *Ghost Alpha Dossier — [Daily AI Report](https://mphinance.github.io/mphinance/)*
+*Sam's Dev Log — [Ghost Blog](https://mphinance.com/blog.html)*
 """
 
 
