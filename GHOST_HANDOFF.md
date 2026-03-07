@@ -1,41 +1,54 @@
-# GHOST_HANDOFF.md — Session 2026-03-06 (Afternoon)
+# 👻 GHOST_HANDOFF — March 7, 2026
 
-## What Happened
+> This is the current state doc. Next agent reads this first.
 
-### Revenue Transparency Widget (Live on mphinance.com)
+## Infrastructure State
 
-- Full Stripe audit: 52 charges, $2,956.66 gross, $419.85 in fees (Substack 10% + Stripe 2.9%)
-- Reconciled against Relay bank statements (Dec 2025 – Mar 2026)
-- TastyTrade portfolio via API: $945.27 net liq, $144 premium income (Wheel on DDD/RR)
-- 4-bucket allocation widget with delta coloring (tax was $155 short — Michael fixed in real time)
-- Data in `landing/data/revenue_stats.json`, widget JS in `landing/index.html`
+### Vultr (Production)
 
-### VaultGuard MCP Server (Running on Venus)
+- **API Gateway:** `api.mphinance.com` — 3 routes active:
+  - `/alpha/` → Ghost Alpha API (port 8002) ✅
+  - `/tt/` → TickerTrace API (port 8100) ✅
+  - `/ebook/` → Ebook Checkout (port 8300) ✅
+- **SSL:** `alpha.mphinance.com` cert obtained + reverse proxy
+- **DNS NEEDED:** A records for `api.mphinance.com` and `alpha.mphinance.com` → 207.148.19.144
+- **Ebook Reader:** `/ebook/read/69533e52220545f7` (obfuscated permanent URL)
+- **TickerTrace:** Unchanged, `api.tickertrace.pro` still works independently
 
-- FastAPI REST API on `venus:8003` (32 secrets)
-- FastMCP SSE on `venus:8004` (get_secret, list_secrets, set_secret, delete_secret)
-- Firebase Firestore backend, single API key auth
-- API key: stored in VaultGuard itself + in `.env` on Venus at `/home/mph/mphinance/vaultguard/.env`
-- **Was initially deployed to Vultr — MOVED to Venus. Vultr fully cleaned up (container, SA, .env, iptables rules deleted)**
+### Venus (Local Server)
 
-### GCP Cloud Run (Deployed)
+- **VaultGuard:** Running localhost:8003/8004 (Docker Compose, Firebase Firestore backed)
+- **Alpha-Momentum API:** Port 8100 via Docker
+- **Gemini CLI:** Configured with GEMINI.md + MCP servers (tradier, yfinance, vaultguard)
+- **GHOST_HANDOFF.md:** At `/home/mph/alpha-momentum/GHOST_HANDOFF.md`
 
-- gcloud CLI installed at `/tmp/google-cloud-sdk/` (not permanent — will need reinstall)
-- 6 APIs enabled on project `studio-3669937961-ea8a7`
-- Artifact Registry: `mphinance-docker` (338MB pipeline image)
-- GCS bucket: `mphinance-pipeline-data`
-- Cloud Run Jobs: `batch-scanner` (2GB/2CPU), `dossier-pipeline` (4GB/2CPU)
-- **Still needs:** Cloud Scheduler triggers, secrets wiring via VaultGuard
+### This Machine (sam1)
 
-## Next Session Priorities
+- **Repo:** `/home/sam/mphinance` — main branch, up to date
+- **Pipeline:** 16 stages (added watchlist cleanup, revenue refresh, auto-backtest)
+- **Blog:** Latest entry March 7, rsynced to Vultr
 
-1. **Resume site refresh** — `venus:/home/mphanko/public_html/index.html` (Bootstrap 3 from 2019)
-2. **Cloud Scheduler** — 5AM CST trigger for dossier-pipeline
-3. **Auto-refresh revenue_stats.json** — add to dossier pipeline
-4. **Point gcp/secrets.py at VaultGuard** — Venus endpoint
+## What Changed This Session
 
-## Key Credentials (all in VaultGuard on Venus)
+1. API Gateway consolidation (single vhost, path routing)
+2. SSL for alpha.mphinance.com
+3. 16-stage pipeline (was 13)
+4. OpenClaw archived from sam2 → `OPENCLAW_ARCHIVE.md` + `_archive/openclaw_workspace/`
+5. VaultGuard deployed to venus
+6. Venus Gemini CLI configured
+7. Ebook checkout deployed on Vultr with obfuscated reader URL
+8. `gcp/setup.sh` rewritten (was all comments)
+9. Widgets stripped from blog + landing
+10. Ghost Blog entry for session
 
-- VaultGuard API key: `vg-c565df3f42538b6bb7a0ea4a47f5afeb`
-- Access: `curl -H "X-API-Key: <key>" http://venus:8003/secrets/<SECRET_NAME>`
-- MCP: `http://venus:8004/sse`
+## User's Next Focus
+
+- **TraderDaddy.pro** — Michael's priority. Promote it, add to blog signatures, grab screenshots
+- **0DTE Dashboard** — tightspread submodule, see `tightspread/TODO_backtesting.md`
+- **sam2 is retired** — all relevant data archived here
+
+## Unresolved
+
+- DNS A records not yet pointed
+- `STRIPE_SECRET_KEY` not set in ebook container (checkout will fail without it)
+- Cloud Scheduler needs `gcloud` CLI (run `gcp/setup.sh`)
