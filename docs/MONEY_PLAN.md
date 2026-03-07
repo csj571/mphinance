@@ -5,94 +5,92 @@
 ## Current State
 
 - **Account:** TastyTrade
-- **Balance:** ~$100
+- **Balance:** ~$100 (+ $100 backup = $200 total budget)
 - **Strategy:** 0DTE day trading via tightspread
-- **Target:** $2,000+ by end of week (March 14, 2026)
+- **Immediate need:** First ~$1,200 gets withdrawn ASAP
+- **Runway:** Two shots at $100 to make this work
 
 ---
 
-## Revenue Allocation (The Buckets)
+## Phase 1: The Sprint ($100 → $1,200+ withdrawal)
 
-### 🔄 Compounding Engine — 60%
+**Goal:** Get to a withdrawal as fast as possible. Michael needs this money.
 
-**Goal:** Grow the account to scale. More capital = more contracts = more premium collected.
+This is NOT the compounding phase. This is survival mode. Grow to ~$2,400, pull $1,200, leave $1,200 as the new working capital.
 
-| Balance Tier | Max Position Size | Contracts | Strategy |
-|-------------|-------------------|-----------|----------|
-| $100-$500 | $50/trade | 1 | 0DTE scalps |
-| $500-$2,000 | $200/trade | 1-2 | 0DTE + small swings |
-| $2,000-$5,000 | $500/trade | 2-5 | 0DTE + Wheel (CSPs) |
-| $5,000-$10,000 | $1,000/trade | 5-10 | Full strategy suite |
-| $10,000+ | 5% per trade | 10+ | Diversified across strategies |
+| Account Balance | Action | Position Size |
+| --- | --- | --- |
+| $100-$300 | Full send, 0DTE scalps only | $50 max/trade (50% risk) |
+| $300-$800 | Scaling up, still aggressive | $100-$150/trade |
+| $800-$1,500 | Getting close, tighten stops | $200/trade max |
+| $1,500-$2,400 | Target zone — coast to $2,400 | $250/trade max |
+| **$2,400** | **WITHDRAW $1,200** | Take the money |
 
-**Rule:** Never risk more than 10% of the account on a single trade. This is non-negotiable.
+**If this $100 busts:** Deploy the second $100. Same plan. No shame. Same strategy, different week.
 
-### 💸 Withdrawals (Paycheck) — 20%
+**Rules during Phase 1:**
 
-**Goal:** Pay yourself. You built this. Take the W.
-
-| Trigger | Amount | Frequency |
-|---------|--------|-----------|
-| Account hits $2,000 | $400 | One-time milestone |
-| Account hits $5,000 | $500/month | Monthly |
-| Account hits $10,000 | $1,000/month | Monthly |
-| Account hits $25,000 | $2,500/month | Monthly |
-
-**Rule:** Withdrawals only from REALIZED gains. Never withdraw from principal.
-
-### 🙏 Charity — 10%
-
-**Goal:** Give back. Recovery taught this. When you have abundance, share it.
-
-| Balance | Charity Action |
-|---------|---------------|
-| First $100 profit | $10 to local AA/NA group |
-| $1,000 profit | $100 to Area 75 Archives |
-| $5,000 profit | $500 split — AA/NA + local food bank |
-| $10,000+ profit | Set up recurring $100/month |
-
-**Rule:** Charity comes OFF THE TOP of realized gains, same session as the withdrawal. Not "I'll do it later." Recovery wisdom: "You can't keep it unless you give it away."
-
-### 🏦 Tax Reserve — 10%
-
-**Goal:** Don't get wrecked by the IRS. Short-term capital gains = ordinary income = ~30%.
-
-| Action | When |
-|--------|------|
-| Set aside 10% of every withdrawal | Same day as withdrawal |
-| Track wash sales meticulously | Dashboard already does this |
-| Quarterly estimated payments | When total exceeds $1,000 |
-
-**Note:** The 10% here is a buffer on top of the compounding allocation. The real tax is calculated on withdrawals. When withdrawals start being significant ($5K+/quarter), bump this or file quarterly.
+- No charity yet (can't give what you don't have)
+- No tax reserve yet (worry about that when there's something to tax)
+- Daily loss limit: -30% of account. Walk away. Try again tomorrow.
+- Win or lose, it all gets logged. Transparency doesn't stop when you're losing.
 
 ---
 
-## Milestones & Celebrations
+## Phase 2: The Build ($1,200 working capital → sustainable growth)
 
-| Milestone | Celebration | Action |
-|-----------|-------------|--------|
-| $500 | "Five Hundy" | Blog post, first charity donation |
-| $2,000 | "The Deuce" | First withdrawal, celebrate with a nice dinner |
-| $5,000 | "Five Bands" | Monthly withdrawal plan starts |
-| $10,000 | "Ten Stack" | Serious compounding unlocked |
-| $25,000 | "Quarter Mill Route" | Full-time income potential |
-| $100,000 | "Six Figures" | We made it. Sam gets a raise (jk she's free) |
+**After the first withdrawal, the pressure is off.** Now we compound properly.
+
+### Revenue Allocation (post-Phase 1)
+
+| Bucket | % | Purpose |
+| --- | --- | --- |
+| 🔄 Compounding | 60% | Grow the account |
+| 💸 Withdrawals | 20% | Pay yourself |
+| 🙏 Charity | 10% | Give back |
+| 🏦 Tax Reserve | 10% | Don't get IRS'd |
+
+### Compounding Tiers
+
+| Balance | Max Position Size | Strategy |
+| --- | --- | --- |
+| $1,200-$3,000 | $300/trade | 0DTE + small swings |
+| $3,000-$5,000 | $500/trade | 0DTE + Wheel (CSPs) |
+| $5,000-$10,000 | $1,000/trade | Full strategy suite |
+| $10,000+ | 5% per trade | Diversified |
+
+### Withdrawal Triggers (Phase 2)
+
+| Trigger | Withdraw | Keep |
+| --- | --- | --- |
+| Account hits $3,000 | $600 | $2,400 |
+| Account hits $5,000 | $1,000 | $4,000 |
+| Monthly, if above $5K | 20% of gains | The rest compounds |
+
+### Charity (Phase 2)
+
+10% of every withdrawal, OFF THE TOP, same day. Recovery wisdom: "You can't keep what you don't give away."
+
+- First $100 charity → local AA/NA group
+- $500+ → Area 75 Archives
+- $1,000+ → recurring monthly
 
 ---
 
-## Risk Management (The Guard Rails)
+## Risk Management
 
-1. **Daily loss limit:** -20% of account. Hit it? Walk away. "Live to trade another day."
-2. **Weekly loss limit:** -30% of account. Hit it? No trading until next Monday.
-3. **Never average down on a losing options position.** Cut it. Take the loss. Blog about it.
-4. **Position sizing scales with account, never with emotion.** The table above is the law.
-5. **Wash sale tracking:** Dashboard monitors this automatically. Respect the 30-day window.
+1. **Phase 1 daily loss limit:** -30% of account. Walk away.
+2. **Phase 2 daily loss limit:** -15% of account. Walk away.
+3. **Weekly loss limit:** -40% of account. No trading until Monday.
+4. **Never average down on options.** Cut it. Log it.
+5. **Position sizing follows the table, not your feelings.**
+6. **Wash sale tracking:** Dashboard monitors this. Respect the 30-day window.
 
 ---
 
-## The Flywheel
+## The Flywheel (Phase 2)
 
-```
+```text
 More Capital → More Contracts → More Premium
      ↑                                    ↓
   Compound ← Net Gains ← Smart Entries ← tightspread signals
@@ -100,8 +98,8 @@ More Capital → More Contracts → More Premium
   Withdraw → Charity / Taxes / Living
 ```
 
-The Substack revenue ($197/month net) also feeds the brokerage allocation. Two income streams into one growth engine.
+Substack revenue ($197/month net) also feeds the brokerage. Two income streams.
 
 ---
 
-*"I learned in recovery that money is a tool, not a scoreboard. The plan isn't about getting rich — it's about being responsible with what we earn. First time in my life I'm treating money with respect."* — Michael
+*"I learned in recovery that money is a tool, not a scoreboard. The plan isn't about getting rich — it's about being responsible with what we earn."* — Michael
