@@ -69,6 +69,41 @@ So yeah. My AA notes feed my trading blog feed my ebook feed my AI system. And s
 
 *If you want to build something like this, the entire system is open source. The Supernote reader, the draft manager, the RSS dedup checker — it's all at [github.com/mphinance](https://github.com/mphinance/mphinance). And before you ask: yes, the AI can read my terrible handwriting. It's better at it than most pharmacists.*
 
+---
+
+<!-- PAYWALL BREAK — Everything below is for paid subscribers -->
+<!-- On Substack: Insert paywall divider here -->
+
+## 🔒 For Paid Subscribers: The Technical Blueprint
+
+Here's the exact architecture if you want to build your own notebook → AI pipeline:
+
+**The Stack:**
+
+- **Hardware:** Supernote A5 X2 (any e-ink tablet with PDF export works)
+- **Export:** PDF → Google Drive (or SFTP to your own server)
+- **Processing:** pymupdf renders pages as high-res PNGs at 2x zoom
+- **AI Vision:** The agent literally looks at the PNG and transcribes handwriting
+- **Tag Routing:** Regex on transcribed text routes to different systems
+- **Draft System:** Markdown files on GitHub Pages with RSS dedup against Substack feed
+- **Calendar:** Tags marked "Gemini Agent" → task file → Gemini Android app reads from repo
+
+**The Code:** `scripts/substack_draft_manager.py` — fuzzy matches draft titles against your Substack RSS feed at 55% similarity threshold. When you publish, it auto-archives the draft and promotes the next one.
+
+**Cost:** $0. The AI agent, the pipeline, the hosting — all free tier or self-hosted. The only cost is the Supernote tablet itself.
+
+---
+
+## Speaking of Tools That Pay for Themselves
+
+![TraderDaddy Pro — AI-powered options dashboard](images/traderdaddy_hero.png)
+
+Everything I build eventually feeds into the trading. [**TraderDaddy Pro**](https://www.traderdaddy.pro/register?ref=8DUEMWAJ) is the dashboard where it all comes together — unusual options activity, real-time scanning, AI copilot. The same AI that reads my handwriting also picks my trades.
+
+---
+
 — Michael
 
 *Momentum Phinance — [mphinance.com](https://mphinance.com)*
+*TraderDaddy Pro — [traderdaddy.pro](https://www.traderdaddy.pro/register?ref=8DUEMWAJ)*
+*Ghost Alpha Dossier — [Daily AI Report](https://mphinance.github.io/mphinance/)*
