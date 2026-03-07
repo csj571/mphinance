@@ -1,73 +1,52 @@
-# 👻 GHOST_HANDOFF — March 7, 2026 (Evening)
+# 👻 GHOST_HANDOFF.md — Session 2026-03-07 (Round 2)
 
-> This is the current state doc. Next agent reads this first.
+## What Happened
 
-## Infrastructure State
+This was a massive infrastructure + content session. Sam got her own Discord channel, a voice, and a channel monitor.
 
-### Vultr (Production)
+## Key Deliverables
 
-- **API Gateway:** `api.mphinance.com` — 3 routes active:
-  - `/alpha/` → Ghost Alpha API (port 8002) ✅
-  - `/tt/` → TickerTrace API (port 8100) ✅
-  - `/ebook/` → Ebook Checkout (port 8300) ✅
-- **SSL:** `alpha.mphinance.com` cert obtained + reverse proxy
-- **DNS NEEDED:** A records for `api.mphinance.com` and `alpha.mphinance.com` → 207.148.19.144
-- **Ebook Reader:** `/ebook/read/69533e52220545f7` (obfuscated permanent URL)
-- **TickerTrace:** Unchanged, `api.tickertrace.pro` still works independently
+### Discord Ecosystem
 
-### Venus (Local Server)
+- **Sam's Locker Room (#sam-mph)** — Deployed `scripts/sam_discord.py` that takes blog entries, feeds through Gemini (temp 1.2), posts unhinged locker room recaps
+- **Channel Monitor** — `scripts/sam_discord_monitor.py` scans all text channels via bot token, summarizes with Gemini, posts digest to #sam-mph. Tested live — 15 channels, 152+ messages, perfect summary
+- **Trade Notifications** — `tightspread/core/discord_notify.py` — fire-and-forget entry/exit alerts using `subprocess.Popen` (never blocks trading loop)
+- **Webhook** — `WEBHOOK_SAM_MPH` saved to VaultGuard. Bot token updated and verified working
+- **Bloomberg Scraper** — `twitter-discord-scraper/` configured for Traders Anonymous with #sam-mph webhook. TARGET_URL now configurable via .env
 
-- **VaultGuard:** Running localhost:8003/8004 (Docker Compose, Firebase Firestore backed)
-- **Alpha-Momentum API:** Port 8100 via Docker
-- **Gemini CLI:** Configured with GEMINI.md + MCP servers (tradier, yfinance, vaultguard)
+### Content
 
-### This Machine (sam2)
+- **"The Old Guy Knows Everything"** — New Substack musing about knowledge transfer. Sam's injected commentary. Paywall section with technical blueprint
+- **Ghost Blog** — Entry about Syr Squirrel, Discord locker room, channel monitor. Deployed to Vultr
+- **Syr Squirrel's Weather Fix** — `traffic_logger.py` rewritten to use wttr.in (no API key needed)
 
-- **Repo:** `/home/sam/mphinance` — main branch, up to date
-- **Pipeline:** 16 stages (added watchlist cleanup, revenue refresh, auto-backtest)
-- **Blog:** Latest entry March 7, rsynced to Vultr
+### Stack2LLM v2.0
 
-## What Changed This Session
+- CLI-first architecture (scrape, process, analyze, voice-prompt commands)
+- Voice analysis engine: Flesch-Kincaid, vocabulary richness, tone markers, perspective
+- Michael's fingerprint: 10 em dashes/1K words, 484 bold markers, FK Grade 8.0, first-person dominant
 
-1. **AGENTS.md** — unified agent instructions (merged CLAUDE.md + GEMINI.md + VaultGuard-first + Supernote)
-2. **CLAUDE.md** — slim redirect to AGENTS.md
-3. **GEMINI.md** — repurposed as Gemini Android app task file ("Unless you ARE Gemini on Michael's phone")
-4. **Substack Draft System** — GitHub-based drafts in `docs/substack/`:
-   - `latest.md` = static bookmark link for reviewing drafts
-   - `musings/` = "Michael's Musings" personal diary drafts
-   - `dossier/` = auto-generated dossier drafts
-   - `archive/` = published posts moved here
-   - `scripts/substack_draft_manager.py` = RSS dedup checker + archive lifecycle
-   - Playwright posting commented out in `scripts/substack_cron.sh`
-5. **First Musing** — "Sobriety Doesn't Fix Your Character — And Neither Does Money" (from Art's AA insight)
-6. **Money Plan** — `docs/MONEY_PLAN.md` with tier-based compounding/withdrawal/charity allocation
-7. **Supernote Integration** — downloaded + transcribed 2 notebook PDFs via Google Drive API
+### Money Plan
 
-## Key Files Created/Modified
+- Rebalanced to 55/20/5/10/10 — 5% AI costs (non-negotiable)
+- AI2 (Allen Institute for AI) as charity recipient
+- Pine Scripts from tv-code-library → `tightspread/training/pine-scripts/`
 
-| File | Action |
-|------|--------|
-| `AGENTS.md` | NEW — unified agent instructions |
-| `CLAUDE.md` | MODIFIED — redirect to AGENTS.md |
-| `GEMINI.md` | REWRITTEN — Gemini Android task file |
-| `docs/substack/README.md` | NEW — draft system docs |
-| `docs/substack/latest.md` | NEW — current draft |
-| `docs/substack/musings/2026-03-07_*.md` | NEW — first musing |
-| `docs/MONEY_PLAN.md` | NEW — money allocation plan |
-| `scripts/substack_draft_manager.py` | NEW — RSS dedup + archive manager |
-| `scripts/substack_cron.sh` | MODIFIED — Playwright → GitHub drafts |
+## What's Next
 
-## User's Next Focus
+1. **Tradier API** — Michael submitted the request. When approved, wire into tightspread
+2. **Wire dossier → Substack drafts** — Auto-generate daily paywalled content
+3. **Bot Interactions Endpoint** — Slash commands on Vultr (/dossier, /weather, /watchlist)
+4. **Invite bot to The Kingdom** — For cross-server monitoring
+5. **Voice prompt → VOICE.md** — Use Stack2LLM analysis to update Sam's writing calibration
 
-- **TraderDaddy.pro / tightspread** — 0DTE trading, expecting $100 → $2K this week
-- **PineScripts** — `mphinance/tv-code-library` repo ready for tightspread submodule
-- **Supernote** — may switch from Google Drive to Venus SFTP
-- **VaultGuard OAuth** — refresh tokens expired, need Michael to re-auth
+## Secrets Updated
 
-## Unresolved
+- `WEBHOOK_SAM_MPH` — Discord webhook for #sam-mph
+- `DISCORD_BOT_TOKEN` — Refreshed and verified working
 
-- DNS A records not yet pointed
-- `STRIPE_SECRET_KEY` not set in ebook container
-- Google Drive OAuth refresh tokens expired in VaultGuard
-- Substack dossier auto-generation needs wiring (currently only musings supported)
-- All musings/money plan content → ebook pipeline (noted but not built yet)
+## Important Links
+
+- **Latest Substack draft:** <https://github.com/mphinance/mphinance/blob/main/docs/substack/latest.md>
+- **Ghost Blog:** <https://mphinance.com/blog.html>
+- **Stack2LLM CLI:** `python3 cli.py scrape mphinance.substack.com --analyze`
