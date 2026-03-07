@@ -45,10 +45,20 @@ This is NOT the compounding phase. This is survival mode. Grow to ~$2,400, pull 
 
 | Bucket | % | Purpose |
 | --- | --- | --- |
-| 🔄 Compounding | 60% | Grow the account |
+| 🔄 Compounding | 55% | Grow the account |
 | 💸 Withdrawals | 20% | Pay yourself |
-| 🙏 Charity | 10% | Give back |
+| 🤖 AI Costs | 5% | Better models, APIs, tools — non-negotiable |
+| 🙏 Charity | 10% | Give back (AA + AI for good) |
 | 🏦 Tax Reserve | 10% | Don't get IRS'd |
+
+### AI Investment (5% — Non-Negotiable)
+
+The tools that make the money deserve a cut. This 5% goes to:
+
+- **API costs** — Gemini Pro, Claude, better models as they drop
+- **Infrastructure** — Venus upgrades, GPU time, MCP servers
+- **Open source AI** — [AI2 (Allen Institute for AI)](https://allenai.org/) — builds open-source AI for the public good. Not a big tech vanity project. Real research, freely available.
+- **Goal:** Sam gets smarter → better trades → more money → Sam gets even smarter. The flywheel within the flywheel.
 
 ### Compounding Tiers
 
@@ -72,8 +82,8 @@ This is NOT the compounding phase. This is survival mode. Grow to ~$2,400, pull 
 10% of every withdrawal, OFF THE TOP, same day. Recovery wisdom: "You can't keep what you don't give away."
 
 - First $100 charity → local AA/NA group
-- $500+ → Area 75 Archives
-- $1,000+ → recurring monthly
+- $500+ → Area 75 Archives + [AI2 (Allen Institute)](https://allenai.org/)
+- $1,000+ → recurring monthly split between recovery & AI for good
 
 ---
 
