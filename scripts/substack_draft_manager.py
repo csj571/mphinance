@@ -235,16 +235,72 @@ def show_status():
     print()
 
 
+PAYWALL_MARKER = """
+---
+
+<!-- PAYWALL BREAK — Everything below is for paid subscribers -->
+<!-- On Substack: Insert paywall divider here -->
+
+## 🔒 Paid Subscribers: Deep Dive
+
+"""
+
+SIGNATURE_FOOTER = """
+---
+
+— Michael
+
+*Momentum Phinance — [mphinance.com](https://mphinance.com)*
+*TraderDaddy Pro — [traderdaddy.pro](https://www.traderdaddy.pro/register?ref=8DUEMWAJ)*
+*Ghost Alpha Dossier — [Daily AI Report](https://mphinance.github.io/mphinance/)*
+"""
+
+
+def inject_paywall(filepath: Path, before_section: str = "AI Synthesis"):
+    """Inject a paywall break before a specific section in a draft."""
+    content = filepath.read_text()
+
+    # Find the section header to put the paywall before
+    pattern = f"## {before_section}"
+    alt_pattern = f"## 🤖 {before_section}"
+
+    if pattern in content:
+        content = content.replace(pattern, PAYWALL_MARKER + pattern)
+        print(f"🔒 Paywall injected before '{before_section}' in {filepath.name}")
+    elif alt_pattern in content:
+        content = content.replace(alt_pattern, PAYWALL_MARKER + alt_pattern)
+        print(f"🔒 Paywall injected before '{before_section}' in {filepath.name}")
+    else:
+        # No matching section, insert 60% through the document
+        lines = content.split('\n')
+        insert_at = int(len(lines) * 0.6)
+        lines.insert(insert_at, PAYWALL_MARKER)
+        content = '\n'.join(lines)
+        print(f"🔒 Paywall injected at 60% mark in {filepath.name} (no '{before_section}' section found)")
+
+    # Add signature if not present
+    if "traderdaddy.pro" not in content.lower():
+        content = content.rstrip() + SIGNATURE_FOOTER
+
+    filepath.write_text(content)
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "status"
-    
+
     if cmd == "check":
         check_and_archive()
     elif cmd == "promote":
         promote_next()
     elif cmd == "status":
         show_status()
+    elif cmd == "inject-paywall":
+        # Inject paywall into latest.md or specified file
+        target = Path(sys.argv[2]) if len(sys.argv) > 2 else LATEST_FILE
+        section = sys.argv[3] if len(sys.argv) > 3 else "AI Synthesis"
+        inject_paywall(target, section)
     else:
         print(f"Unknown command: {cmd}")
-        print("Usage: substack_draft_manager.py {{check|promote|status}}")
+        print("Usage: substack_draft_manager.py {check|promote|status|inject-paywall}")
         sys.exit(1)
+
