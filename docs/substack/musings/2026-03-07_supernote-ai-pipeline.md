@@ -18,6 +18,10 @@ The problem is, those notes sit in a tablet. They export to PDFs. Those PDFs sit
 
 So I did what any reasonable person would do. I built a pipeline.
 
+Here's what my actual notes look like. This is the raw handwriting my AI reads:
+
+![My actual Supernote to-do page — handwritten tags in the right column route tasks to different systems](images/supernote_todo_page.png)
+
 Here's the flow:
 
 1. **I write in Supernote** — normal handwritten notes, like a human being
@@ -31,6 +35,10 @@ Here's the flow:
 Today's notes were from this morning's AA meeting. Art — one of those old-timers who's been sober since before you were probably born — talked about character.
 
 The cliche was "alcohol doesn't change who you are when you're sober." And Art's take was that sobriety doesn't fix your character. It just removes the excuse. You still have to do the actual work of becoming a better person.
+
+Here are the actual meeting notes from that day:
+
+![AA District Meeting notes — handwritten on Supernote, exported as PDF, read by AI](images/supernote_aa_meeting.png)
 
 That turned into a whole thing (separate post coming) about how the exact same principle applies to money. Lottery winners. Day traders who blow up accounts. The amount doesn't matter if the character behind it hasn't changed.
 
