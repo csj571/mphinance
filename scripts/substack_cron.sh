@@ -29,9 +29,15 @@ case "${1:-draft}" in
 
   draft)
     echo "[$DATE] Creating Substack dossier draft..." >> "$LOG"
-    # Wait a bit for GH Pages to deploy the latest data
+    # ── OLD: Playwright-based Substack draft (commented out 2026-03-07) ──
+    # Replaced with GitHub Pages draft system. Drafts now live in
+    # docs/substack/latest.md and Michael publishes manually.
+    # python3 substack_dossier.py --date "$DATE" >> "$LOG" 2>&1
+
+    # ── NEW: GitHub-based draft system ──
+    # Generate dossier draft as markdown, check RSS for published posts
     sleep 30
-    python3 substack_dossier.py --date "$DATE" >> "$LOG" 2>&1
+    python3 scripts/substack_draft_manager.py check >> "$LOG" 2>&1
     ;;
 
   both)
