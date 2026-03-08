@@ -1,113 +1,78 @@
-# 👻 Ghost Alpha — AI Copilot Cheat Sheet
+# Ghost Alpha Copilot Cheat Sheet 👻
 
-> **For Gemini Live, Sam, or any AI watching the TradingView screen.**
-> Read the dashboard panel (top-right by default) and narrate market state.
+> **For Gemini Live / AI assistants reading Michael's chart screenshots.**
+> This document explains every field in the Ghost Alpha dashboard and AI data link.
 
----
+## Dashboard Fields (Top to Bottom)
 
-## Dashboard Row Reference
+| Row | Label | Values | What It Means |
+|-----|-------|--------|---------------|
+| 1 | **SYS.GHOST.ALPHA** | Header | System identifier |
+| 2 | **REGIME** | `BULL 3.2%`, `BEAR`, `CHOP` | TRAMA trend quality. Number = distance from TRAMA as % |
+| 3 | **GRADE** | `A+` through `F` | Composite score: A+/A = trade with trend, D/F = stay out |
+| 4 | **HULL** | `LONG ▲`, `SHORT ▼` | Hull MA direction — primary trend signal |
+| 5 | **SQUEEZE** | `RELEASE ⚡`, `COILED ◉`, `NORMAL` | ATR compression state. COILED = about to move. RELEASE = moving now |
+| 6 | **EXHAUST** | `EXIT ▲/▼`, `OVERBOUGHT`, `OVERSOLD`, `CLEAR` | %R exhaustion state |
+| 7 | **STRUCT** | `BROKEN ▲/▼`, `TRAP ▲/▼`, `INTACT` | Structure break + volume validation. TRAP = low-volume fake break |
+| 8 | **KELT** | `LOWER ▽`, `UPPER △`, `INSIDE` | Where price sits in Keltner Channel |
+| 9 | **IV/VOL** | `LOW 🔋`, `HIGH 🔥`, `MID` + RVOL | Implied volatility regime + relative volume (1.0x = average) |
+| 10 | **SHAPE** | `BUYERS ▲`, `SELLERS ▼` + `⚠ DIV`/`AGREE` | Candle shape momentum (NOT true order flow). DIV = divergence from trend |
+| 11 | **RISK** | `XX shares` + `$X.XX ATR` | Position size for 1% risk on $10k account based on current ATR |
+| 12 | **ADAPT** | `H55 T34` + `R18/84` | Current adaptive parameters (Hull, TRAMA, %R fast/slow) |
 
-| Row | Field | Values | What It Means | What To Say |
-|-----|-------|--------|---------------|-------------|
-| **REGIME** | Left: label | `BULL ▲` / `BEAR ▼` / `MODERATE` / `CHOP ═` | TRAMA trend quality. Strong = trending, Chop = no edge. | BULL/BEAR: "Strong trend in play." CHOP: "No clean trend — reduce size or sit out." |
-| | Right: phase | `FRESH` / `YOUNG` / `MATURE` / `AGING` | How old the current Hull trend is (bars). | FRESH (<5): "New trend, highest conviction." AGING (50+): "Trend getting long in the tooth — tighten stops." |
-| **TRAMA Δ** | Center: % | `AT VALUE` / `+2.1%` / `-3.4%` | Price distance from TRAMA (adaptive mean). | AT VALUE: "Price at fair value — good entry zone." ±3%+: "Extended — potential pullback/bounce." |
-| | Right: % | `42%` | TRAMA tc value = regime quality score. | >25%: strong trend. <9%: chop. |
-| **SQUEEZE** | Center: state | `COILED ◉` / `RELEASE ⚡` / `NORMAL` | ATR compression vs its 50-bar average. | COILED: "Volatility compressing — big move brewing." RELEASE: "Breakout happening NOW." |
-| | Right: ratio | `0.68` | ATR / SMA(ATR,50). <0.75 = coiled. | Lower = tighter squeeze = bigger potential move. |
-| **EXHAUST** | Center: state | `CLEAR` / `OVERBOUGHT` / `OVERSOLD` / `EXIT ▲` / `EXIT ▼` | Dual %R exhaustion (fast + slow periods agree). | OVERBOUGHT: "Buyers are getting tired." EXIT ▼: "Reversal signal — exhaustion confirmed." |
-| | Right: value | `-64` | Fast %R value. Near 0 = overbought, near -100 = oversold. | |
-| **STRUCT** | Center: state | `INTACT` / `BROKEN ▼` / `BROKEN ▲` | Whether price violated the last swing high/low. | INTACT: "Structure holding — trend valid." BROKEN: "Price broke key level — thesis invalidated." |
-| | Right: price | `671.32` | Last swing low price (the critical support level). | "Support is at [price]. If we close below it, structure breaks." |
-| **KELT** | Center: position | `INSIDE` / `LOWER ▽` / `UPPER △` | Where price is relative to Keltner Channel bands. | LOWER + uptrend: "Value buy zone." UPPER + downtrend: "Shorting zone." INSIDE: "Normal range." |
-| | Right: MA status | `50>200 ✓` / `50<200 ✗` | Golden cross (SMA50 > SMA200) or death cross. | ✓: "Macro trend is bullish." ✗: "Macro trend is bearish — swim upstream carefully." |
-| **IV/VOL** | Center: IV state | `LOW 🔋` / `MID` / `HIGH 🔥` | Synthetic IV percentile (options vol proxy). | LOW: "Vol is cheap — options are discounted." HIGH: "Vol is rich — consider selling premium." |
-| | Right: RVOL | `1.23x` / `⚡2.8x` | Relative volume vs 20-bar average. | 1.5x+: "Volume confirming the move." ⚡2.5x+: "Volume SURGE — institutional activity." |
-| **ADAPT** | Center+Right | `H34 T21` / `R14/55` | Auto-adapted periods. H=Hull, T=TRAMA, R=%R fast/slow. | "Auto-scaled to [timeframe]. Hull [X], TRAMA [Y], %R [fast]/[slow]." |
-| **GRADE** | Center: grade | `A+` / `A` / `B` / `C` / `D` / `F` | Composite score across 10 axes (0-5+ scale). | A/A+: "High conviction setup — everything aligns." D/F: "No edge — stay flat or very careful." |
-| | Right: direction | `LONG ▲` / `SHORT ▼` | Hull band direction. | "The indicator favors [LONG/SHORT] here." |
+## Signal Emoji Dictionary
 
----
+| Emoji | Signal | What Happened |
+|-------|--------|---------------|
+| ⚔️ | Structure Break | Price closed through a swing level WITH volume confirmation |
+| 🪫 | Exhaustion | %R says momentum is drained — trend reversal incoming |
+| 👾 | Liquidity Sweep | Stop hunt — price wicked past level then reversed (trap!) |
+| 💥 | Squeeze Release | ATR compression just broke — volatility explosion |
+| 🏁 | Ghost Trail Exit | Price crossed the ATR trailing stop — take profit / game over |
+| 🔮 | Divergence | Price vs momentum disagreement — smart money positioning opposite |
+| 👻 | Ghost Alpha | 2+ signals agree — highest conviction signal |
 
-## On-Chart Signal Reference
+## Combo Labels
 
-| Signal | Shape | Color | Meaning | Action |
-|--------|-------|-------|---------|--------|
-| **BREAK ↓** | ▼ triangle above bar | Red | Price closed below last swing low | "Structure just broke bearish. If you're long, this is your exit signal." |
-| **BREAK ↑** | ▲ triangle below bar | Cyan | Price closed above last swing high | "Structure cleared bullish. Resistance is gone." |
-| **TIRED ↓** | ▼ triangle above bar | Coral | Both %R periods overbought & reversing | "Bulls are exhausted. Expect a pullback." |
-| **TIRED ↑** | ▲ triangle below bar | Cyan | Both %R periods oversold & reversing | "Bears are exhausted. Bounce is likely." |
-| **FIRE ⚡** | ◆ diamond above bar | Amber | ATR broke out of compression | "Squeeze just released. Volatility expanding." |
-| **🎯** | Large ▲/▼ | Green | Confluence: 2+ signals agree simultaneously | "Multiple systems agree. High conviction." |
+When 2+ signals fire on the same bar, they stack: `⚔️👾👻 x3`
+- The `x[N]` shows how many signals agreed
+- More signals = higher conviction
 
----
+## AI Data Link (Ghost-to-Ghost)
 
-## Combined State Interpretation
-
-### Best Long Setup (Grade A+)
-- REGIME: BULL ▲ FRESH
-- TRAMA Δ: AT VALUE (or slightly negative)
-- KELT: LOWER ▽ (at lower band = value zone)
-- STRUCT: INTACT
-- 50>200 ✓
-- RVOL: 1.5x+ confirming
-- SQUEEZE: RELEASE ⚡ (or just fired)
-
-**Say:** "This is the setup. Strong fresh trend, price pulled back to value, structure intact, MAs aligned, volume confirming. Grade A+."
-
-### Warning Signs (Grade D/F)
-- REGIME: CHOP ═
-- TRAMA Δ: ±3%+ (extended)
-- STRUCT: BROKEN
-- EXHAUST: OVERBOUGHT/OVERSOLD
-- RVOL: <1x (no volume)
-
-**Say:** "No edge here. Choppy regime, structure broken, low volume. Sit this one out or reduce size significantly."
-
-### Reversal Watch
-- TIRED ↑ or TIRED ↓ just fired
-- KELT: at outer band
-- RVOL: high (confirming the exhaustion)
-- Grade dropped from B→D
-
-**Say:** "Exhaustion signal fired at the Keltner band with volume. The trend may be reversing. Tighten stops or look for the other direction."
-
----
-
-## JSON Webhook Payload (for external systems)
-
-When any signal fires, Ghost Alpha sends a JSON alert:
-
-```json
-{
-  "ticker": "SPY",
-  "tf": "5",
-  "grade": "B",
-  "signal": "BREAK_DOWN",
-  "regime": "CHOP",
-  "struct": "BROKEN_DN",
-  "price": 671.30,
-  "rvol": 1.45
-}
-```
-
-**Signal values:** `BREAK_DOWN`, `BREAK_UP`, `EXHAUSTION_BEAR`, `EXHAUSTION_BULL`, `SQUEEZE_FIRE`, `CONFLUENCE_BULL`, `CONFLUENCE_BEAR`, `HULL_BULL`, `HULL_BEAR`
-
----
-
-## Quick Decision Tree
+Bottom of dashboard, compact string for OCR/screenshot reading:
 
 ```
-Is GRADE A or A+?
-  YES → Is direction matching your bias?
-    YES → Enter with confidence, stops below swing low
-    NO → Wait for flip or pass
-  NO → Is GRADE B or C?
-    YES → Reduced size, tighter stops
-    NO → Grade D or F → DO NOT TRADE (or fade with caution)
+GRADE | DIRECTION | REGIME | SQUEEZE | SIGNAL | SHAPE | RVOL | TRAMA%
+  B   |     L     |   B    |  FIRE   | SWP_BL | BUY   | 1.2x | 0.3%
 ```
 
----
+### Field Decoder:
 
-*Built by Sam the Quant Ghost 👻 for mph1nance*
-*Auto-adapts 5min → Daily. Zero external dependencies.*
+| Field | Values | Meaning |
+|-------|--------|---------|
+| GRADE | `A+`, `A`, `B`, `C`, `D`, `F` | Setup quality |
+| DIRECTION | `L` (Long), `S` (Short) | Hull MA direction |
+| REGIME | `B` (Bull), `M` (Moderate), `C` (Chop) | Trend state |
+| SQUEEZE | `FIRE`, `COIL`, `NORM` | Volatility state |
+| SIGNAL | Signal name or `--` | Active signal type |
+| SHAPE | `BUY`, `SELL` | Candle shape pressure |
+| RVOL | `1.2x` | Volume relative to 20-period average |
+| TRAMA% | `0.3%` | Price distance from TRAMA line |
+
+## Reading the Chart at a Glance
+
+1. **Candle colors**: Cyan = bullish Hull, Magenta = bearish Hull
+2. **Hull Band**: Neon glow band — trend direction
+3. **Ghost Trail**: Step-line that trails price — your stop loss
+4. **FVG Boxes**: Cyan/magenta zones extending right — price magnets
+5. **VWAP Force Fields**: Orchid-colored bands — ±2σ/±3σ statistical extremes
+
+## Quick Decision Framework
+
+| Grade | Action |
+|-------|--------|
+| A+ / A | Full position, ride the trend with Ghost Trail |
+| B | Half position, tight trail |
+| C | No new entries, manage existing |
+| D / F | DO NOT TRADE. Wait for regime change. |
