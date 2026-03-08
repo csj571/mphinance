@@ -213,6 +213,13 @@ bool  above_200  = close > sma_200
 bool  golden_x   = sma_50 > sma_200
 // VWAP — session-anchored, intraday only (daily+ charts don't need VWAP)
 float vwap_val = timeframe.isintraday ? ta.vwap(hlc3, timeframe.change("D")) : na
+// VWAP Force Fields (± Standard Deviation bands)
+float vwap_dev  = timeframe.isintraday ? ta.stdev(close, 20) : na
+float vwap_2u   = not na(vwap_val) ? vwap_val + vwap_dev * 2 : na
+float vwap_2d   = not na(vwap_val) ? vwap_val - vwap_dev * 2 : na
+float vwap_3u   = not na(vwap_val) ? vwap_val + vwap_dev * 3 : na
+float vwap_3d   = not na(vwap_val) ? vwap_val - vwap_dev * 3 : na
+bool  at_vwap_extreme = (not na(vwap_3u) and high >= vwap_3u) or (not na(vwap_3d) and low <= vwap_3d)
 
 // ═══════════════════════════════════════════════════════════════
 // ████  STRUCTURE BREAK  ████
@@ -446,18 +453,31 @@ if fvg_enable
         if array.size(fvg_bear_boxes) > fvg_history
             box.delete(array.shift(fvg_bear_boxes))
 
-    // Remove filled FVGs (price returned to the gap)
+    // FVG Armor Mechanic: shrink FVGs as price eats into them
+    // Only fully remove when price pierces completely through
     if array.size(fvg_bull_boxes) > 0
         for i = array.size(fvg_bull_boxes) - 1 to 0
             box b = array.get(fvg_bull_boxes, i)
-            if close < box.get_top(b)
+            float b_top = box.get_top(b)
+            float b_bot = box.get_bottom(b)
+            if low < b_top and low > b_bot
+                // Price wicking into the gap — shrink the top down
+                box.set_top(b, low)
+            if close < b_bot
+                // Fully pierced — remove the gap
                 box.set_extend(b, extend.none)
                 box.set_right(b, bar_index)
                 array.remove(fvg_bull_boxes, i)
     if array.size(fvg_bear_boxes) > 0
         for i = array.size(fvg_bear_boxes) - 1 to 0
             box b = array.get(fvg_bear_boxes, i)
-            if close > box.get_bottom(b)
+            float b_top = box.get_top(b)
+            float b_bot = box.get_bottom(b)
+            if high > b_bot and high < b_top
+                // Price wicking into the gap — shrink the bottom up
+                box.set_bottom(b, high)
+            if close > b_top
+                // Fully pierced — remove the gap
                 box.set_extend(b, extend.none)
                 box.set_right(b, bar_index)
                 array.remove(fvg_bear_boxes, i)
@@ -559,8 +579,15 @@ plot(trama_show ? trama : na, "TRAMA", trama_line_clr, linewidth=2)
 plot(ma_show_50  ? sma_50  : na, "SMA 50",  color.new(C_MA_50, 50),  linewidth=1, style=plot.style_line)
 plot(ma_show_200 ? sma_200 : na, "SMA 200", color.new(C_MA_200, 50), linewidth=1, style=plot.style_line)
 
-// VWAP — intraday only
+// VWAP Force Fields (± SD bands, intraday only)
 plot(ma_show_vwap and timeframe.isintraday ? vwap_val : na, "VWAP", color.new(C_VWAP, 50), linewidth=1, style=plot.style_line)
+const color C_VWAP_FIELD = #E040FB  // Electric Orchid
+p_v2u = plot(ma_show_vwap and timeframe.isintraday ? vwap_2u : na, "VWAP +2σ", color.new(C_VWAP_FIELD, 70), linewidth=1, style=plot.style_line)
+p_v2d = plot(ma_show_vwap and timeframe.isintraday ? vwap_2d : na, "VWAP -2σ", color.new(C_VWAP_FIELD, 70), linewidth=1, style=plot.style_line)
+p_v3u = plot(ma_show_vwap and timeframe.isintraday ? vwap_3u : na, "VWAP +3σ", color.new(C_VWAP_FIELD, 50), linewidth=1, style=plot.style_line)
+p_v3d = plot(ma_show_vwap and timeframe.isintraday ? vwap_3d : na, "VWAP -3σ", color.new(C_VWAP_FIELD, 50), linewidth=1, style=plot.style_line)
+fill(p_v2u, p_v3u, color=color.new(C_VWAP_FIELD, 93), title="Upper Force Field")
+fill(p_v2d, p_v3d, color=color.new(C_VWAP_FIELD, 93), title="Lower Force Field")
 
 // ═══════════════════════════════════════════════════════════════
 // ████  PLOTTING — STRUCTURE  ████
@@ -625,32 +652,25 @@ if sig_count_bull >= 2
 // Plot combo labels (or individual signals if only 1)
 if sig_count_bear >= 2 or mega_bear
     label.new(bar_index, high, bear_combo, style=label.style_label_down, color=color.new(C_BREAK, 20), textcolor=#FFFFFF, size=size.normal)
-else
-    // Individual plotshapes for single signals
-    if false
-        na  // placeholder for else block
 
 // Individual bear signals (only when not in a combo)
 plotshape(sig_count_bear < 2 and brk_bear, "⚔️ Break Down", shape.triangledown, location.abovebar, C_BREAK, size=size.normal, text="⚔️", textcolor=C_BREAK)
 plotshape(sig_count_bear < 2 and exh_bear_rev, "🪫 Exhaustion Bear", shape.triangledown, location.abovebar, C_BEAR, size=size.small, text="🪫", textcolor=C_BEAR)
 plotshape(sig_count_bear < 2 and sweep_bear, "👾 Sweep Bear", shape.xcross, location.abovebar, C_WARNING, size=size.small, text="👾", textcolor=C_WARNING)
-plotshape(sig_count_bear < 2 and not hull_bull and sqz_fire, "💥 Squeeze Bear", shape.diamond, location.abovebar, C_SQUEEZE, size=size.small, text="💥", textcolor=C_SQUEEZE)
-plotshape(sig_count_bear < 2 and trail_cross_bear, "🏁 Trail Exit Bear", shape.square, location.abovebar, C_BEAR, size=size.small, text="🏁", textcolor=C_BEAR)
-plotshape(sig_count_bear < 2 and div_bear, "🔮 Divergence Bear", shape.diamond, location.abovebar, C_SQUEEZE, size=size.normal, text="🔮", textcolor=C_SQUEEZE)
+plotshape(sig_count_bear < 2 and not hull_bull and sqz_fire, "💥 Squeeze Bear", shape.xcross, location.abovebar, C_SQUEEZE, size=size.small, text="💥", textcolor=C_SQUEEZE)
+plotshape(sig_count_bear < 2 and trail_cross_bear, "🏁 Trail Exit Bear", shape.xcross, location.abovebar, C_BEAR, size=size.small, text="🏁", textcolor=C_BEAR)
+plotshape(sig_count_bear < 2 and div_bear, "🔮 Divergence Bear", shape.xcross, location.abovebar, C_SQUEEZE, size=size.normal, text="🔮", textcolor=C_SQUEEZE)
 
 if sig_count_bull >= 2 or mega_bull
     label.new(bar_index, low, bull_combo, style=label.style_label_up, color=color.new(C_CONFLUENCE, 20), textcolor=#FFFFFF, size=size.normal)
-else
-    if false
-        na
 
 // Individual bull signals (only when not in a combo)
 plotshape(sig_count_bull < 2 and brk_bull, "⚔️ Break Up", shape.triangleup, location.belowbar, C_BULL, size=size.normal, text="⚔️", textcolor=C_BULL)
 plotshape(sig_count_bull < 2 and exh_bull_rev, "🪫 Exhaustion Bull", shape.triangleup, location.belowbar, C_BULL, size=size.small, text="🪫", textcolor=C_BULL)
 plotshape(sig_count_bull < 2 and sweep_bull, "👾 Sweep Bull", shape.xcross, location.belowbar, C_WARNING, size=size.small, text="👾", textcolor=C_WARNING)
-plotshape(sig_count_bull < 2 and hull_bull and sqz_fire, "💥 Squeeze Bull", shape.diamond, location.belowbar, C_SQUEEZE, size=size.small, text="💥", textcolor=C_SQUEEZE)
-plotshape(sig_count_bull < 2 and trail_cross_bull, "🏁 Trail Exit Bull", shape.square, location.belowbar, C_BULL, size=size.small, text="🏁", textcolor=C_BULL)
-plotshape(sig_count_bull < 2 and div_bull, "🔮 Divergence Bull", shape.diamond, location.belowbar, C_SQUEEZE, size=size.normal, text="🔮", textcolor=C_SQUEEZE)
+plotshape(sig_count_bull < 2 and hull_bull and sqz_fire, "💥 Squeeze Bull", shape.xcross, location.belowbar, C_SQUEEZE, size=size.small, text="💥", textcolor=C_SQUEEZE)
+plotshape(sig_count_bull < 2 and trail_cross_bull, "🏁 Trail Exit Bull", shape.xcross, location.belowbar, C_BULL, size=size.small, text="🏁", textcolor=C_BULL)
+plotshape(sig_count_bull < 2 and div_bull, "🔮 Divergence Bull", shape.xcross, location.belowbar, C_SQUEEZE, size=size.normal, text="🔮", textcolor=C_SQUEEZE)
 
 // OB/OS Warnings (off by default)
 plotshape(exh_show_warn and exh_bear_start, "OB Warning", shape.square, location.abovebar, color.new(C_WARNING, 30), size=size.tiny)
