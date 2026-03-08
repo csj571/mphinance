@@ -377,6 +377,11 @@ float cvd_sma      = ta.sma(cvd, 20)
 bool  cvd_bullish  = cvd > cvd_sma
 bool  cvd_bearish  = cvd < cvd_sma
 
+// ── Chaikin Money Flow (independent volume axis for Grade V2) ───
+float cmf_mf   = candle_range != 0 ? ((close - low) - (high - close)) / candle_range : 0.0
+float cmf_mfv  = cmf_mf * volume
+float cmf      = ta.sma(volume, 20) != 0 ? ta.sma(cmf_mfv, 20) / ta.sma(volume, 20) : 0.0
+
 // ═══════════════════════════════════════════════════════════════
 // ████  CONFLUENCE DETECTION  ████
 // ═══════════════════════════════════════════════════════════════
@@ -516,37 +521,42 @@ bool trail_cross_bear = trail_enable and not na(ghost_trail) and close < ghost_t
 bool trail_cross_bull = trail_enable and not na(ghost_trail) and close > ghost_trail and close[1] <= ghost_trail and not hull_bull[1]
 
 // ═══════════════════════════════════════════════════════════════
-// ████  GHOST GRADE — 10-Axis Scoring  ████
+// ████  GHOST GRADE V2 — 5 Independent Axes (Gemini Collab)  ████
 // ═══════════════════════════════════════════════════════════════
+// Each axis measures a GENUINELY INDEPENDENT source of market data.
+// No more collinearity from counting smoothed price 5 different ways.
+// Max score: 5.0 (1.0 per axis). Directional: positive = bullish.
 
-float g_score = 0.0
+// ── Axis 1: TREND DIRECTION (Price) — single oracle ──────────
+// Just Hull MA. One indicator, one vote. No double-counting.
+float ax1_trend = hull_bull ? 1.0 : 0.0
 
-if regime_strong                            // +2 strong trend
-    g_score += 2.0
-else if regime_moderate                     // +1 moderate
-    g_score += 1.0
-if hull_bull == regime_bull                  // +1 direction agreement
-    g_score += 1.0
-if htf_enable and htf_bull == hull_bull      // +0.5 HTF alignment
-    g_score += 0.5
-if golden_x == hull_bull                     // +0.5 MA structure confirms
-    g_score += 0.5
-if at_kc_lower and hull_bull                 // +1 at value zone in uptrend
-    g_score += 1.0
-if at_kc_upper and not hull_bull             // +1 at value zone in downtrend
-    g_score += 1.0
-if exh_ob or exh_os                          // -1 extended
-    g_score -= 1.0
-if exh_bear_rev or exh_bull_rev              // -2 exhaustion fired
-    g_score -= 2.0
-if brk_bear or brk_bull                      // -1.5 structure break
-    g_score -= 1.5
-if sqz_fire                                  // +1 volatility expanding
-    g_score += 1.0
-if rvol_high and regime_strong               // +0.5 volume confirms trend
-    g_score += 0.5
+// ── Axis 2: VOLUME CONFIRMATION (Volume) — CMF ──────────────
+// Chaikin Money Flow: independent of price direction.
+// Strong institutional buying = CMF > 0.10, selling = CMF < -0.10
+float ax2_volume = cmf > 0.10 ? 1.0 : cmf > 0.0 ? 0.5 : 0.0
 
-string ghost_grade = g_score >= 4 ? "A+" : g_score >= 3 ? "A" : g_score >= 2 ? "B" : g_score >= 1 ? "C" : g_score >= 0 ? "D" : "F"
+// ── Axis 3: VOLATILITY REGIME (ATR Ratio) ────────────────────
+// Sweet spot: expanding from compression (0.75-1.5). 
+// Dead (<0.5) or blow-off (>2.0) = unfavorable.
+float ax3_vol = (sqz_ratio >= 0.75 and sqz_ratio <= 1.5) ? 1.0 :
+                 sqz_fire ? 1.0 : 0.0
+
+// ── Axis 4: TREND MATURITY (Time) ────────────────────────────
+// Fresh trends (5-30 bars) have more edge than aging ones.
+// Too early (<5) = noise. Too late (>50) = mean reversion risk.
+float ax4_time = trend_age >= 5 and trend_age <= 30 ? 1.0 :
+                 trend_age > 30 and trend_age <= 50 ? 0.5 : 0.0
+
+// ── Axis 5: MEAN REVERSION PRESSURE (Exhaustion) ─────────────
+// Not stretched = 1.0. Stretched (>3% from TRAMA or %R extreme) = 0.
+float ax5_revert = (not exh_ob and not exh_os and math.abs(trama_dist) < 3.0) ? 1.0 :
+                    (not exh_ob and not exh_os) ? 0.5 : 0.0
+
+// ── V2 Total Score ───────────────────────────────────────────
+float g_score = ax1_trend + ax2_volume + ax3_vol + ax4_time + ax5_revert
+
+string ghost_grade = g_score >= 4.5 ? "A+" : g_score >= 4.0 ? "A" : g_score >= 3.0 ? "B" : g_score >= 2.0 ? "C" : g_score >= 1.0 ? "D" : "F"
 
 // ═══════════════════════════════════════════════════════════════
 // ████  PLOTTING — HULL BAND (Gradient Fill)  ████
@@ -812,12 +822,12 @@ if dash_enable
         table.cell(tbl, 2, row, "R" + str.tostring(exh_fast_len) + "/" + str.tostring(exh_slow_len), text_color=color.new(C_DASH_TEXT, 60), text_size=tbl_size, text_halign=text.align_right)
         row += 1
 
-        // Ghost Grade
+        // Ghost Grade V2 (5 independent axes)
         color g_color = ghost_grade == "A+" ? C_CONFLUENCE : ghost_grade == "A" ? C_BULL : ghost_grade == "B" ? C_BULL_SOFT : ghost_grade == "C" ? C_WARNING : ghost_grade == "D" ? C_BEAR : C_BEAR_DEEP
         string dir_text  = hull_bull ? "LONG ▲" : "SHORT ▼"
         color  dir_color = hull_bull ? C_BULL : C_BEAR
-        table.cell(tbl, 0, row, "GRADE", text_color=color.new(C_DASH_TEXT, 40), text_size=tbl_size, text_halign=text.align_left)
-        table.cell(tbl, 1, row, ghost_grade, text_color=g_color, text_size=tbl_size, text_halign=text.align_center)
+        table.cell(tbl, 0, row, "GRADE V2", text_color=color.new(C_DASH_TEXT, 40), text_size=tbl_size, text_halign=text.align_left)
+        table.cell(tbl, 1, row, ghost_grade + " (" + str.tostring(math.round(g_score * 10) / 10) + "/5)", text_color=g_color, text_size=tbl_size, text_halign=text.align_center)
         table.cell(tbl, 2, row, dir_text, text_color=dir_color, text_size=tbl_size, text_halign=text.align_right)
         row += 1
 
