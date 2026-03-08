@@ -199,9 +199,9 @@ float sma_200    = ta.sma(close, 200)
 bool  above_50   = close > sma_50
 bool  above_200  = close > sma_200
 bool  golden_x   = sma_50 > sma_200
-// VWAP — anchored to daily session open for intraday
-bool  isNewDay = timeframe.change("D")
-float vwap_val = ta.vwap(hlc3, isNewDay)
+// VWAP — anchored to session open (intraday) or yearly (macro charts)
+bool  vwap_anchor = timeframe.isintraday ? timeframe.change("D") : timeframe.change("Y")
+float vwap_val    = ta.vwap(hlc3, vwap_anchor)
 
 // ═══════════════════════════════════════════════════════════════
 // ████  STRUCTURE BREAK  ████
@@ -305,7 +305,9 @@ float iv_pctile    = (hv_hi - hv_lo) != 0 ? (hv - hv_lo) / (hv_hi - hv_lo) * 100
 bool  iv_low       = iv_pctile < 25
 bool  iv_high      = iv_pctile > 75
 
-float rvol       = nz(volume) > 0 ? volume / ta.sma(volume, 20) : 0
+// RVOL — baseline uses full day of bars to avoid morning spike false positives
+float rvol_baseline = ta.sma(volume, math.max(20, int(math.round(bars_per_day))))
+float rvol       = nz(volume) > 0 and rvol_baseline > 0 ? volume / rvol_baseline : 0
 bool  rvol_high  = rvol > 1.5
 bool  rvol_surge = rvol > 2.5
 
@@ -605,5 +607,7 @@ if barstate.isconfirmed
     bool any_signal = brk_bear or brk_bull or exh_bear_rev or exh_bull_rev or sqz_fire or hull_flip_bull or hull_flip_bear or mega_bull or mega_bear
     if any_signal
         string sig = mega_bull ? "CONFLUENCE_BULL" : mega_bear ? "CONFLUENCE_BEAR" : sqz_fire ? "SQUEEZE_FIRE" : brk_bear ? "BREAK_DOWN" : brk_bull ? "BREAK_UP" : exh_bear_rev ? "EXHAUSTION_BEAR" : exh_bull_rev ? "EXHAUSTION_BULL" : hull_flip_bull ? "HULL_BULL" : "HULL_BEAR"
-        string payload = '{"ticker":"' + syminfo.ticker + '","tf":"' + timeframe.period + '","grade":"' + ghost_grade + '","signal":"' + sig + '","regime":"' + (regime_strong ? (regime_bull ? "BULL" : "BEAR") : "CHOP") + '","struct":"' + (brk_bear ? "BROKEN_DN" : brk_bull ? "BROKEN_UP" : "INTACT") + '","price":' + str.tostring(close) + ',"rvol":' + str.tostring(math.round(rvol * 100) / 100) + '}'
+        string regime_str = regime_strong ? (regime_bull ? "BULL" : "BEAR") : "CHOP"
+        string struct_str = brk_bear ? "BROKEN_DN" : brk_bull ? "BROKEN_UP" : "INTACT"
+        string payload = str.format('{' + '"ticker":"{0}","tf":"{1}","grade":"{2}","signal":"{3}","regime":"{4}","struct":"{5}","price":{6},"rvol":{7}' + '}', syminfo.ticker, timeframe.period, ghost_grade, sig, regime_str, struct_str, close, math.round(rvol * 100) / 100)
         alert(payload, alert.freq_once_per_bar_close)
