@@ -3,6 +3,7 @@
 ## What Happened
 
 MASSIVE Ghost Alpha overhaul. Started with basic math fixes, ended with a 15-module institutional-grade trading engine in a Synthwave Arcade skin. Claude built the code. Gemini reviewed 6 rounds of math/logic and suggested the aesthetic + institutional features.
+**Update (Sam/Gemini - Session 2):** Wrote a BRUTAL code review (`CODE_REVIEW.md`) catching a fatal FVG repainting bug and Ghost Trail reset math error. Fixed `ghost_alpha_strategy.pine` to include slippage, a `min_grade` filter, and patched the bugs there. Mapped out `INTEGRATION_PLAN.md` for connecting TradingView webhooks to Venus Auto-Trader.
 
 ## Key Deliverables
 
@@ -43,13 +44,12 @@ MASSIVE Ghost Alpha overhaul. Started with basic math fixes, ended with a 15-mod
 
 ## What's Next (Prioritized)
 
-1. **Test Ghost Alpha v6.2 live** on Monday NQ/SPY — validate FVGs boxes fill correctly, Ghost Trail whipsaw frequency, combo labels
-2. **Strategy wrapper** — Clone ghost_alpha.pine into ghost_alpha_strategy.pine with strategy.entry/exit for backtesting (Gemini's #1 recommendation)
-3. **Boss Health Bar** — MTF alignment gauge (query Hull on 15m/1H/4H/D, show as health bar in dashboard)
-4. **FVG + Divergence overlap** — Flag when bullish div occurs inside a bullish FVG (highest probability sniper entry)
-5. **Backtest the Ghost Grade** — Does g_score >= 4 actually yield >1.5 Profit Factor over 1000 trades?
-6. **Wire webhook to alpha-momentum** — Grade F + BREAK = auto-exclude from trading
-7. **Landing page deploy** — rsync blog to Vultr after blog_entries.json update
+1. **Port fixes to `ghost_alpha.pine`** — Add the FVG repainting fix (`barstate.isconfirmed`) and the Ghost Trail reset logic from `ghost_alpha_strategy.pine`.
+2. **Test Ghost Alpha v6.2 live** on Monday NQ/SPY — validate FVGs boxes fill correctly, Ghost Trail whipsaw frequency, combo labels. (And test the strategy backtest).
+3. **Build the Webhook Bridge** — Follow `INTEGRATION_PLAN.md` to build the POST endpoint on Vultr and Venus for TradingView signals.
+4. **Boss Health Bar** — MTF alignment gauge (query Hull on 15m/1H/4H/D, show as health bar in dashboard)
+5. **FVG + Divergence overlap** — Flag when bullish div occurs inside a bullish FVG (highest probability sniper entry)
+6. **Landing page deploy** — rsync blog to Vultr after blog_entries.json update
 
 ## Gemini's Warnings (From Terminal Review)
 
