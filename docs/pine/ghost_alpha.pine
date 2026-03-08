@@ -117,6 +117,17 @@ sig_group       = "━━━ 🎯 Signal Filter ━━━"
 // (Confluence Mode removed — individual signals always show, 👻 appears on confluence)
 sig_grad_candle = input.bool(true, "Hull Candle Coloring", group=sig_group, tooltip="Colors candles cyan (bull) or magenta (bear) based on Hull direction. Visible from across the room.")
 
+// ── Fair Value Gaps (Warp Zones) ──────────────────────────────
+fvg_group    = "━━━ 🕳️ Fair Value Gaps ━━━"
+fvg_enable   = input.bool(true, "Show Fair Value Gaps", group=fvg_group, tooltip="Detects price imbalances (3-candle gaps). These zones act as price magnets.")
+fvg_history  = input.int(10, "Max FVG Boxes", group=fvg_group, minval=1, maxval=25)
+
+// ── Ghost Trail (ATR Trailing Stop) ─────────────────────────
+trail_group  = "━━━ 👻 Ghost Trail ━━━"
+trail_enable = input.bool(true, "Show Ghost Trail (ATR Stop)", group=trail_group, tooltip="Volatility-adjusted trailing stop. Tells you when to exit.")
+trail_atr    = input.int(14, "ATR Length", group=trail_group)
+trail_mult   = input.float(2.5, "ATR Multiplier", group=trail_group, step=0.1, tooltip="Higher = wider stop, fewer whipsaws. Lower = tighter, more responsive.")
+
 // ── Dashboard ────────────────────────────────────────────────
 dash_group  = "━━━ 📋 Dashboard ━━━"
 dash_enable = input.bool(true, "Show Dashboard", group=dash_group)
@@ -285,6 +296,28 @@ bool exh_bear_start  = exh_ob and not exh_ob[1]
 bool exh_bull_start  = exh_os and not exh_os[1]
 
 // ═══════════════════════════════════════════════════════════════
+// ████  PRICE-MOMENTUM DIVERGENCE (Original)  ████
+// ═══════════════════════════════════════════════════════════════
+// When price makes a higher high but momentum (%R) makes a lower
+// high, smart money is distributing while retail chases. Vice versa
+// for bullish divergence. One of the strongest reversal signals.
+
+int div_lookback = 5
+float price_hi_now = ta.highest(high, div_lookback)
+float price_hi_prev = ta.highest(high, div_lookback)[div_lookback]
+float price_lo_now = ta.lowest(low, div_lookback)
+float price_lo_prev = ta.lowest(low, div_lookback)[div_lookback]
+float wr_hi_now = ta.highest(s_pctR, div_lookback)
+float wr_hi_prev = ta.highest(s_pctR, div_lookback)[div_lookback]
+float wr_lo_now = ta.lowest(s_pctR, div_lookback)
+float wr_lo_prev = ta.lowest(s_pctR, div_lookback)[div_lookback]
+
+// Bearish div: price higher high, %R lower high (smart money selling into strength)
+bool div_bear = price_hi_now > price_hi_prev and wr_hi_now < wr_hi_prev and exh_ob
+// Bullish div: price lower low, %R higher low (smart money accumulating weakness)
+bool div_bull = price_lo_now < price_lo_prev and wr_lo_now > wr_lo_prev and exh_os
+
+// ═══════════════════════════════════════════════════════════════
 // ████  ATR SQUEEZE (Fixed: same-TF baseline, works on all TFs)  ████
 // ═══════════════════════════════════════════════════════════════
 // FIX: Old version compared intraday ATR to weekly ATR — permanently
@@ -386,6 +419,72 @@ else
 string trend_phase = trend_age < 5 ? "FRESH" : trend_age < 20 ? "YOUNG" : trend_age < 50 ? "MATURE" : "AGING"
 
 // ═══════════════════════════════════════════════════════════════
+// ████  FAIR VALUE GAPS (Warp Zones)  ████
+// ═══════════════════════════════════════════════════════════════
+// 3-candle imbalance: candle[2] high < candle[0] low (bullish)
+// or candle[2] low > candle[0] high (bearish). Price magnets.
+
+var box[] fvg_bull_boxes = array.new_box()
+var box[] fvg_bear_boxes = array.new_box()
+
+if fvg_enable
+    // Bullish FVG: gap up (candle[2] high < current candle low)
+    bool fvg_bull = low > high[2] and close[1] > open[1]
+    if fvg_bull
+        box b = box.new(bar_index - 1, low, bar_index, high[2],
+             bgcolor=color.new(C_BULL, 88), border_color=color.new(C_BULL, 60), extend=extend.right)
+        array.push(fvg_bull_boxes, b)
+        if array.size(fvg_bull_boxes) > fvg_history
+            box.delete(array.shift(fvg_bull_boxes))
+
+    // Bearish FVG: gap down (candle[2] low > current candle high)
+    bool fvg_bear = high < low[2] and close[1] < open[1]
+    if fvg_bear
+        box b = box.new(bar_index - 1, low[2], bar_index, high,
+             bgcolor=color.new(C_BEAR, 88), border_color=color.new(C_BEAR, 60), extend=extend.right)
+        array.push(fvg_bear_boxes, b)
+        if array.size(fvg_bear_boxes) > fvg_history
+            box.delete(array.shift(fvg_bear_boxes))
+
+    // Remove filled FVGs (price returned to the gap)
+    if array.size(fvg_bull_boxes) > 0
+        for i = array.size(fvg_bull_boxes) - 1 to 0
+            box b = array.get(fvg_bull_boxes, i)
+            if close < box.get_top(b)
+                box.set_extend(b, extend.none)
+                box.set_right(b, bar_index)
+                array.remove(fvg_bull_boxes, i)
+    if array.size(fvg_bear_boxes) > 0
+        for i = array.size(fvg_bear_boxes) - 1 to 0
+            box b = array.get(fvg_bear_boxes, i)
+            if close > box.get_bottom(b)
+                box.set_extend(b, extend.none)
+                box.set_right(b, bar_index)
+                array.remove(fvg_bear_boxes, i)
+
+// ═══════════════════════════════════════════════════════════════
+// ████  GHOST TRAIL (ATR Trailing Stop)  ████
+// ═══════════════════════════════════════════════════════════════
+// Chandelier-style trailing stop that ratchets in trend direction.
+// Wide in volatile markets, tight in calm ones. Game over when crossed.
+
+var float ghost_trail = na
+float trail_atr_val   = ta.atr(trail_atr)
+
+if trail_enable
+    float long_stop  = ta.highest(high, trail_atr) - trail_atr_val * trail_mult
+    float short_stop = ta.lowest(low, trail_atr) + trail_atr_val * trail_mult
+
+    if hull_bull
+        ghost_trail := math.max(nz(ghost_trail[1], long_stop), long_stop)
+    else
+        ghost_trail := math.min(nz(ghost_trail[1], short_stop), short_stop)
+
+// Trail cross detection (exit signal)
+bool trail_cross_bear = trail_enable and not na(ghost_trail) and close < ghost_trail and close[1] >= ghost_trail and hull_bull[1]
+bool trail_cross_bull = trail_enable and not na(ghost_trail) and close > ghost_trail and close[1] <= ghost_trail and not hull_bull[1]
+
+// ═══════════════════════════════════════════════════════════════
 // ████  GHOST GRADE — 10-Axis Scoring  ████
 // ═══════════════════════════════════════════════════════════════
 
@@ -470,35 +569,92 @@ plot(ma_show_vwap and timeframe.isintraday ? vwap_val : na, "VWAP", color.new(C_
 plot(brk_enable and brk_show_levels ? last_sh : na, "Swing High", color.new(C_BEAR, 65), linewidth=1, style=plot.style_stepline_diamond)
 plot(brk_enable and brk_show_levels ? last_sl : na, "Swing Low", color.new(C_BULL, 65), linewidth=1, style=plot.style_stepline_diamond)
 
+// Ghost Trail — ATR trailing stop, step-line that ratchets
+color trail_clr = hull_bull ? color.new(C_BULL, 40) : color.new(C_BEAR, 40)
+plot(trail_enable ? ghost_trail : na, "Ghost Trail", trail_clr, linewidth=2, style=plot.style_stepline)
+
 // ═══════════════════════════════════════════════════════════════
 // ████  PLOTTING — SIGNALS  ████
 // ═══════════════════════════════════════════════════════════════
 
-// In confluence mode: hide individual signals, show only mega-signals
-// In normal mode: show all individual signals
 // All individual signals always show. 👻 appears on top when 2+ agree.
-// Structure Breaks — ⚔️ Slashing through levels
-plotshape(brk_bear, "Structure Breakdown", shape.triangledown, location.abovebar, C_BREAK, size=size.normal, text="⚔️", textcolor=C_BREAK)
-plotshape(brk_bull, "Structure Breakout", shape.triangleup, location.belowbar, C_BULL, size=size.normal, text="⚔️", textcolor=C_BULL)
 
-// Exhaustion — 🪫 Dead Battery (momentum drained)
-plotshape(exh_bear_rev, "Bearish Exhaustion", shape.triangledown, location.abovebar, C_BEAR, size=size.small, text="🪫", textcolor=C_BEAR)
-plotshape(exh_bull_rev, "Bullish Exhaustion", shape.triangleup, location.belowbar, C_BULL, size=size.small, text="🪫", textcolor=C_BULL)
+// ── Combo Multiplier: stack emojis when multiple signals fire ───
+// Instead of overlapping plotshapes, use labels for multi-signal bars
+int sig_count_bear = (brk_bear ? 1 : 0) + (exh_bear_rev ? 1 : 0) + (sweep_bear ? 1 : 0) + (sqz_fire and not hull_bull ? 1 : 0) + (trail_cross_bear ? 1 : 0) + (div_bear ? 1 : 0)
+int sig_count_bull = (brk_bull ? 1 : 0) + (exh_bull_rev ? 1 : 0) + (sweep_bull ? 1 : 0) + (sqz_fire and hull_bull ? 1 : 0) + (trail_cross_bull ? 1 : 0) + (div_bull ? 1 : 0)
+
+// Build combo text for bearish signals above bar
+string bear_combo = ""
+if brk_bear
+    bear_combo += "⚔️"
+if exh_bear_rev
+    bear_combo += "🪫"
+if sweep_bear
+    bear_combo += "👾"
+if sqz_fire and not hull_bull
+    bear_combo += "💥"
+if trail_cross_bear
+    bear_combo += "🏁"
+if div_bear
+    bear_combo += "🔮"
+if mega_bear
+    bear_combo += "👻"
+if sig_count_bear >= 2
+    bear_combo += " x" + str.tostring(sig_count_bear)
+
+// Build combo text for bullish signals below bar
+string bull_combo = ""
+if brk_bull
+    bull_combo += "⚔️"
+if exh_bull_rev
+    bull_combo += "🪫"
+if sweep_bull
+    bull_combo += "👾"
+if sqz_fire and hull_bull
+    bull_combo += "💥"
+if trail_cross_bull
+    bull_combo += "🏁"
+if div_bull
+    bull_combo += "🔮"
+if mega_bull
+    bull_combo += "👻"
+if sig_count_bull >= 2
+    bull_combo += " x" + str.tostring(sig_count_bull)
+
+// Plot combo labels (or individual signals if only 1)
+if sig_count_bear >= 2 or mega_bear
+    label.new(bar_index, high, bear_combo, style=label.style_label_down, color=color.new(C_BREAK, 20), textcolor=#FFFFFF, size=size.normal)
+else
+    // Individual plotshapes for single signals
+    if false
+        na  // placeholder for else block
+
+// Individual bear signals (only when not in a combo)
+plotshape(sig_count_bear < 2 and brk_bear, "⚔️ Break Down", shape.triangledown, location.abovebar, C_BREAK, size=size.normal, text="⚔️", textcolor=C_BREAK)
+plotshape(sig_count_bear < 2 and exh_bear_rev, "🪫 Exhaustion Bear", shape.triangledown, location.abovebar, C_BEAR, size=size.small, text="🪫", textcolor=C_BEAR)
+plotshape(sig_count_bear < 2 and sweep_bear, "👾 Sweep Bear", shape.xcross, location.abovebar, C_WARNING, size=size.small, text="👾", textcolor=C_WARNING)
+plotshape(sig_count_bear < 2 and not hull_bull and sqz_fire, "💥 Squeeze Bear", shape.diamond, location.abovebar, C_SQUEEZE, size=size.small, text="💥", textcolor=C_SQUEEZE)
+plotshape(sig_count_bear < 2 and trail_cross_bear, "🏁 Trail Exit Bear", shape.square, location.abovebar, C_BEAR, size=size.small, text="🏁", textcolor=C_BEAR)
+plotshape(sig_count_bear < 2 and div_bear, "🔮 Divergence Bear", shape.diamond, location.abovebar, C_SQUEEZE, size=size.normal, text="🔮", textcolor=C_SQUEEZE)
+
+if sig_count_bull >= 2 or mega_bull
+    label.new(bar_index, low, bull_combo, style=label.style_label_up, color=color.new(C_CONFLUENCE, 20), textcolor=#FFFFFF, size=size.normal)
+else
+    if false
+        na
+
+// Individual bull signals (only when not in a combo)
+plotshape(sig_count_bull < 2 and brk_bull, "⚔️ Break Up", shape.triangleup, location.belowbar, C_BULL, size=size.normal, text="⚔️", textcolor=C_BULL)
+plotshape(sig_count_bull < 2 and exh_bull_rev, "🪫 Exhaustion Bull", shape.triangleup, location.belowbar, C_BULL, size=size.small, text="🪫", textcolor=C_BULL)
+plotshape(sig_count_bull < 2 and sweep_bull, "👾 Sweep Bull", shape.xcross, location.belowbar, C_WARNING, size=size.small, text="👾", textcolor=C_WARNING)
+plotshape(sig_count_bull < 2 and hull_bull and sqz_fire, "💥 Squeeze Bull", shape.diamond, location.belowbar, C_SQUEEZE, size=size.small, text="💥", textcolor=C_SQUEEZE)
+plotshape(sig_count_bull < 2 and trail_cross_bull, "🏁 Trail Exit Bull", shape.square, location.belowbar, C_BULL, size=size.small, text="🏁", textcolor=C_BULL)
+plotshape(sig_count_bull < 2 and div_bull, "🔮 Divergence Bull", shape.diamond, location.belowbar, C_SQUEEZE, size=size.normal, text="🔮", textcolor=C_SQUEEZE)
 
 // OB/OS Warnings (off by default)
 plotshape(exh_show_warn and exh_bear_start, "OB Warning", shape.square, location.abovebar, color.new(C_WARNING, 30), size=size.tiny)
 plotshape(exh_show_warn and exh_bull_start, "OS Warning", shape.square, location.belowbar, color.new(C_WARNING, 30), size=size.tiny)
-
-// Liquidity Sweeps — 👾 Space Invader (stop hunts)
-plotshape(sweep_bear, "Sweep High (Stop Hunt)", shape.xcross, location.abovebar, C_WARNING, size=size.small, text="👾", textcolor=C_WARNING)
-plotshape(sweep_bull, "Sweep Low (Stop Hunt)", shape.xcross, location.belowbar, C_WARNING, size=size.small, text="👾", textcolor=C_WARNING)
-
-// Squeeze Release — 💥 Explosion
-plotshape(sqz_enable and sqz_fire, "Squeeze Release", shape.diamond, location.abovebar, C_SQUEEZE, size=size.small, text="💥", textcolor=C_SQUEEZE)
-
-// Confluence — 👻 The Ghost Alpha appears when 2+ signals agree
-plotshape(mega_bull, "👻 Confluence Bull", shape.triangleup, location.belowbar, C_CONFLUENCE, size=size.large, text="👻", textcolor=C_CONFLUENCE)
-plotshape(mega_bear, "👻 Confluence Bear", shape.triangledown, location.abovebar, C_CONFLUENCE, size=size.large, text="👻", textcolor=C_CONFLUENCE)
 
 // ═══════════════════════════════════════════════════════════════
 // ████  PLOTTING — VISUAL EFFECTS  ████
@@ -653,9 +809,9 @@ alertcondition(sweep_bear,                                   "Liquidity Sweep Be
 
 // ── Dynamic JSON webhook (consolidated, for external systems) ───
 if barstate.isconfirmed
-    bool any_signal = brk_bear or brk_bull or exh_bear_rev or exh_bull_rev or sqz_fire or hull_flip_bull or hull_flip_bear or mega_bull or mega_bear or sweep_bull or sweep_bear
+    bool any_signal = brk_bear or brk_bull or exh_bear_rev or exh_bull_rev or sqz_fire or hull_flip_bull or hull_flip_bear or mega_bull or mega_bear or sweep_bull or sweep_bear or trail_cross_bear or trail_cross_bull or div_bear or div_bull
     if any_signal
-        string sig = sweep_bull ? "SWEEP_BULL" : sweep_bear ? "SWEEP_BEAR" : mega_bull ? "CONFLUENCE_BULL" : mega_bear ? "CONFLUENCE_BEAR" : sqz_fire ? "SQUEEZE_FIRE" : brk_bear ? "BREAK_DOWN" : brk_bull ? "BREAK_UP" : exh_bear_rev ? "EXHAUSTION_BEAR" : exh_bull_rev ? "EXHAUSTION_BULL" : hull_flip_bull ? "HULL_BULL" : "HULL_BEAR"
+        string sig = div_bear ? "DIVERGE_BEAR" : div_bull ? "DIVERGE_BULL" : trail_cross_bear ? "TRAIL_EXIT_BEAR" : trail_cross_bull ? "TRAIL_EXIT_BULL" : sweep_bull ? "SWEEP_BULL" : sweep_bear ? "SWEEP_BEAR" : mega_bull ? "CONFLUENCE_BULL" : mega_bear ? "CONFLUENCE_BEAR" : sqz_fire ? "SQUEEZE_FIRE" : brk_bear ? "BREAK_DOWN" : brk_bull ? "BREAK_UP" : exh_bear_rev ? "EXHAUSTION_BEAR" : exh_bull_rev ? "EXHAUSTION_BULL" : hull_flip_bull ? "HULL_BULL" : "HULL_BEAR"
         string regime_str = regime_strong ? (regime_bull ? "BULL" : "BEAR") : "CHOP"
         string struct_str = brk_bear ? "BROKEN_DN" : brk_bull ? "BROKEN_UP" : "INTACT"
         string cvd_str    = cvd_bullish ? "BUY" : "SELL"
