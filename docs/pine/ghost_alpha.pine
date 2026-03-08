@@ -1,12 +1,11 @@
-// Ghost Alpha [mph1nance] v3
+// Ghost Alpha [mph1nance] v4 — The Masterpiece
 // © mph1nance + Sam the Quant Ghost
 // Three-axis momentum indicator: Direction × Regime × Exhaustion
-// + Structure Break detection + Volume confirmation
+// + Keltner Envelope + Key MAs + Structure + Confluence Filtering
 //
-// Inspired by: Hull Suite (InSilico), TRAMA (LuxAlgo concept),
-//   %R Trend Exhaustion (upslidedown), ATR Squeeze (cmph)
+// Philosophy: Beautiful visuals, fewer but smarter signals,
+//   data-rich dashboard, clean chart. Less is more.
 //
-// Auto-adapts all parameters to chart timeframe. 5min → Daily.
 // Zero external dependencies. Pure Pine v6.
 
 //@version=6
@@ -22,9 +21,13 @@ const color C_BEAR_DEEP   = #E53935   // Deep Rose
 const color C_NEUTRAL     = #B39DDB   // Soft Lavender
 const color C_SQUEEZE     = #7C4DFF   // Neon Purple
 const color C_WARNING     = #FFB74D   // Amber
-const color C_STRUCTURE   = #80DEEA   // Structure Ice
 const color C_BREAK       = #FF1744   // Break Red
 const color C_HTF         = #FFFFFF   // HTF Hull
+const color C_KELT        = #4DD0E1   // Keltner Ice
+const color C_MA_50       = #FFA726   // MA 50 Gold
+const color C_MA_200      = #EF5350   // MA 200 Rose
+const color C_VWAP        = #FFEE58   // VWAP Yellow
+const color C_CONFLUENCE  = #00FF87   // Confluence Neon Green
 const color C_DASH_BG     = #0D1117   // Deep Space
 const color C_DASH_BORDER = #30363D   // Subtle Border
 const color C_DASH_TEXT   = #E0E0E0   // Ghost White
@@ -46,59 +49,76 @@ _lerp(float lo, float hi) => math.round(lo + _tf_pct * (hi - lo))
 // ═══════════════════════════════════════════════════════════════
 
 // ── Auto-Adapt ───────────────────────────────────────────────
-adapt_group   = "━━━ Auto-Adapt ━━━"
-auto_adapt    = input.bool(true, "Auto-adapt to timeframe", group=adapt_group, tooltip="Scales all periods from 5min→Daily. OFF = manual values.")
+adapt_group   = "━━━ 🔧 Auto-Adapt ━━━"
+auto_adapt    = input.bool(true, "Auto-adapt to timeframe", group=adapt_group)
 
 // ── Hull Trend Band ──────────────────────────────────────────
-hull_group      = "━━━ Hull Trend Band ━━━"
+hull_group      = "━━━ 🌊 Hull Trend Band ━━━"
 hull_src        = input.source(close, "Source", group=hull_group)
 hull_mode       = input.string("Hma", "Variation", options=["Hma", "Ehma", "Thma"], group=hull_group)
 hull_len_man    = input.int(55, "Length (manual)", group=hull_group)
 hull_show_band  = input.bool(true, "Show as Band", group=hull_group)
-hull_color_bars = input.bool(false, "Color Candles by Trend", group=hull_group)
 
 // ── HTF Hull Overlay ─────────────────────────────────────────
-htf_group     = "━━━ Higher-TF Hull Overlay ━━━"
-htf_enable    = input.bool(false, "Show HTF Hull", group=htf_group, tooltip="See the bigger trend while scalping.")
+htf_group     = "━━━ 🔭 HTF Hull Overlay ━━━"
+htf_enable    = input.bool(false, "Show HTF Hull", group=htf_group)
 htf_tf        = input.timeframe("60", "Timeframe", group=htf_group)
 htf_show_band = input.bool(true, "Show HTF Band", group=htf_group)
 
 // ── TRAMA Regime Filter ──────────────────────────────────────
-trama_group   = "━━━ TRAMA Regime Filter ━━━"
+trama_group   = "━━━ 🧠 TRAMA Regime ━━━"
 trama_len_man = input.int(34, "Length (manual)", group=trama_group)
 trama_src     = input.source(close, "Source", group=trama_group)
 trama_show    = input.bool(true, "Show TRAMA Line", group=trama_group)
 
+// ── Keltner Envelope ─────────────────────────────────────────
+kc_group      = "━━━ 📐 Keltner Envelope ━━━"
+kc_enable     = input.bool(true, "Show Keltner Bands", group=kc_group)
+kc_len_man    = input.int(21, "EMA Length (manual)", group=kc_group)
+kc_atr_man    = input.int(14, "ATR Length (manual)", group=kc_group)
+kc_mult       = input.float(2.0, "ATR Multiplier", group=kc_group, step=0.1)
+
+// ── Key Moving Averages ──────────────────────────────────────
+ma_group      = "━━━ 📊 Key Moving Averages ━━━"
+ma_show_50    = input.bool(false, "Show SMA 50", group=ma_group)
+ma_show_200   = input.bool(false, "Show SMA 200", group=ma_group)
+ma_show_vwap  = input.bool(false, "Show VWAP (intraday only)", group=ma_group)
+
 // ── Structure Break ──────────────────────────────────────────
-brk_group      = "━━━ Structure Break ━━━"
-brk_enable     = input.bool(true, "Enable Structure Detection", group=brk_group)
-brk_swing_man  = input.int(5, "Swing Length (manual)", group=brk_group, minval=2, maxval=20, tooltip="Pivot lookback. Auto-adapts: 3 (5min) → 8 (daily).")
-brk_show_levels = input.bool(true, "Show Swing Levels", group=brk_group, tooltip="Draw horizontal lines at last swing high/low")
-brk_show_zones  = input.bool(false, "Show S/D Zones", group=brk_group, tooltip="Draw supply/demand boxes at swing points")
+brk_group       = "━━━ 🏗️ Structure ━━━"
+brk_enable      = input.bool(true, "Enable Structure Detection", group=brk_group)
+brk_swing_man   = input.int(5, "Swing Length (manual)", group=brk_group, minval=2, maxval=20)
+brk_show_levels = input.bool(true, "Show Swing Levels", group=brk_group)
+brk_show_zones  = input.bool(false, "Show S/D Zones", group=brk_group)
 brk_zone_history = input.int(5, "Zone History", group=brk_group, minval=1, maxval=15)
 
 // ── Trend Exhaustion (%R) ────────────────────────────────────
-exh_group       = "━━━ Trend Exhaustion ━━━"
+exh_group       = "━━━ 💀 Trend Exhaustion ━━━"
 exh_fast_man    = input.int(21, "Fast %R (manual)", group=exh_group)
 exh_slow_man    = input.int(112, "Slow %R (manual)", group=exh_group, minval=1)
 exh_threshold   = input.int(20, "Threshold", group=exh_group, minval=1, maxval=50)
 exh_fast_smooth = input.int(7, "Fast Smooth", group=exh_group, minval=1)
 exh_slow_smooth = input.int(3, "Slow Smooth", group=exh_group, minval=1)
-exh_show_warn   = input.bool(true, "Show Trend Start Warnings", group=exh_group)
+exh_show_warn   = input.bool(false, "Show Trend Start Warnings", group=exh_group, tooltip="Default OFF — reduces chart noise")
 
 // ── Volatility Squeeze ───────────────────────────────────────
-sqz_group   = "━━━ Volatility Squeeze ━━━"
+sqz_group   = "━━━ 🔋 Volatility Squeeze ━━━"
 sqz_enable  = input.bool(true, "Enable Squeeze Detection", group=sqz_group)
 sqz_atr_len = input.int(14, "ATR Length", group=sqz_group)
 
 // ── Synthetic IV Percentile ──────────────────────────────────
-iv_group    = "━━━ IV Percentile (Synthetic) ━━━"
+iv_group    = "━━━ 📈 IV Percentile ━━━"
 iv_enable   = input.bool(true, "Enable IV Percentile", group=iv_group)
 iv_hv_len   = input.int(21, "HV Length", group=iv_group, minval=5)
 iv_rank_len = input.int(252, "Rank Lookback", group=iv_group, minval=50)
 
+// ── Signal Filtering ─────────────────────────────────────────
+sig_group       = "━━━ 🎯 Signal Filter ━━━"
+sig_confluence  = input.bool(false, "Confluence Mode (fewer, stronger signals)", group=sig_group, tooltip="When ON, only shows signals when 2+ modules agree. Dramatically reduces noise.")
+sig_grad_candle = input.bool(false, "Gradient Candle Coloring", group=sig_group, tooltip="Colors each candle on a bull→bear gradient based on composite score")
+
 // ── Dashboard ────────────────────────────────────────────────
-dash_group  = "━━━ Dashboard ━━━"
+dash_group  = "━━━ 📋 Dashboard ━━━"
 dash_enable = input.bool(true, "Show Dashboard", group=dash_group)
 dash_pos    = input.string("Top Right", "Position", options=["Top Right", "Top Left", "Bottom Right", "Bottom Left"], group=dash_group)
 dash_size   = input.string("Small", "Text Size", options=["Tiny", "Small", "Normal"], group=dash_group)
@@ -112,6 +132,8 @@ int trama_len    = auto_adapt ? _lerp(21, 55)   : trama_len_man
 int exh_fast_len = auto_adapt ? _lerp(14, 21)   : exh_fast_man
 int exh_slow_len = auto_adapt ? _lerp(55, 112)  : exh_slow_man
 int brk_swing    = auto_adapt ? _lerp(3, 8)     : brk_swing_man
+int kc_len       = auto_adapt ? _lerp(13, 21)   : kc_len_man
+int kc_atr_len   = auto_adapt ? _lerp(10, 14)   : kc_atr_man
 
 // ═══════════════════════════════════════════════════════════════
 // ████  HULL BAND  ████
@@ -131,6 +153,8 @@ float hull_val = _hull_calc(hull_src, hull_len, hull_mode)
 float MHULL    = hull_val
 float SHULL    = hull_val[2]
 bool  hull_bull = MHULL > SHULL
+bool  hull_flip_bull = hull_bull and not hull_bull[1]
+bool  hull_flip_bear = not hull_bull and hull_bull[1]
 
 // ── HTF Hull ─────────────────────────────────────────────────
 float htf_hull = request.security(syminfo.tickerid, htf_tf, _hull_calc(hull_src, hull_len, hull_mode))
@@ -151,6 +175,29 @@ trama      := nz(trama[1] + t_tc * (trama_src - trama[1]), trama_src)
 bool regime_strong   = t_tc > 0.25
 bool regime_moderate = t_tc > 0.09
 bool regime_bull     = trama > trama[1]
+float trama_dist     = trama != 0 ? (close - trama) / trama * 100 : 0  // % distance from TRAMA
+
+// ═══════════════════════════════════════════════════════════════
+// ████  KELTNER ENVELOPE  ████
+// ═══════════════════════════════════════════════════════════════
+
+float kc_basis = ta.ema(close, kc_len)
+float kc_atr   = ta.atr(kc_atr_len)
+float kc_upper = kc_basis + kc_atr * kc_mult
+float kc_lower = kc_basis - kc_atr * kc_mult
+bool  at_kc_lower = close <= kc_lower
+bool  at_kc_upper = close >= kc_upper
+
+// ═══════════════════════════════════════════════════════════════
+// ████  KEY MOVING AVERAGES  ████
+// ═══════════════════════════════════════════════════════════════
+
+float sma_50     = ta.sma(close, 50)
+float sma_200    = ta.sma(close, 200)
+bool  above_50   = close > sma_50
+bool  above_200  = close > sma_200
+bool  golden_x   = sma_50 > sma_200
+float vwap_val   = ta.vwap(hlc3)
 
 // ═══════════════════════════════════════════════════════════════
 // ████  STRUCTURE BREAK  ████
@@ -161,46 +208,33 @@ float sl = ta.pivotlow(low, brk_swing, brk_swing)
 
 var float last_sh = na
 var float last_sl = na
-var int   last_sh_bar = 0
-var int   last_sl_bar = 0
 
 if not na(sh)
-    last_sh     := sh
-    last_sh_bar := bar_index - brk_swing
+    last_sh := sh
 if not na(sl)
-    last_sl     := sl
-    last_sl_bar := bar_index - brk_swing
+    last_sl := sl
 
-// Break detection: close violates the last swing level
 bool brk_bear = brk_enable and not na(last_sl) and close < last_sl and close[1] >= last_sl
 bool brk_bull = brk_enable and not na(last_sh) and close > last_sh and close[1] <= last_sh
 
-// ── Supply/Demand Zones ──────────────────────────────────────
+// ── S/D Zones ────────────────────────────────────────────────
 var box[] supply_zones = array.new_box()
 var box[] demand_zones = array.new_box()
 
 if brk_enable and brk_show_zones
     float atr_buf = ta.atr(14) * 0.3
-
-    // New supply zone at swing high
     if not na(sh)
         box b = box.new(bar_index - brk_swing, sh, bar_index, sh - atr_buf,
-             bgcolor=color.new(C_BEAR, 85), border_color=color.new(C_BEAR, 60),
-             extend=extend.right)
+             bgcolor=color.new(C_BEAR, 88), border_color=color.new(C_BEAR, 70), extend=extend.right)
         array.push(supply_zones, b)
         if array.size(supply_zones) > brk_zone_history
             box.delete(array.shift(supply_zones))
-
-    // New demand zone at swing low
     if not na(sl)
         box b = box.new(bar_index - brk_swing, sl + atr_buf, bar_index, sl,
-             bgcolor=color.new(C_BULL, 85), border_color=color.new(C_BULL, 60),
-             extend=extend.right)
+             bgcolor=color.new(C_BULL, 88), border_color=color.new(C_BULL, 70), extend=extend.right)
         array.push(demand_zones, b)
         if array.size(demand_zones) > brk_zone_history
             box.delete(array.shift(demand_zones))
-
-    // Invalidate broken supply zones
     if array.size(supply_zones) > 0
         for i = array.size(supply_zones) - 1 to 0
             box b = array.get(supply_zones, i)
@@ -208,8 +242,6 @@ if brk_enable and brk_show_zones
                 box.set_extend(b, extend.none)
                 box.set_right(b, bar_index)
                 array.remove(supply_zones, i)
-
-    // Invalidate broken demand zones
     if array.size(demand_zones) > 0
         for i = array.size(demand_zones) - 1 to 0
             box b = array.get(demand_zones, i)
@@ -243,7 +275,7 @@ bool exh_bear_start  = exh_ob and not exh_ob[1]
 bool exh_bull_start  = exh_os and not exh_os[1]
 
 // ═══════════════════════════════════════════════════════════════
-// ████  ATR SQUEEZE  ████
+// ████  ATR SQUEEZE + IV PERCENTILE + RVOL  ████
 // ═══════════════════════════════════════════════════════════════
 
 float sqz_daily  = ta.atr(sqz_atr_len)
@@ -251,10 +283,6 @@ float sqz_weekly = request.security(syminfo.tickerid, "1W", ta.atr(sqz_atr_len))
 float sqz_ratio  = sqz_daily / (nz(sqz_weekly, sqz_daily) / 2.0)
 bool  sqz_coiled = sqz_ratio < 1.0
 bool  sqz_fire   = sqz_ratio >= 1.0 and sqz_ratio[1] < 1.0
-
-// ═══════════════════════════════════════════════════════════════
-// ████  SYNTHETIC IV PERCENTILE  ████
-// ═══════════════════════════════════════════════════════════════
 
 float daily_ret = math.log(close / close[1])
 float hv        = ta.stdev(daily_ret, iv_hv_len) * math.sqrt(252) * 100
@@ -264,131 +292,182 @@ float iv_pctile = (hv_hi - hv_lo) != 0 ? (hv - hv_lo) / (hv_hi - hv_lo) * 100 : 
 bool  iv_low    = iv_pctile < 25
 bool  iv_high   = iv_pctile > 75
 
-// ═══════════════════════════════════════════════════════════════
-// ████  RELATIVE VOLUME  ████
-// ═══════════════════════════════════════════════════════════════
-
-float rvol      = nz(volume) > 0 ? volume / ta.sma(volume, 20) : 0
-bool  rvol_high = rvol > 1.5
+float rvol       = nz(volume) > 0 ? volume / ta.sma(volume, 20) : 0
+bool  rvol_high  = rvol > 1.5
 bool  rvol_surge = rvol > 2.5
 
 // ═══════════════════════════════════════════════════════════════
-// ████  GHOST GRADE  ████
+// ████  CONFLUENCE DETECTION  ████
+// ═══════════════════════════════════════════════════════════════
+// Counts how many bullish/bearish signals are firing simultaneously.
+// In confluence mode, individual signals are hidden — only the
+// combined mega-signal appears. Fewer markers, higher conviction.
+
+int bull_conf = 0
+int bear_conf = 0
+
+if exh_bull_rev
+    bull_conf += 1
+if exh_bear_rev
+    bear_conf += 1
+if brk_bull
+    bull_conf += 1
+if brk_bear
+    bear_conf += 1
+if sqz_fire and hull_bull
+    bull_conf += 1
+if sqz_fire and not hull_bull
+    bear_conf += 1
+if rvol_high and hull_bull and at_kc_lower
+    bull_conf += 1
+if rvol_high and not hull_bull and at_kc_upper
+    bear_conf += 1
+if hull_flip_bull
+    bull_conf += 1
+if hull_flip_bear
+    bear_conf += 1
+
+bool mega_bull = bull_conf >= 2
+bool mega_bear = bear_conf >= 2
+
+// ═══════════════════════════════════════════════════════════════
+// ████  TREND AGE  ████
+// ═══════════════════════════════════════════════════════════════
+
+var int trend_age = 0
+if hull_bull == hull_bull[1]
+    trend_age += 1
+else
+    trend_age := 0
+
+string trend_phase = trend_age < 5 ? "FRESH" : trend_age < 20 ? "YOUNG" : trend_age < 50 ? "MATURE" : "AGING"
+
+// ═══════════════════════════════════════════════════════════════
+// ████  GHOST GRADE — 10-Axis Scoring  ████
 // ═══════════════════════════════════════════════════════════════
 
 float g_score = 0.0
 
-// Axis 1: Regime quality (TRAMA tc)
-if regime_strong
+if regime_strong                            // +2 strong trend
     g_score += 2.0
-else if regime_moderate
+else if regime_moderate                     // +1 moderate
     g_score += 1.0
-
-// Axis 2: Direction agreement (Hull + TRAMA)
-if hull_bull == regime_bull
+if hull_bull == regime_bull                  // +1 direction agreement
     g_score += 1.0
-
-// Axis 3: HTF alignment bonus
-if htf_enable and htf_bull == hull_bull
+if htf_enable and htf_bull == hull_bull      // +0.5 HTF alignment
     g_score += 0.5
-
-// Axis 4: Exhaustion penalty
-if exh_ob or exh_os
+if golden_x == hull_bull                     // +0.5 MA structure confirms
+    g_score += 0.5
+if at_kc_lower and hull_bull                 // +1 at value zone in uptrend
+    g_score += 1.0
+if at_kc_upper and not hull_bull             // +1 at value zone in downtrend
+    g_score += 1.0
+if exh_ob or exh_os                          // -1 extended
     g_score -= 1.0
-if exh_bear_rev or exh_bull_rev
+if exh_bear_rev or exh_bull_rev              // -2 exhaustion fired
     g_score -= 2.0
-
-// Axis 5: Structure break penalty
-if brk_bear or brk_bull
+if brk_bear or brk_bull                      // -1.5 structure break
     g_score -= 1.5
-
-// Axis 6: Squeeze bonus
-if sqz_fire
+if sqz_fire                                  // +1 volatility expanding
     g_score += 1.0
-
-// Axis 7: Volume confirmation bonus
-if rvol_high and (regime_strong or sqz_fire)
+if rvol_high and regime_strong               // +0.5 volume confirms trend
     g_score += 0.5
 
-string ghost_grade = g_score >= 3.5 ? "A+" : g_score >= 3 ? "A" : g_score >= 2 ? "B" : g_score >= 1 ? "C" : g_score >= 0 ? "D" : "F"
+string ghost_grade = g_score >= 4 ? "A+" : g_score >= 3 ? "A" : g_score >= 2 ? "B" : g_score >= 1 ? "C" : g_score >= 0 ? "D" : "F"
 
 // ═══════════════════════════════════════════════════════════════
-// ████  PLOTTING — HULL BAND  ████
+// ████  PLOTTING — HULL BAND (Gradient Fill)  ████
 // ═══════════════════════════════════════════════════════════════
 
-int hull_alpha  = regime_strong ? 15 : regime_moderate ? 45 : 75
-int fill_alpha  = regime_strong ? 75 : regime_moderate ? 88 : 96
-color hull_color     = hull_bull ? color.new(C_BULL, hull_alpha) : color.new(C_BEAR, hull_alpha)
-color hull_fill_clr  = hull_bull ? color.new(C_BULL, fill_alpha) : color.new(C_BEAR, fill_alpha)
+int glow_alpha = regime_strong ? 40 : regime_moderate ? 60 : 80
+int fade_alpha = regime_strong ? 88 : regime_moderate ? 94 : 98
 
-p_mhull = plot(MHULL, "Hull Fast", hull_color, linewidth=2)
-p_shull = plot(hull_show_band ? SHULL : na, "Hull Slow", hull_color, linewidth=2)
-fill(p_mhull, p_shull, color=hull_fill_clr, title="Hull Band")
+color hull_line_clr  = hull_bull ? color.new(C_BULL, glow_alpha - 25) : color.new(C_BEAR, glow_alpha - 25)
+// Gradient: leading edge of trend glows brighter
+color hull_top_clr   = hull_bull ? color.new(C_BULL, glow_alpha) : color.new(C_BEAR, fade_alpha)
+color hull_bot_clr   = hull_bull ? color.new(C_BULL, fade_alpha) : color.new(C_BEAR, glow_alpha)
 
-barcolor(hull_color_bars ? (hull_bull ? color.new(C_BULL, 25) : color.new(C_BEAR, 25)) : na)
-
-// ═══════════════════════════════════════════════════════════════
-// ████  PLOTTING — HTF HULL OVERLAY  ████
-// ═══════════════════════════════════════════════════════════════
-
-color htf_color     = htf_bull ? color.new(C_HTF, 50) : color.new(C_HTF, 70)
-color htf_fill_clr  = htf_bull ? color.new(C_BULL, 94) : color.new(C_BEAR, 94)
-
-p_htf_m = plot(htf_enable ? HTF_M : na, "HTF Hull Fast", htf_color, linewidth=1, style=plot.style_stepline)
-p_htf_s = plot(htf_enable and htf_show_band ? HTF_S : na, "HTF Hull Slow", htf_color, linewidth=1, style=plot.style_stepline)
-fill(p_htf_m, p_htf_s, color=htf_fill_clr, title="HTF Hull Band")
+p_mhull = plot(MHULL, "Hull Fast", hull_line_clr, linewidth=2)
+p_shull = plot(hull_show_band ? SHULL : na, "Hull Slow", hull_line_clr, linewidth=2)
+fill(p_mhull, p_shull, MHULL, SHULL, top_color=hull_top_clr, bottom_color=hull_bot_clr, title="Hull Gradient")
 
 // ═══════════════════════════════════════════════════════════════
-// ████  PLOTTING — TRAMA  ████
+// ████  PLOTTING — KELTNER ENVELOPE  ████
 // ═══════════════════════════════════════════════════════════════
 
+p_kc_up = plot(kc_enable ? kc_upper : na, "KC Upper", color.new(C_KELT, 75), linewidth=1, style=plot.style_line)
+p_kc_dn = plot(kc_enable ? kc_lower : na, "KC Lower", color.new(C_KELT, 75), linewidth=1, style=plot.style_line)
+fill(p_kc_up, p_kc_dn, color=color.new(C_KELT, 95), title="Keltner Zone")
+
+// ═══════════════════════════════════════════════════════════════
+// ████  PLOTTING — HTF HULL + TRAMA + KEY MAs + VWAP  ████
+// ═══════════════════════════════════════════════════════════════
+
+// HTF Hull
+color htf_color = htf_bull ? color.new(C_HTF, 50) : color.new(C_HTF, 70)
+p_htf_m = plot(htf_enable ? HTF_M : na, "HTF Fast", htf_color, linewidth=1, style=plot.style_stepline)
+p_htf_s = plot(htf_enable and htf_show_band ? HTF_S : na, "HTF Slow", htf_color, linewidth=1, style=plot.style_stepline)
+fill(p_htf_m, p_htf_s, color=htf_bull ? color.new(C_BULL, 95) : color.new(C_BEAR, 95), title="HTF Band")
+
+// TRAMA
 color trama_clr = regime_strong ? (regime_bull ? C_BULL_SOFT : C_BEAR_DEEP) : C_NEUTRAL
-plot(trama_show ? trama : na, "TRAMA", trama_clr, linewidth=1, style=plot.style_line)
+plot(trama_show ? trama : na, "TRAMA", trama_clr, linewidth=1)
+
+// Key MAs — thin, subtle reference lines
+plot(ma_show_50  ? sma_50  : na, "SMA 50",  color.new(C_MA_50, 50),  linewidth=1, style=plot.style_line)
+plot(ma_show_200 ? sma_200 : na, "SMA 200", color.new(C_MA_200, 50), linewidth=1, style=plot.style_line)
+
+// VWAP — intraday only
+plot(ma_show_vwap and timeframe.isintraday ? vwap_val : na, "VWAP", color.new(C_VWAP, 50), linewidth=1, style=plot.style_line)
 
 // ═══════════════════════════════════════════════════════════════
 // ████  PLOTTING — STRUCTURE  ████
 // ═══════════════════════════════════════════════════════════════
 
-// Swing level lines (step-lines that update when new swings form)
-plot(brk_enable and brk_show_levels ? last_sh : na, "Last Swing High", color.new(C_BEAR, 60), linewidth=1, style=plot.style_stepline_diamond)
-plot(brk_enable and brk_show_levels ? last_sl : na, "Last Swing Low", color.new(C_BULL, 60), linewidth=1, style=plot.style_stepline_diamond)
-
-// Swing pivot dots — subtle, just marking where pivots formed
-plotshape(brk_enable and not na(sh), "Swing High •", shape.circle, location.abovebar, color.new(C_BEAR, 65), size=size.tiny)
-plotshape(brk_enable and not na(sl), "Swing Low •", shape.circle, location.belowbar, color.new(C_BULL, 65), size=size.tiny)
-
-// BREAK signals
-// Bear breakdown: above the bar, pointing down — "price just fell through the floor"
-plotshape(brk_bear, "▼ Structure Breakdown", shape.triangledown, location.abovebar, C_BREAK, size=size.normal, text="BREAK ↓", textcolor=C_BREAK)
-// Bull breakout: below the bar, pointing up — "price just cleared resistance"
-plotshape(brk_bull, "▲ Structure Breakout", shape.triangleup, location.belowbar, C_BULL, size=size.normal, text="BREAK ↑", textcolor=C_BULL)
+plot(brk_enable and brk_show_levels ? last_sh : na, "Swing High", color.new(C_BEAR, 65), linewidth=1, style=plot.style_stepline_diamond)
+plot(brk_enable and brk_show_levels ? last_sl : na, "Swing Low", color.new(C_BULL, 65), linewidth=1, style=plot.style_stepline_diamond)
 
 // ═══════════════════════════════════════════════════════════════
-// ████  PLOTTING — EXHAUSTION  ████
+// ████  PLOTTING — SIGNALS  ████
 // ═══════════════════════════════════════════════════════════════
 
-// Exhaustion reversals: when BOTH fast+slow %R agree the trend is cooked
-plotshape(exh_bear_rev, "Bearish Exhaustion", shape.triangledown, location.abovebar, C_BEAR, size=size.small, text="TIRED ↓", textcolor=C_BEAR)
-plotshape(exh_bull_rev, "Bullish Exhaustion", shape.triangleup, location.belowbar, C_BULL, size=size.small, text="TIRED ↑", textcolor=C_BULL)
-// Warning squares: just entered OB/OS zone (trend may be getting extended)
-plotshape(exh_show_warn and exh_bear_start, "Overbought Warning", shape.square, location.abovebar, color.new(C_WARNING, 30), size=size.tiny)
-plotshape(exh_show_warn and exh_bull_start, "Oversold Warning", shape.square, location.belowbar, color.new(C_WARNING, 30), size=size.tiny)
+// In confluence mode: hide individual signals, show only mega-signals
+// In normal mode: show all individual signals
+
+bool show_individual = not sig_confluence
+
+// Structure Breaks (always shown — these are critical)
+plotshape(brk_bear, "Structure Breakdown", shape.triangledown, location.abovebar, C_BREAK, size=size.normal, text="BREAK ↓", textcolor=C_BREAK)
+plotshape(brk_bull, "Structure Breakout", shape.triangleup, location.belowbar, C_BULL, size=size.normal, text="BREAK ↑", textcolor=C_BULL)
+
+// Exhaustion (filtered in confluence mode)
+plotshape(show_individual and exh_bear_rev, "Bearish Exhaustion", shape.triangledown, location.abovebar, C_BEAR, size=size.small, text="TIRED ↓", textcolor=C_BEAR)
+plotshape(show_individual and exh_bull_rev, "Bullish Exhaustion", shape.triangleup, location.belowbar, C_BULL, size=size.small, text="TIRED ↑", textcolor=C_BULL)
+
+// Warnings (off by default now)
+plotshape(show_individual and exh_show_warn and exh_bear_start, "OB Warning", shape.square, location.abovebar, color.new(C_WARNING, 30), size=size.tiny)
+plotshape(show_individual and exh_show_warn and exh_bull_start, "OS Warning", shape.square, location.belowbar, color.new(C_WARNING, 30), size=size.tiny)
+
+// Squeeze release (filtered in confluence mode)
+plotshape(show_individual and sqz_enable and sqz_fire, "Squeeze Release", shape.diamond, location.abovebar, C_WARNING, size=size.small, text="FIRE ⚡", textcolor=C_WARNING)
+
+// ── Confluence Mega-Signals ──────────────────────────────────
+plotshape(sig_confluence and mega_bull, "⚡ Confluence Bull", shape.triangleup, location.belowbar, C_CONFLUENCE, size=size.large, text="🎯", textcolor=C_CONFLUENCE)
+plotshape(sig_confluence and mega_bear, "⚡ Confluence Bear", shape.triangledown, location.abovebar, C_CONFLUENCE, size=size.large, text="🎯", textcolor=C_CONFLUENCE)
 
 // ═══════════════════════════════════════════════════════════════
-// ████  PLOTTING — SQUEEZE  ████
+// ████  PLOTTING — VISUAL EFFECTS  ████
 // ═══════════════════════════════════════════════════════════════
 
-// Squeeze: purple background when ATR is compressed vs weekly. Flash on release.
-bgcolor(sqz_enable and sqz_coiled ? color.new(C_SQUEEZE, 94) : na, title="Squeeze Zone (Purple Glow)")
-// Squeeze release: volatility just expanded — something's moving
-plotshape(sqz_enable and sqz_fire, "Squeeze Release", shape.diamond, location.abovebar, C_WARNING, size=size.small, text="FIRE ⚡", textcolor=C_WARNING)
+// Squeeze background glow
+bgcolor(sqz_enable and sqz_coiled ? color.new(C_SQUEEZE, 95) : na, title="Squeeze Glow")
 
-// ═══════════════════════════════════════════════════════════════
-// ████  PLOTTING — VOLUME SURGE  ████
-// ═══════════════════════════════════════════════════════════════
+// Volume surge highlight
+bgcolor(rvol_surge ? color.new(C_WARNING, 93) : na, title="Volume Surge")
 
-// Subtle bar highlight on volume surges (2.5x+ average)
-bgcolor(rvol_surge ? color.new(C_WARNING, 92) : na, title="Volume Surge")
+// Gradient candle coloring (optional — maps ghost score to color)
+color candle_grad = color.from_gradient(g_score, -2, 5, C_BEAR_DEEP, C_BULL)
+barcolor(sig_grad_candle ? candle_grad : na)
 
 // ═══════════════════════════════════════════════════════════════
 // ████  DASHBOARD  ████
@@ -407,7 +486,7 @@ var table tbl = na
 
 if dash_enable
     if barstate.isfirst
-        tbl := table.new(tbl_pos, 3, 9, bgcolor=C_DASH_BG, border_width=1, border_color=C_DASH_BORDER, frame_width=2, frame_color=C_DASH_BORDER)
+        tbl := table.new(tbl_pos, 3, 11, bgcolor=C_DASH_BG, border_width=1, border_color=C_DASH_BORDER, frame_width=2, frame_color=C_DASH_BORDER)
 
     if barstate.islast
         int row = 0
@@ -417,11 +496,19 @@ if dash_enable
         table.merge_cells(tbl, 0, row, 2, row)
         row += 1
 
-        // Regime
+        // Regime + trend age
         string r_text   = regime_strong ? (regime_bull ? "BULL ▲" : "BEAR ▼") : regime_moderate ? "MODERATE" : "CHOP ═"
         color  r_color  = regime_strong ? (regime_bull ? C_BULL : C_BEAR) : regime_moderate ? C_WARNING : C_NEUTRAL
         table.cell(tbl, 0, row, "REGIME",  text_color=color.new(C_DASH_TEXT, 40), text_size=tbl_size, text_halign=text.align_left)
         table.cell(tbl, 1, row, r_text,    text_color=r_color, text_size=tbl_size, text_halign=text.align_center)
+        table.cell(tbl, 2, row, trend_phase, text_color=trend_age < 5 ? C_CONFLUENCE : trend_age < 50 ? color.new(C_DASH_TEXT, 40) : C_WARNING, text_size=tbl_size, text_halign=text.align_right)
+        row += 1
+
+        // TRAMA distance
+        string td_text  = math.abs(trama_dist) < 1 ? "AT VALUE" : trama_dist > 0 ? "+" + str.tostring(math.round(trama_dist * 10) / 10) + "%" : str.tostring(math.round(trama_dist * 10) / 10) + "%"
+        color  td_color = math.abs(trama_dist) < 1 ? C_CONFLUENCE : math.abs(trama_dist) > 3 ? C_WARNING : color.new(C_DASH_TEXT, 40)
+        table.cell(tbl, 0, row, "TRAMA Δ", text_color=color.new(C_DASH_TEXT, 40), text_size=tbl_size, text_halign=text.align_left)
+        table.cell(tbl, 1, row, td_text,   text_color=td_color, text_size=tbl_size, text_halign=text.align_center)
         table.cell(tbl, 2, row, str.tostring(math.round(t_tc * 100)) + "%", text_color=color.new(C_DASH_TEXT, 50), text_size=tbl_size, text_halign=text.align_right)
         row += 1
 
@@ -447,51 +534,55 @@ if dash_enable
             color  brk_color = (brk_bear or brk_bull) ? C_BREAK : color.new(C_DASH_TEXT, 50)
             table.cell(tbl, 0, row, "STRUCT", text_color=color.new(C_DASH_TEXT, 40), text_size=tbl_size, text_halign=text.align_left)
             table.cell(tbl, 1, row, brk_text,  text_color=brk_color, text_size=tbl_size, text_halign=text.align_center)
-            string lvl_text = not na(last_sl) ? str.tostring(last_sl, format.mintick) : "—"
-            table.cell(tbl, 2, row, lvl_text, text_color=color.new(C_DASH_TEXT, 50), text_size=tbl_size, text_halign=text.align_right)
+            table.cell(tbl, 2, row, not na(last_sl) ? str.tostring(last_sl, format.mintick) : "—", text_color=color.new(C_DASH_TEXT, 50), text_size=tbl_size, text_halign=text.align_right)
             row += 1
 
-        // IV Percentile
+        // Keltner position
+        if kc_enable
+            string kc_text  = at_kc_lower ? "LOWER ▽" : at_kc_upper ? "UPPER △" : "INSIDE"
+            color  kc_color = at_kc_lower ? C_BULL : at_kc_upper ? C_BEAR : color.new(C_DASH_TEXT, 50)
+            table.cell(tbl, 0, row, "KELT", text_color=color.new(C_DASH_TEXT, 40), text_size=tbl_size, text_halign=text.align_left)
+            table.cell(tbl, 1, row, kc_text, text_color=kc_color, text_size=tbl_size, text_halign=text.align_center)
+            string ma_status = golden_x ? "50>200 ✓" : "50<200 ✗"
+            table.cell(tbl, 2, row, ma_status, text_color=golden_x ? color.new(C_BULL, 40) : color.new(C_BEAR, 40), text_size=tbl_size, text_halign=text.align_right)
+            row += 1
+
+        // IV + RVOL combined row
         if iv_enable
             string iv_text  = iv_low ? "LOW 🔋" : iv_high ? "HIGH 🔥" : "MID"
             color  iv_color = iv_low ? C_SQUEEZE : iv_high ? C_WARNING : color.new(C_DASH_TEXT, 50)
-            table.cell(tbl, 0, row, "IV PCTL", text_color=color.new(C_DASH_TEXT, 40), text_size=tbl_size, text_halign=text.align_left)
+            table.cell(tbl, 0, row, "IV/VOL", text_color=color.new(C_DASH_TEXT, 40), text_size=tbl_size, text_halign=text.align_left)
             table.cell(tbl, 1, row, iv_text,   text_color=iv_color, text_size=tbl_size, text_halign=text.align_center)
-            table.cell(tbl, 2, row, str.tostring(math.round(iv_pctile)) + "%", text_color=color.new(C_DASH_TEXT, 50), text_size=tbl_size, text_halign=text.align_right)
+            string rv_text  = rvol_surge ? "⚡" + str.tostring(math.round(rvol * 10) / 10) + "x" : str.tostring(math.round(rvol * 10) / 10) + "x"
+            table.cell(tbl, 2, row, rv_text, text_color=rvol_surge ? C_WARNING : rvol_high ? C_BULL_SOFT : color.new(C_DASH_TEXT, 50), text_size=tbl_size, text_halign=text.align_right)
             row += 1
 
-        // RVOL
-        string rv_text  = rvol_surge ? "SURGE ⚡" : rvol_high ? "HIGH" : "NORMAL"
-        color  rv_color = rvol_surge ? C_WARNING : rvol_high ? C_BULL_SOFT : color.new(C_DASH_TEXT, 50)
-        table.cell(tbl, 0, row, "RVOL",   text_color=color.new(C_DASH_TEXT, 40), text_size=tbl_size, text_halign=text.align_left)
-        table.cell(tbl, 1, row, rv_text,   text_color=rv_color, text_size=tbl_size, text_halign=text.align_center)
-        table.cell(tbl, 2, row, str.tostring(math.round(rvol * 100) / 100) + "x", text_color=color.new(C_DASH_TEXT, 50), text_size=tbl_size, text_halign=text.align_right)
-        row += 1
-
-        // Periods (auto-adapt feedback)
+        // Adapt
         table.cell(tbl, 0, row, "ADAPT", text_color=color.new(C_DASH_TEXT, 40), text_size=tbl_size, text_halign=text.align_left)
         table.cell(tbl, 1, row, "H" + str.tostring(hull_len) + " T" + str.tostring(trama_len), text_color=color.new(C_DASH_TEXT, 60), text_size=tbl_size, text_halign=text.align_center)
         table.cell(tbl, 2, row, "R" + str.tostring(exh_fast_len) + "/" + str.tostring(exh_slow_len), text_color=color.new(C_DASH_TEXT, 60), text_size=tbl_size, text_halign=text.align_right)
         row += 1
 
         // Ghost Grade
-        color g_color = ghost_grade == "A+" ? C_BULL : ghost_grade == "A" ? C_BULL : ghost_grade == "B" ? C_BULL_SOFT : ghost_grade == "C" ? C_WARNING : ghost_grade == "D" ? C_BEAR : C_BEAR_DEEP
+        color g_color = ghost_grade == "A+" ? C_CONFLUENCE : ghost_grade == "A" ? C_BULL : ghost_grade == "B" ? C_BULL_SOFT : ghost_grade == "C" ? C_WARNING : ghost_grade == "D" ? C_BEAR : C_BEAR_DEEP
         string dir_text  = hull_bull ? "LONG ▲" : "SHORT ▼"
         color  dir_color = hull_bull ? C_BULL : C_BEAR
-        table.cell(tbl, 0, row, "GRADE",    text_color=color.new(C_DASH_TEXT, 40), text_size=tbl_size, text_halign=text.align_left)
+        table.cell(tbl, 0, row, "GRADE", text_color=color.new(C_DASH_TEXT, 40), text_size=tbl_size, text_halign=text.align_left)
         table.cell(tbl, 1, row, ghost_grade, text_color=g_color, text_size=tbl_size, text_halign=text.align_center)
-        table.cell(tbl, 2, row, dir_text,    text_color=dir_color, text_size=tbl_size, text_halign=text.align_right)
+        table.cell(tbl, 2, row, dir_text, text_color=dir_color, text_size=tbl_size, text_halign=text.align_right)
 
 // ═══════════════════════════════════════════════════════════════
 // ████  ALERTS  ████
 // ═══════════════════════════════════════════════════════════════
 
-alertcondition(exh_bear_rev,                                 "Bearish Exhaustion",  "👻 Bearish exhaustion on {{ticker}}")
-alertcondition(exh_bull_rev,                                 "Bullish Exhaustion",  "👻 Bullish exhaustion on {{ticker}}")
-alertcondition(brk_bear,                                     "Structure Break Down", "👻 Structure broke DOWN on {{ticker}} — swing low violated")
-alertcondition(brk_bull,                                     "Structure Break Up",   "👻 Structure broke UP on {{ticker}} — swing high cleared")
-alertcondition(sqz_fire,                                     "Squeeze Release",     "👻 Squeeze released on {{ticker}}")
-alertcondition(hull_bull and not hull_bull[1],                "Hull Bull Flip",      "👻 Hull turned bullish on {{ticker}}")
-alertcondition(not hull_bull and hull_bull[1],                "Hull Bear Flip",      "👻 Hull turned bearish on {{ticker}}")
-alertcondition(ghost_grade == "A" and ghost_grade[1] != "A", "Grade A Setup",       "👻 Grade A setup on {{ticker}}!")
-alertcondition(rvol_surge,                                   "Volume Surge",        "👻 Volume surge (2.5x+) on {{ticker}}")
+alertcondition(exh_bear_rev,                                 "Bearish Exhaustion",   "👻 Bearish exhaustion on {{ticker}}")
+alertcondition(exh_bull_rev,                                 "Bullish Exhaustion",   "👻 Bullish exhaustion on {{ticker}}")
+alertcondition(brk_bear,                                     "Structure Breakdown",  "👻 Structure broke DOWN on {{ticker}}")
+alertcondition(brk_bull,                                     "Structure Breakout",   "👻 Structure broke UP on {{ticker}}")
+alertcondition(sqz_fire,                                     "Squeeze Release",      "👻 Squeeze released on {{ticker}}")
+alertcondition(hull_flip_bull,                               "Hull Bull Flip",       "👻 Hull turned bullish on {{ticker}}")
+alertcondition(hull_flip_bear,                               "Hull Bear Flip",       "👻 Hull turned bearish on {{ticker}}")
+alertcondition(mega_bull,                                    "Confluence Bullish",   "👻🎯 Multi-signal BULL confluence on {{ticker}}")
+alertcondition(mega_bear,                                    "Confluence Bearish",   "👻🎯 Multi-signal BEAR confluence on {{ticker}}")
+alertcondition(ghost_grade == "A+" and ghost_grade[1] != "A+", "Grade A+ Setup",    "👻 GRADE A+ setup on {{ticker}}!")
+alertcondition(at_kc_lower and hull_bull,                    "Keltner Value Zone",   "👻 Price at Keltner lower in uptrend on {{ticker}} — bounce zone")
