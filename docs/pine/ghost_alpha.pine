@@ -80,9 +80,9 @@ kc_mult       = input.float(2.0, "ATR Multiplier", group=kc_group, step=0.1)
 
 // ── Key Moving Averages ──────────────────────────────────────
 ma_group      = "━━━ 📊 Key Moving Averages ━━━"
-ma_show_50    = input.bool(false, "Show SMA 50", group=ma_group)
-ma_show_200   = input.bool(false, "Show SMA 200", group=ma_group)
-ma_show_vwap  = input.bool(false, "Show VWAP (intraday only)", group=ma_group)
+ma_show_50    = input.bool(true, "Show SMA 50", group=ma_group)
+ma_show_200   = input.bool(true, "Show SMA 200", group=ma_group)
+ma_show_vwap  = input.bool(true, "Show VWAP (intraday only)", group=ma_group)
 
 // ── Structure Break ──────────────────────────────────────────
 brk_group       = "━━━ 🏗️ Structure ━━━"
@@ -156,8 +156,8 @@ bool  hull_bull = MHULL > SHULL
 bool  hull_flip_bull = hull_bull and not hull_bull[1]
 bool  hull_flip_bear = not hull_bull and hull_bull[1]
 
-// ── HTF Hull ─────────────────────────────────────────────────
-float htf_hull = request.security(syminfo.tickerid, htf_tf, _hull_calc(hull_src, hull_len, hull_mode))
+// ── HTF Hull (no-repaint: lookahead_off) ─────────────────────
+float htf_hull = request.security(syminfo.tickerid, htf_tf, _hull_calc(hull_src, hull_len, hull_mode), lookahead=barmerge.lookahead_off)
 float HTF_M    = htf_hull
 float HTF_S    = htf_hull[2]
 bool  htf_bull = HTF_M > HTF_S
@@ -275,22 +275,31 @@ bool exh_bear_start  = exh_ob and not exh_ob[1]
 bool exh_bull_start  = exh_os and not exh_os[1]
 
 // ═══════════════════════════════════════════════════════════════
-// ████  ATR SQUEEZE + IV PERCENTILE + RVOL  ████
+// ████  ATR SQUEEZE (Fixed: same-TF baseline, works on all TFs)  ████
 // ═══════════════════════════════════════════════════════════════
+// FIX: Old version compared intraday ATR to weekly ATR — permanently
+//   coiled on lower TFs. Now compares current ATR to its own 50-bar SMA.
 
-float sqz_daily  = ta.atr(sqz_atr_len)
-float sqz_weekly = request.security(syminfo.tickerid, "1W", ta.atr(sqz_atr_len))
-float sqz_ratio  = sqz_daily / (nz(sqz_weekly, sqz_daily) / 2.0)
-bool  sqz_coiled = sqz_ratio < 1.0
-bool  sqz_fire   = sqz_ratio >= 1.0 and sqz_ratio[1] < 1.0
+float sqz_atr      = ta.atr(sqz_atr_len)
+float sqz_baseline = ta.sma(sqz_atr, 50)
+float sqz_ratio    = nz(sqz_baseline) > 0 ? sqz_atr / sqz_baseline : 1.0
+bool  sqz_coiled    = sqz_ratio < 0.75
+bool  sqz_fire      = sqz_ratio >= 0.75 and sqz_ratio[1] < 0.75
 
-float daily_ret = math.log(close / close[1])
-float hv        = ta.stdev(daily_ret, iv_hv_len) * math.sqrt(252) * 100
-float hv_hi     = ta.highest(hv, iv_rank_len)
-float hv_lo     = ta.lowest(hv, iv_rank_len)
-float iv_pctile = (hv_hi - hv_lo) != 0 ? (hv - hv_lo) / (hv_hi - hv_lo) * 100 : 50
-bool  iv_low    = iv_pctile < 25
-bool  iv_high   = iv_pctile > 75
+// ═══════════════════════════════════════════════════════════════
+// ████  SYNTHETIC IV PERCENTILE (Fixed: TF-aware annualization)  ████
+// ═══════════════════════════════════════════════════════════════
+// FIX: Old version used sqrt(252) which only works on daily charts.
+//   Now dynamically calculates bars-per-day for correct annualization.
+
+float bars_per_day = math.max(86400.0 / _tf_sec, 1.0)  // 78 for 5min, 26 for 15min, 1 for daily
+float bar_ret      = math.log(close / close[1])
+float hv           = ta.stdev(bar_ret, iv_hv_len) * math.sqrt(bars_per_day * 252) * 100
+float hv_hi        = ta.highest(hv, iv_rank_len)
+float hv_lo        = ta.lowest(hv, iv_rank_len)
+float iv_pctile    = (hv_hi - hv_lo) != 0 ? (hv - hv_lo) / (hv_hi - hv_lo) * 100 : 50
+bool  iv_low       = iv_pctile < 25
+bool  iv_high      = iv_pctile > 75
 
 float rvol       = nz(volume) > 0 ? volume / ta.sma(volume, 20) : 0
 bool  rvol_high  = rvol > 1.5
@@ -572,7 +581,7 @@ if dash_enable
         table.cell(tbl, 2, row, dir_text, text_color=dir_color, text_size=tbl_size, text_halign=text.align_right)
 
 // ═══════════════════════════════════════════════════════════════
-// ████  ALERTS  ████
+// ████  ALERTS — Individual + Dynamic JSON Webhook  ████
 // ═══════════════════════════════════════════════════════════════
 
 alertcondition(exh_bear_rev,                                 "Bearish Exhaustion",   "👻 Bearish exhaustion on {{ticker}}")
@@ -586,3 +595,11 @@ alertcondition(mega_bull,                                    "Confluence Bullish
 alertcondition(mega_bear,                                    "Confluence Bearish",   "👻🎯 Multi-signal BEAR confluence on {{ticker}}")
 alertcondition(ghost_grade == "A+" and ghost_grade[1] != "A+", "Grade A+ Setup",    "👻 GRADE A+ setup on {{ticker}}!")
 alertcondition(at_kc_lower and hull_bull,                    "Keltner Value Zone",   "👻 Price at Keltner lower in uptrend on {{ticker}} — bounce zone")
+
+// ── Dynamic JSON webhook (consolidated, for external systems) ───
+if barstate.isconfirmed
+    bool any_signal = brk_bear or brk_bull or exh_bear_rev or exh_bull_rev or sqz_fire or hull_flip_bull or hull_flip_bear or mega_bull or mega_bear
+    if any_signal
+        string sig = brk_bear ? "BREAK_DOWN" : brk_bull ? "BREAK_UP" : exh_bear_rev ? "EXHAUSTION_BEAR" : exh_bull_rev ? "EXHAUSTION_BULL" : sqz_fire ? "SQUEEZE_FIRE" : mega_bull ? "CONFLUENCE_BULL" : mega_bear ? "CONFLUENCE_BEAR" : hull_flip_bull ? "HULL_BULL" : "HULL_BEAR"
+        string payload = '{"ticker":"' + syminfo.ticker + '","tf":"' + timeframe.period + '","grade":"' + ghost_grade + '","signal":"' + sig + '","regime":"' + (regime_strong ? (regime_bull ? "BULL" : "BEAR") : "CHOP") + '","struct":"' + (brk_bear ? "BROKEN_DN" : brk_bull ? "BROKEN_UP" : "INTACT") + '","price":' + str.tostring(close) + ',"rvol":' + str.tostring(math.round(rvol * 100) / 100) + '}'
+        alert(payload, alert.freq_once_per_bar_close)
