@@ -9,7 +9,7 @@
 // Zero external dependencies. Pure Pine v6.
 
 //@version=6
-strategy("Ghost Alpha Strategy [mph1nance]", "👻 Ghost Alpha Strat", overlay=true, max_bars_back=500, max_labels_count=500, initial_capital=10000, default_qty_type=strategy.percent_of_equity, default_qty_value=100)
+strategy("Ghost Alpha Strategy [mph1nance]", "👻 Ghost Alpha Strat", overlay=true, max_bars_back=500, max_labels_count=500, initial_capital=10000, default_qty_type=strategy.percent_of_equity, default_qty_value=100, commission_type=strategy.commission.percent, commission_value=0.01, slippage=2)
 
 // ═══════════════════════════════════════════════════════════════
 // ████  COLOR PALETTE — LuxAlgo / BigBeluga Inspired  ████
@@ -133,6 +133,10 @@ dash_group  = "━━━ 📋 Dashboard ━━━"
 dash_enable = input.bool(true, "Show Dashboard", group=dash_group)
 dash_pos    = input.string("Top Right", "Position", options=["Top Right", "Top Left", "Bottom Right", "Bottom Left"], group=dash_group)
 dash_size   = input.string("Small", "Text Size", options=["Tiny", "Small", "Normal"], group=dash_group)
+
+// ── Strategy Settings ────────────────────────────────────────
+strat_group = "━━━ 🤖 Strategy Setup ━━━"
+min_grade   = input.string("C", "Minimum Ghost Grade", options=["A+", "A", "B", "C", "D", "F"], group=strat_group)
 
 // ═══════════════════════════════════════════════════════════════
 // ████  RESOLVE ADAPTIVE PERIODS  ████
@@ -468,7 +472,7 @@ if fvg_enable
             if low < b_top and low > b_bot
                 // Price wicking into the gap — shrink the top down
                 box.set_top(b, low)
-            if close < b_bot
+            if close < b_bot and barstate.isconfirmed
                 // Fully pierced — remove the gap
                 box.set_extend(b, extend.none)
                 box.set_right(b, bar_index)
@@ -481,7 +485,7 @@ if fvg_enable
             if high > b_bot and high < b_top
                 // Price wicking into the gap — shrink the bottom up
                 box.set_bottom(b, high)
-            if close > b_top
+            if close > b_top and barstate.isconfirmed
                 // Fully pierced — remove the gap
                 box.set_extend(b, extend.none)
                 box.set_right(b, bar_index)
@@ -501,9 +505,9 @@ if trail_enable
     float short_stop = ta.lowest(low, trail_atr) + trail_atr_val * trail_mult
 
     if hull_bull
-        ghost_trail := math.max(nz(ghost_trail[1], long_stop), long_stop)
+        ghost_trail := not hull_bull[1] ? long_stop : math.max(nz(ghost_trail[1], long_stop), long_stop)
     else
-        ghost_trail := math.min(nz(ghost_trail[1], short_stop), short_stop)
+        ghost_trail := hull_bull[1] ? short_stop : math.min(nz(ghost_trail[1], short_stop), short_stop)
 
 // Trail cross detection (exit signal)
 bool trail_cross_bear = trail_enable and not na(ghost_trail) and close < ghost_trail and close[1] >= ghost_trail and hull_bull[1]
@@ -855,14 +859,36 @@ if barstate.isconfirmed
 // ████  STRATEGY EXECUTION  ████
 // ═══════════════════════════════════════════════════════════════
 
-if mega_bull
+int min_grade_val = switch min_grade
+    "A+" => 5
+    "A"  => 4
+    "B"  => 3
+    "C"  => 2
+    "D"  => 1
+    => 0
+
+int current_grade_val = switch ghost_grade
+    "A+" => 5
+    "A"  => 4
+    "B"  => 3
+    "C"  => 2
+    "D"  => 1
+    => 0
+
+bool grade_ok = current_grade_val >= min_grade_val
+
+if mega_bull and grade_ok
     strategy.entry("Long", strategy.long)
 
-if mega_bear
+if mega_bear and grade_ok
     strategy.entry("Short", strategy.short)
 
-if trail_cross_bear
-    strategy.close("Long", comment="Trail Exit Long")
+if strategy.position_size > 0
+    strategy.exit("Trail Exit Long", "Long", stop=ghost_trail)
+    if trail_cross_bear or exh_bear_rev
+        strategy.close("Long", comment="Reversal Exit Long")
 
-if trail_cross_bull
-    strategy.close("Short", comment="Trail Exit Short")
+if strategy.position_size < 0
+    strategy.exit("Trail Exit Short", "Short", stop=ghost_trail)
+    if trail_cross_bull or exh_bull_rev
+        strategy.close("Short", comment="Reversal Exit Short")
