@@ -1,75 +1,126 @@
-# 0DTE SPY/QQQ Options Day Trading Flow
+# 🎯 0DTE Day Trading Flow — Monday Ready
 
-**Date:** 2026-03-08
-**Author:** Sam (Ghost Copilot)
-
-This document outlines the concrete implementation plan for the 0DTE SPY/QQQ options day trading flow, integrating Ghost Alpha v6.2 signals from TradingView with our Venus-hosted auto-trading backend via Tradier.
-
-## 1. The Exact Trading Flow
-
-### A. Signal Generation (TradingView)
-- **Indicator:** Ghost Alpha v6.2
-- **Trigger:** `barstate.isconfirmed` on 5m or 15m timeframe.
-- **Payload:** JSON containing `ticker` (SPY/QQQ), `grade` (A+ or A), `signal` (CONFLUENCE_BULL or CONFLUENCE_BEAR), `price`.
-- **Destination:** `https://mphinance.com/api/webhook/ghost` (Vultr VPS)
-
-### B. Gateway & Routing (Vultr VPS)
-- **Action:** Vultr receives the payload, validates the shared secret header, and forwards the verified JSON to the Venus server at `http://192.168.2.172:8100/api/auto-trade/webhook`.
-
-### C. Entry Execution (Venus Auto-Trader)
-- **Validation:** Venus verifies `ticker` is SPY or QQQ and `grade` is A+/A.
-- **Contract Selection:** 
-  - Fetch today's option chain for the ticker from Tradier.
-  - If `CONFLUENCE_BULL` → Select Call. If `CONFLUENCE_BEAR` → Select Put.
-  - **Delta/Strike Target:** Select the strike closest to ATM (At-The-Money) or slightly OTM (Delta ~0.40 to 0.50) to balance premium cost and gamma exposure.
-- **Order Placement:** Place a **Buy to Open (BTO)** Limit order at the current `ask` or mid-price using Tradier's API.
-- **Logging:** Log the entry in `data/trade_log.json` with the specific option symbol (e.g., `SPY260309C00515000`).
-
-### D. Position Management & Exit (Venus & Michael)
-- **Manual Overrides:** Since Michael is watching charts during market hours, exits are primarily manual via the Tradier interface or the upcoming auto-trade HUD.
-- **Auto-Close (Failsafe):** If not closed manually, a cron job on Venus triggers at **3:45 PM ET** to market-sell (Sell to Close) any open 0DTE positions to prevent assignment/exercise risk.
+> **For Michael's Monday morning session.**
+> Ghost Alpha signals → Tradier 0DTE SPY/QQQ options → Same-day close.
+> **Authors:** Claude + Gemini (collaborative design)
 
 ---
 
-## 2. What Needs to be Built vs. What Exists
+## Why This Works on Tradier
 
-### ✅ What Already Exists
-- **TradingView Signals:** Ghost Alpha v6.2 indicator is ready and capable of generating dynamic JSON payloads.
-- **Venus Infrastructure:** FastAPI backend on port 8100, Dockerized, with basic equity auto-trade endpoints (`/api/auto-trade/run`).
-- **Tradier Integration:** `services/tradier_service.py` is established with authentication and equity execution capabilities.
-- **Vultr Proxy Concept:** Documented in `docs/pine/INTEGRATION_PLAN.md`.
-
-### 🛠️ What Needs to be Built (By Monday)
-1. **Webhook Receiver on Venus:** Implement `POST /api/auto-trade/webhook` in the FastAPI app to parse the TradingView payload and trigger execution.
-2. **Vultr Forwarder:** Ensure the route on Vultr is actually forwarding the payload to the local Venus IP.
-3. **Options Chain Fetcher:** Add logic to fetch 0DTE chains for SPY/QQQ from Tradier (`GET /v1/markets/options/chains`) and filter for the target strike.
-4. **Options Order Builder:** Extend the Tradier service to support `option` class orders (`buy_to_open`, `sell_to_close`). The current `smart_buyer.py` only handles equities.
-5. **Auto-Close Scheduler:** Create a script (`scripts/0dte_auto_close.py`) and a cron job on Venus to liquidate 0DTE options at 3:45 PM ET.
+The AUTO_TRADE_PLAN marked 0DTE as "aspirational" because it assumed SPX index options (futures broker required). But **SPY and QQQ have 0DTE options expiring M/W/F** and Tradier supports them fully. Standard ETF options — `class=option` in the API. No new broker needed.
 
 ---
 
-## 3. Risk Guardrails for 0DTE
+## The Flow
 
-- **Maximum Allocation:** Fixed max dollar amount per trade (e.g., $100-$300 limit per signal, determining contract quantity).
-- **Max Concurrent Positions:** Only 1 open 0DTE position at a time. The webhook must reject new signals if a position is already active.
-- **Stop-Loss (Systematic):** Implement a hard stop-loss at 50% premium decay. This can be submitted as a contingent Stop-Market order immediately after the entry fills.
-- **Time-in-Force / Auto-Close:** **CRITICAL.** All 0DTE positions MUST be closed by **3:45 PM ET** (15 minutes before market close) to avoid catastrophic risk. A cron job will forcefully issue Market `Sell to Close` orders for any remaining 0DTE inventory.
-- **Dry Run Default:** The webhook must support a `dry_run=true` state by default to verify signal parsing and contract selection before real capital is deployed.
+```
+ SIGNAL          ENTRY              MANAGE              EXIT
+┌──────┐    ┌──────────┐    ┌─────────────────┐    ┌──────────┐
+│Ghost │    │BTO 0DTE  │    │+50% TP          │    │STC by    │
+│Alpha │───→│ATM Call  │───→│-40% SL          │───→│3:00 PM   │
+│A+/A  │    │or Put    │    │Ghost Trail watch│    │MANDATORY │
+└──────┘    └──────────┘    └─────────────────┘    └──────────┘
+```
+
+### Step by Step
+
+1. **PRE-MARKET (9:00 AM ET):** Open Ghost Alpha on SPY 5min. Check Grade V2 ≥ B and REGIME is BULL/BEAR (not CHOP).
+
+2. **SIGNAL (9:30–11:30 AM ET):** Ghost Alpha fires `mega_bull` or `mega_bear` with Grade A+/A. RVOL > 1.5. Trend age < 10 bars (FRESH).
+
+3. **ENTRY:** BUY TO OPEN 0DTE option. CALL if mega_bull, PUT if mega_bear. ATM or 1 strike OTM. LIMIT order at mid-price. Max $100/trade.
+
+4. **MANAGE:** Trail using Ghost Trail on chart. Take profit at +50%. Stop loss at -40%. If Grade drops to D/F → CLOSE immediately.
+
+5. **EXIT:** SELL TO CLOSE all 0DTE by **3:00 PM ET**. No exceptions. No holding to expiration.
 
 ---
 
-## 4. Can We Use the Existing Tradier API for 0DTE Options?
+## Risk Guardrails (NON-NEGOTIABLE)
 
-**Yes.** Tradier natively supports SPY and QQQ options. Because they are standard ETF options (unlike SPX index options which require futures/index routing that Tradier lacks for retail auto-trading), we can trade them with our current setup.
+| Rule | Value |
+|------|-------|
+| Max per trade | $100 |
+| Max daily loss | $200 (walk away after 2 losers) |
+| Max open positions | 1 (0DTE only, focus > diversification) |
+| Auto-close time | 3:00 PM ET |
+| No averaging down | EVER |
+| Grade minimum | B (3.0/5) |
+| Trading window | 9:30–11:30 AM ET only |
+| Friday 0DTE | NO (triple witching risk) |
+| Dry run first | ALWAYS test the flow before live |
 
-We will use the standard Tradier options endpoints:
-- **Get Options Chain:** `GET /v1/markets/options/chains?symbol=SPY&expiration=YYYY-MM-DD`
-- **Place Order:** `POST /v1/accounts/{account_id}/orders`
-  - `class=option`
-  - `symbol=SPY`
-  - `option_symbol=SPY260309C00515000`
-  - `side=buy_to_open` (for entry)
-  - `type=limit`
-  - `duration=day`
+---
 
-The only difference from our equity trading logic is passing `class=option` and the specific `option_symbol` derived from the chain.
+## Tradier API — Option Orders
+
+### Get Today's 0DTE Chain
+```bash
+curl -s -H "Authorization: Bearer $TRADIER_TOKEN" \
+  "https://api.tradier.com/v1/markets/options/chains?symbol=SPY&expiration=$(date +%Y-%m-%d)"
+```
+
+### Buy to Open (0DTE Call)
+```bash
+curl -s -X POST -H "Authorization: Bearer $TRADIER_TOKEN" \
+  "https://api.tradier.com/v1/accounts/$ACCOUNT_ID/orders" \
+  -d "class=option&symbol=SPY&option_symbol=SPY260310C00570000&side=buy_to_open&quantity=1&type=limit&price=1.50&duration=day"
+```
+
+### Sell to Close
+```bash
+curl -s -X POST -H "Authorization: Bearer $TRADIER_TOKEN" \
+  "https://api.tradier.com/v1/accounts/$ACCOUNT_ID/orders" \
+  -d "class=option&symbol=SPY&option_symbol=SPY260310C00570000&side=sell_to_close&quantity=1&type=limit&price=2.25&duration=day"
+```
+
+### Option Symbol Format
+`SPY260310C00570000` = SPY, 2026-03-10, Call, $570 strike
+
+---
+
+## What Exists vs What's Needed
+
+### ✅ Already Built
+- Tradier API integration (Venus `services/tradier_service.py`)
+- Market clock, quotes, trade preview/execute endpoints
+- Trade journal (`/api/auto-trade/log`)
+- Ghost Alpha v6.2 + Grade V2 signals
+- Webhook JSON payload in Pine Script
+
+### 🔲 Needs Building (for full automation)
+| Component | Priority |
+|-----------|----------|
+| Options chain endpoint on Venus | HIGH |
+| Option order endpoint (`buy_to_open`/`sell_to_close`) | HIGH |
+| Auto-close cron at 3:00 PM ET | HIGH |
+| Webhook receiver on Vultr | MEDIUM |
+| `scripts/zero_dte_runner.py` orchestrator | MEDIUM |
+
+### 🟢 Monday Workaround (No Code Required)
+Michael can trade 0DTE **manually** on Monday using Ghost Alpha signals + the Tradier web app. The flow:
+1. Watch Ghost Alpha dashboard on SPY 5min
+2. When Grade A+/A fires with mega signal → open Tradier, buy 0DTE option manually
+3. Watch Ghost Trail for exit → sell on Tradier
+4. Close everything by 3:00 PM ET
+
+This lets us **validate the signals work live** before automating execution.
+
+---
+
+## Monday Morning Checklist
+
+- [ ] Venus running: `curl http://192.168.2.172:8100/api/health`
+- [ ] Tradier buying power: `curl http://192.168.2.172:8100/api/portfolio/tradier`
+- [ ] Ghost Alpha loaded on SPY 5min in TradingView
+- [ ] Grade V2 on open: if F/D → sit on hands
+- [ ] First mega signal → check 0DTE chain on Tradier
+- [ ] Enter if premium $0.50–$2.00 and Grade ≥ B
+- [ ] Screenshot entry for blog
+- [ ] Close all by 3:00 PM ET
+- [ ] Log results
+
+---
+
+*"0DTE options are like Mike Tyson — they can make you rich in 5 minutes or knock you out in 3. The difference is whether you have a plan when you walk in the ring." — Sam 👻*
