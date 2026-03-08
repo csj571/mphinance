@@ -236,8 +236,13 @@ if not na(sh)
 if not na(sl)
     last_sl := sl
 
-bool brk_bear = brk_enable and not na(last_sl) and close < last_sl and close[1] >= last_sl
-bool brk_bull = brk_enable and not na(last_sh) and close > last_sh and close[1] <= last_sh
+// Volume-validated breakouts (Gemini upgrade: low vol breaks are probably traps)
+bool brk_bear_raw = brk_enable and not na(last_sl) and close < last_sl and close[1] >= last_sl
+bool brk_bull_raw = brk_enable and not na(last_sh) and close > last_sh and close[1] <= last_sh
+bool brk_bear = brk_bear_raw and rvol > 1.0  // require at least average volume
+bool brk_bull = brk_bull_raw and rvol > 1.0
+bool brk_trap_bear = brk_bear_raw and rvol <= 1.0  // low vol = probable trap
+bool brk_trap_bull = brk_bull_raw and rvol <= 1.0
 
 // ── Liquidity Sweeps (Stop Hunts) ───────────────────────────────
 // Price WICKED past the level but CLOSED back inside — retail stops
@@ -707,7 +712,7 @@ var table tbl = na
 
 if dash_enable
     if barstate.isfirst
-        tbl := table.new(tbl_pos, 3, 13, bgcolor=C_DASH_BG, border_width=2, border_color=C_DASH_BORDER, frame_width=3, frame_color=C_DASH_BORDER)
+        tbl := table.new(tbl_pos, 3, 15, bgcolor=C_DASH_BG, border_width=2, border_color=C_DASH_BORDER, frame_width=3, frame_color=C_DASH_BORDER)
 
     if barstate.islast
         int row = 0
@@ -751,8 +756,8 @@ if dash_enable
 
         // Structure
         if brk_enable
-            string brk_text  = brk_bear ? "BROKEN ▼" : brk_bull ? "BROKEN ▲" : "INTACT"
-            color  brk_color = (brk_bear or brk_bull) ? C_BREAK : color.new(C_DASH_TEXT, 50)
+            string brk_text  = brk_bear ? "BROKEN ▼" : brk_bull ? "BROKEN ▲" : brk_trap_bear ? "TRAP ▼" : brk_trap_bull ? "TRAP ▲" : "INTACT"
+            color  brk_color = (brk_bear or brk_bull) ? C_BREAK : (brk_trap_bear or brk_trap_bull) ? C_WARNING : color.new(C_DASH_TEXT, 50)
             table.cell(tbl, 0, row, "STRUCT", text_color=color.new(C_DASH_TEXT, 40), text_size=tbl_size, text_halign=text.align_left)
             table.cell(tbl, 1, row, brk_text,  text_color=brk_color, text_size=tbl_size, text_halign=text.align_center)
             table.cell(tbl, 2, row, not na(last_sl) ? str.tostring(last_sl, format.mintick) : "—", text_color=color.new(C_DASH_TEXT, 50), text_size=tbl_size, text_halign=text.align_right)
@@ -778,13 +783,21 @@ if dash_enable
             table.cell(tbl, 2, row, rv_text, text_color=rvol_surge ? C_WARNING : rvol_high ? C_BULL_SOFT : color.new(C_DASH_TEXT, 50), text_size=tbl_size, text_halign=text.align_right)
             row += 1
 
-        // CVD (delta pressure)
+        // Candle Shape pressure (renamed from CVD — Gemini upgrade: it's candle shape, not true order flow)
         string cvd_text  = cvd_bullish ? "BUYERS ▲" : "SELLERS ▼"
         color  cvd_color = cvd_bullish ? C_BULL : C_BEAR
         bool   cvd_diverge = ((cvd_bullish and not hull_bull) or (cvd_bearish and hull_bull)) and (regime_strong or regime_moderate)
-        table.cell(tbl, 0, row, "DELTA", text_color=color.new(C_DASH_TEXT, 40), text_size=tbl_size, text_halign=text.align_left)
+        table.cell(tbl, 0, row, "SHAPE", text_color=color.new(C_DASH_TEXT, 40), text_size=tbl_size, text_halign=text.align_left)
         table.cell(tbl, 1, row, cvd_text, text_color=cvd_color, text_size=tbl_size, text_halign=text.align_center)
         table.cell(tbl, 2, row, cvd_diverge ? "⚠ DIV" : "AGREE", text_color=cvd_diverge ? C_WARNING : color.new(C_DASH_TEXT, 50), text_size=tbl_size, text_halign=text.align_right)
+        row += 1
+
+        // ATR Position Sizing (Gemini upgrade: institutional risk management)
+        float risk_dollars = 100.0  // 1% of $10,000 account
+        float shares_size  = trail_atr_val > 0 ? math.floor(risk_dollars / trail_atr_val) : 0
+        table.cell(tbl, 0, row, "RISK", text_color=color.new(C_DASH_TEXT, 40), text_size=tbl_size, text_halign=text.align_left)
+        table.cell(tbl, 1, row, str.tostring(shares_size) + " shares", text_color=C_CONFLUENCE, text_size=tbl_size, text_halign=text.align_center)
+        table.cell(tbl, 2, row, "$" + str.tostring(math.round(trail_atr_val * 100) / 100) + " ATR", text_color=color.new(C_DASH_TEXT, 50), text_size=tbl_size, text_halign=text.align_right)
         row += 1
 
         // Adapt
