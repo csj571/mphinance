@@ -347,7 +347,8 @@ bool  sqz_fire      = sqz_ratio >= 0.75 and sqz_ratio[1] < 0.75
 // FIX: Old version used sqrt(252) which only works on daily charts.
 //   Now dynamically calculates bars-per-day for correct annualization.
 
-float bars_per_day = math.max(86400.0 / _tf_sec, 1.0)  // 78 for 5min, 26 for 15min, 1 for daily
+float mkt_secs_day = syminfo.type == "crypto" ? 86400.0 : 23400.0  // crypto=24hr, equities=6.5hr
+float bars_per_day = math.max(mkt_secs_day / _tf_sec, 1.0)  // 78 for 5min equities, 288 for 5min crypto
 float bar_ret      = math.log(close / close[1])
 float hv           = ta.stdev(bar_ret, iv_hv_len) * math.sqrt(bars_per_day * 252) * 100
 float hv_hi        = ta.highest(hv, iv_rank_len)
@@ -440,23 +441,26 @@ var box[] fvg_bull_boxes = array.new_box()
 var box[] fvg_bear_boxes = array.new_box()
 
 if fvg_enable
-    // Bullish FVG: gap up (candle[2] high < current candle low)
-    bool fvg_bull = low > high[2] and close[1] > open[1]
-    if fvg_bull
-        box b = box.new(bar_index - 1, low, bar_index, high[2],
-             bgcolor=color.new(C_BULL, 88), border_color=color.new(C_BULL, 60), extend=extend.right)
-        array.push(fvg_bull_boxes, b)
-        if array.size(fvg_bull_boxes) > fvg_history
-            box.delete(array.shift(fvg_bull_boxes))
+    // FVG CREATION — wrapped in barstate.isconfirmed to prevent repainting
+    // (Gemini review: live bar's low/high change intra-bar, creating phantom gaps)
+    if barstate.isconfirmed
+        // Bullish FVG: gap up (candle[2] high < current candle low)
+        bool fvg_bull = low > high[2] and close[1] > open[1]
+        if fvg_bull
+            box b = box.new(bar_index - 1, low, bar_index, high[2],
+                 bgcolor=color.new(C_BULL, 88), border_color=color.new(C_BULL, 60), extend=extend.right)
+            array.push(fvg_bull_boxes, b)
+            if array.size(fvg_bull_boxes) > fvg_history
+                box.delete(array.shift(fvg_bull_boxes))
 
-    // Bearish FVG: gap down (candle[2] low > current candle high)
-    bool fvg_bear = high < low[2] and close[1] < open[1]
-    if fvg_bear
-        box b = box.new(bar_index - 1, low[2], bar_index, high,
-             bgcolor=color.new(C_BEAR, 88), border_color=color.new(C_BEAR, 60), extend=extend.right)
-        array.push(fvg_bear_boxes, b)
-        if array.size(fvg_bear_boxes) > fvg_history
-            box.delete(array.shift(fvg_bear_boxes))
+        // Bearish FVG: gap down (candle[2] low > current candle high)
+        bool fvg_bear = high < low[2] and close[1] < open[1]
+        if fvg_bear
+            box b = box.new(bar_index - 1, low[2], bar_index, high,
+                 bgcolor=color.new(C_BEAR, 88), border_color=color.new(C_BEAR, 60), extend=extend.right)
+            array.push(fvg_bear_boxes, b)
+            if array.size(fvg_bear_boxes) > fvg_history
+                box.delete(array.shift(fvg_bear_boxes))
 
     // FVG Armor Mechanic: shrink FVGs as price eats into them
     // Only fully remove when price pierces completely through
@@ -500,10 +504,12 @@ if trail_enable
     float long_stop  = ta.highest(high, trail_atr) - trail_atr_val * trail_mult
     float short_stop = ta.lowest(low, trail_atr) + trail_atr_val * trail_mult
 
+    // Force reset on trend flips (Gemini review: old short_stop is way above price,
+    // math.max would select it and instantly stop out the new long trade)
     if hull_bull
-        ghost_trail := math.max(nz(ghost_trail[1], long_stop), long_stop)
+        ghost_trail := hull_flip_bull ? long_stop : math.max(nz(ghost_trail[1], long_stop), long_stop)
     else
-        ghost_trail := math.min(nz(ghost_trail[1], short_stop), short_stop)
+        ghost_trail := hull_flip_bear ? short_stop : math.min(nz(ghost_trail[1], short_stop), short_stop)
 
 // Trail cross detection (exit signal)
 bool trail_cross_bear = trail_enable and not na(ghost_trail) and close < ghost_trail and close[1] >= ghost_trail and hull_bull[1]
