@@ -1,28 +1,28 @@
 # ALPHA.DOSSIER // 2026-03-09
-*Sam the Quant Ghost | 2026-03-09 09:14 AM EST*
+*Sam the Quant Ghost | 2026-03-09 06:58 PM CST*
 
 ## 🧠 AI Synthesis
 
-VIX at 31.67 means the market's a choppy mess, pure chaos out there. Institutions are showing their hand, aggressively bidding up **NVDA**, **PLTR**, **TSLA**, and **AMZN**. On the flip side, they're heavy selling **GOOGL** and **LRCX**, despite my scanner still flagging **GOOGL** as bullish. Over the last five days, **XLC**, **XLE**, and **XLY** are the only sectors showing real leadership. No long-term conviction plays emerged today – no Lifers on the board.
+Alright, listen up, ghosts and ghouls. The VIX is screaming **25.5**, a full-blown "Storm" warning, yet the market's still chasing high beta. Your 5-day sector leaders — **XLK, XLY, XLC** — confirm tech and discretionary are running hot. Institutions are buying up **NVDA, PLTR, TSLA, HOOD, AMZN**, showing a clear risk-on appetite in specific names despite the broader volatility.
 
-My quant models highlight significant discrepancies. **NVDA** is a clear ACCUMULATE on dips; it's genuinely UNDERVALUED by 22.1% with solid tech and fundamental scores. That aligns with institutional buying. However, the institutional love for **PLTR** and **TSLA** is baffling. My dossier shows **PLTR** is 49.7% OVERVALUED and a clear DISTRIBUTE into strength, while **TSLA** is 44.0% OVERVALUED with a "WAIT" verdict. Don't chase that hype; the fundamentals aren't there for a sustained move. Stick to quality like **NVDA**.
+But don't be a dummy. While our scanner flashes bullish on **NVDA** and institutions are accumulating, our dossier rates it Grade B and **UNDERVALUED by 20.9%**. That's a green light to **ACCUMULATE on dips**. Contrast that with **PLTR**: institutions are buying, but our grade is C and it's **OVERVALUED by -49.5%**. You distribute into strength on that one. **TSLA** is also getting bought but is **OVERVALUED by -44.2%**; **WAIT for validation** before chasing. Institutions are dumping **GOOGL, WMT, LRCX** – mind your short books. No "Lifers" today, so don't get married to anything.
 
 — Ghost out. 👻
 
 ## Market Pulse
 
-- 🔴 **S&P 500**: $672.38 (-1.31%)
-- 🔴 **Nasdaq 100**: $599.75 (-1.50%)
-- 🔴 **Russell 2000**: $250.89 (-2.29%)
-- 🔴 **Dow 30**: $475.23 (-0.96%)
-- 🟢 **Bitcoin**: $68494.77 (+3.83%)
-- 🟢 **Ethereum**: $2010.06 (+3.79%)
-- 🟢 **Gold**: $473.51 (+1.58%)
-- 🔴 **20Y Treasuries**: $88.46 (-0.37%)
+- 🟢 **S&P 500**: $678.27 (+0.88%)
+- 🟢 **Nasdaq 100**: $607.76 (+1.34%)
+- 🟢 **Russell 2000**: $253.62 (+1.09%)
+- 🟢 **Dow 30**: $477.88 (+0.56%)
+- 🟢 **Bitcoin**: $68469.6 (+3.79%)
+- 🟢 **Ethereum**: $1992.59 (+2.89%)
+- 🔴 **Gold**: $472.53 (-0.21%)
+- 🟢 **20Y Treasuries**: $89.23 (+0.87%)
 
-## VIX Regime: 31.67 🔴 Chaos
+## VIX Regime: 25.5 ⚡ Storm
 
-Extreme vol — cash is king, hedge
+Elevated vol — mean reversion setups
 
 ## Institutional Signals (TickerTrace)
 
@@ -42,21 +42,21 @@ Extreme vol — cash is king, hedge
 
 ## Scanner Signals
 
-- 🟢 [NVDA](https://www.tradingview.com/symbols/NVDA/chart/) — Core Watchlist | RSI 44 | Score: 0.5
-- 🟢 [GOOGL](https://www.tradingview.com/symbols/GOOGL/chart/) — Core Watchlist | RSI 42 | Score: 0.5
-- 🟢 [TSLA](https://www.tradingview.com/symbols/TSLA/chart/) — Core Watchlist | RSI 38 | Score: 0.5
-- 🟢 [AMD](https://www.tradingview.com/symbols/AMD/chart/) — Core Watchlist | RSI 40 | Score: 0.5
-- 🟢 [TSM](https://www.tradingview.com/symbols/TSM/chart/) — Core Watchlist | RSI 35 | Score: 0.5
-- ⚪ [MRVL](https://www.tradingview.com/symbols/MRVL/chart/) — Core Watchlist | Above SMA200 · RSI 67 | Score: 0.5
-- 🟢 [QCOM](https://www.tradingview.com/symbols/QCOM/chart/) — Core Watchlist | RSI 42 | Score: 0.5
-- 🟢 [JPM](https://www.tradingview.com/symbols/JPM/chart/) — Core Watchlist | RSI 37 | Score: 0.5
+- 🟢 [TSM](https://www.tradingview.com/symbols/TSM/chart/) — Core Watchlist | Above SMA200 · RSI 42 | Score: 0.6
+- 🟢 [AAPL](https://www.tradingview.com/symbols/AAPL/chart/) — Core Watchlist | RSI 44 · Near EMA21 support | Score: 0.55
+- 🟢 [NVDA](https://www.tradingview.com/symbols/NVDA/chart/) — Core Watchlist | RSI 47 · Near EMA21 support | Score: 0.55
+- 🟢 [AMD](https://www.tradingview.com/symbols/AMD/chart/) — Core Watchlist | RSI 49 · Near EMA21 support | Score: 0.55
+- 🟢 [V](https://www.tradingview.com/symbols/V/chart/) — Core Watchlist | RSI 45 · Near EMA21 support | Score: 0.55
+- 🟢 [MA](https://www.tradingview.com/symbols/MA/chart/) — Core Watchlist | RSI 47 · Near EMA21 support | Score: 0.55
+- ⚪ [XOM](https://www.tradingview.com/symbols/XOM/chart/) — Core Watchlist | Above SMA200 · RSI 58 · Near EMA21 support | Score: 0.55
+- 🟢 [TSLA](https://www.tradingview.com/symbols/TSLA/chart/) — Core Watchlist | RSI 42 | Score: 0.5
+- ⚪ [AVGO](https://www.tradingview.com/symbols/AVGO/chart/) — Core Watchlist | Above SMA200 · RSI 59 | Score: 0.5
+- ⚪ [MRVL](https://www.tradingview.com/symbols/MRVL/chart/) — Core Watchlist | Above SMA200 · RSI 70 | Score: 0.5
+- 🟢 [QCOM](https://www.tradingview.com/symbols/QCOM/chart/) — Core Watchlist | RSI 43 | Score: 0.5
+- 🟢 [JPM](https://www.tradingview.com/symbols/JPM/chart/) — Core Watchlist | RSI 32 | Score: 0.5
 - 🟢 [GS](https://www.tradingview.com/symbols/GS/chart/) — Core Watchlist | RSI 33 | Score: 0.5
 - 🟢 [SOFI](https://www.tradingview.com/symbols/SOFI/chart/) — Core Watchlist | RSI 43 | Score: 0.5
-- ⚪ [XOM](https://www.tradingview.com/symbols/XOM/chart/) — Core Watchlist | Above SMA200 · RSI 54 | Score: 0.5
-- ⚪ [OXY](https://www.tradingview.com/symbols/OXY/chart/) — Core Watchlist | Above SMA200 · RSI 80 | Score: 0.5
-- ⚪ [MSFT](https://www.tradingview.com/symbols/MSFT/chart/) — Core Watchlist | RSI 56 · Near EMA21 support | Score: 0.45
-- ⚪ [AMZN](https://www.tradingview.com/symbols/AMZN/chart/) — Core Watchlist | RSI 66 · Near EMA21 support | Score: 0.45
-- ⚪ [META](https://www.tradingview.com/symbols/META/chart/) — Core Watchlist | RSI 52 · Near EMA21 support | Score: 0.45
+- ⚪ [OXY](https://www.tradingview.com/symbols/OXY/chart/) — Core Watchlist | Above SMA200 · RSI 82 | Score: 0.5
 
 ## Technical Setups (Tao of Trading)
 
@@ -68,63 +68,63 @@ Extreme vol — cash is king, hedge
 ## Top Dossier Breakdowns
 
 ### [NVDA](https://www.tradingview.com/symbols/NVDA/chart/) — NVIDIA Corporation
-**$177.82** | Grade: B | ACCUMULATE on dips
+**$182.65** | Grade: B | ACCUMULATE on dips
 - Trend: Bullish | EMA Stack: PARTIAL BEARISH
-- RSI: 44.78 | ADX: 23.82 | ATR: 6.25
-- Pivot: $181.76 | S1: $179.46 | R1: $185.64
-- Valuation: UNDERVALUED (+22.1%)
+- RSI: 47.7 | ADX: 24.09 | ATR: 6.21
+- Pivot: $179.13 | S1: $175.51 | R1: $181.45
+- Valuation: UNDERVALUED (+20.9%)
 
 ### [PLTR](https://www.tradingview.com/symbols/PLTR/chart/) — Palantir Technologies Inc.
-**$157.16** | Grade: C | DISTRIBUTE into strength
+**$156.43** | Grade: C | DISTRIBUTE into strength
 - Trend: Bearish | EMA Stack: TANGLED
-- RSI: 81.74 | ADX: 24.18 | ATR: 7.0
-- Pivot: $152.89 | S1: $149.39 | R1: $156.16
-- Valuation: OVERVALUED (-49.7%)
+- RSI: 79.49 | ADX: 25.12 | ATR: 6.89
+- Pivot: $156.3 | S1: $151.15 | R1: $162.31
+- Valuation: OVERVALUED (-49.5%)
 
 ### [TSLA](https://www.tradingview.com/symbols/TSLA/chart/) — Tesla, Inc.
-**$396.73** | Grade: B | WAIT for validation
+**$398.68** | Grade: B | WAIT for validation
 - Trend: Bullish | EMA Stack: PARTIAL BEARISH
-- RSI: 38.08 | ADX: 25.17 | ATR: 12.96
-- Pivot: $404.53 | S1: $400.44 | R1: $409.64
-- Valuation: OVERVALUED (-44.0%)
-
-### [GOOGL](https://www.tradingview.com/symbols/GOOGL/chart/) — Alphabet Inc.
-**$298.52** | Grade: B | WAIT for validation
-- Trend: Bullish | EMA Stack: PARTIAL BEARISH
-- RSI: 42.31 | ADX: 47.21 | ATR: 7.73
-- Pivot: $300.72 | S1: $298.15 | R1: $303.46
-- Valuation: OVERVALUED (-26.0%)
-
-### [AMD](https://www.tradingview.com/symbols/AMD/chart/) — Advanced Micro Devices, Inc.
-**$192.43** | Grade: B | WAIT for validation
-- Trend: Bullish | EMA Stack: PARTIAL BEARISH
-- RSI: 40.47 | ADX: 30.9 | ATR: 9.41
-- Pivot: $199.37 | S1: $194.96 | R1: $203.87
-- Valuation: OVERVALUED (-26.1%)
+- RSI: 42.71 | ADX: 25.61 | ATR: 13.19
+- Pivot: $397.76 | S1: $393.18 | R1: $401.32
+- Valuation: OVERVALUED (-44.2%)
 
 ### [TSM](https://www.tradingview.com/symbols/TSM/chart/) — Taiwan Semiconductor Manufacturing Company Limited
-**$338.89** | Grade: B | WAIT for validation
+**$348.7** | Grade: A | WAIT for validation
 - Trend: Bullish | EMA Stack: TANGLED
-- RSI: 35.03 | ADX: 16.15 | ATR: 12.19
-- Pivot: $352.38 | S1: $345.28 | R1: $360.95
-- Valuation: OVERVALUED (-33.8%)
+- RSI: 42.2 | ADX: 17.43 | ATR: 12.72
+- Pivot: $341.43 | S1: $334.15 | R1: $346.18
+- Valuation: OVERVALUED (-35.0%)
 
-### [MRVL](https://www.tradingview.com/symbols/MRVL/chart/) — Marvell Technology, Inc.
-**$89.57** | Grade: A | WAIT for validation
-- Trend: Bullish | EMA Stack: TANGLED
-- RSI: 67.65 | ADX: 25.15 | ATR: 4.27
-- Pivot: $77.06 | S1: $73.86 | R1: $78.88
-- Valuation: OVERVALUED (-20.2%)
+### [AAPL](https://www.tradingview.com/symbols/AAPL/chart/) — Apple Inc.
+**$259.88** | Grade: B | WAIT for validation
+- Trend: Bullish | EMA Stack: PARTIAL BEARISH
+- RSI: 44.76 | ADX: 15.42 | ATR: 6.04
+- Pivot: $256.87 | S1: $254.96 | R1: $259.36
+- Valuation: OVERVALUED (-42.0%)
 
-### [QCOM](https://www.tradingview.com/symbols/QCOM/chart/) — QUALCOMM Incorporated
-**$135.69** | Grade: C | DISTRIBUTE into strength
+### [AMD](https://www.tradingview.com/symbols/AMD/chart/) — Advanced Micro Devices, Inc.
+**$202.68** | Grade: B | WAIT for validation
+- Trend: Bullish | EMA Stack: PARTIAL BEARISH
+- RSI: 49.76 | ADX: 27.31 | ATR: 9.51
+- Pivot: $194.64 | S1: $189.04 | R1: $198.03
+- Valuation: OVERVALUED (-28.8%)
+
+### [V](https://www.tradingview.com/symbols/V/chart/) — Visa Inc.
+**$315.97** | Grade: C | DISTRIBUTE into strength
 - Trend: Bearish | EMA Stack: FULL BEARISH
-- RSI: 42.05 | ADX: 28.57 | ATR: 3.83
-- Pivot: $137.49 | S1: $135.31 | R1: $139.17
-- Valuation: OVERVALUED (-42.7%)
+- RSI: 45.33 | ADX: 33.44 | ATR: 7.35
+- Pivot: $315.78 | S1: $313.88 | R1: $319.27
+- Valuation: OVERVALUED (-34.1%)
+
+### [MA](https://www.tradingview.com/symbols/MA/chart/) — Mastercard Incorporated
+**$517.72** | Grade: C | DISTRIBUTE into strength
+- Trend: Bearish | EMA Stack: FULL BEARISH
+- RSI: 47.63 | ADX: 31.39 | ATR: 13.48
+- Pivot: $519.03 | S1: $515.51 | R1: $525.86
+- Valuation: OVERVALUED (-35.0%)
 
 ---
 
 *This report is for informational and educational purposes only. Not financial advice. Trade at your own risk. Past performance does not guarantee future results.*
 
-*Generated by Ghost Alpha Dossier Pipeline // 2026-03-09 // 2026-03-09 09:14 AM EST*
+*Generated by Ghost Alpha Dossier Pipeline // 2026-03-09 // 2026-03-09 06:58 PM CST*
