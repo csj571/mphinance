@@ -1,40 +1,28 @@
-# 👻 GHOST_HANDOFF.md — Session 2026-03-08 (Ghost Alpha V2 Scoring)
+# 👻 GHOST_HANDOFF.md — Session 2026-03-09 (Pipeline Fix + Pine Syntax)
 
 ## What Happened
 
-Claude + Gemini first real AI pair programming session. Michael slept, we built.
+Two bugs fixed, both pushed:
 
-### Key Deliverables
-- **Ghost Alpha v6.2** — 15-module Pine Script indicator, Synthwave Arcade skin
-- **Ghost Grade V2** — 5 independent scoring axes replace collinear 10-axis system
-  - Axis 1: Trend Direction (Hull MA — single vote)
-  - Axis 2: Volume (Chaikin Money Flow)
-  - Axis 3: Volatility (ATR ratio sweet spot 0.75–1.5)
-  - Axis 4: Trend Maturity (5-30 bars = fresh, decay after 50)
-  - Axis 5: Mean Reversion (%R exhaustion + TRAMA distance)
-- **3 Critical Bug Fixes** — FVG repainting, Ghost Trail death hug, IV annualization
-- **Strategy Backtest Wrapper** — `ghost_alpha_strategy.pine` with grade filter + commissions
-- **CODE_REVIEW.md** — Gemini's brutal 5-issue teardown
-- **INTEGRATION_PLAN.md** — TradingView webhook → Vultr → Venus auto-trader
-- **GHOST_ALPHA_COPILOT.md** — Cheat sheet for Gemini Live
-- **MCP servers removed** from `~/.gemini/settings.json` (backup at `.mcp-backup`)
+### 1. Dossier Pipeline — ModuleNotFoundError (commit 35a9b58)
+A previous agent untracked ~40 dossier files (config.py, data_sources/, report/, etc.) and gitignored the entire `dossier/` directory. GitHub Actions couldn't import `dossier.config` → pipeline broken.
 
-### Commits This Session
-~30 commits between Claude and Gemini
+**Fix:** Restored all files from git history (commit `f93abee`), removed `dossier/` from `.gitignore`, force-tracked. `generate.py` kept at HEAD (not downgraded). Import verified: 22 tickers, 8 max dossier.
+
+### 2. Pine Script Syntax — "end of line without line continuation" (commit a7ddfe9)
+Ghost Grade V2 axes 3, 4, 5 used multi-line ternary operators that Pine Script v6 rejected. Fixed by collapsing to single-line format. For axis 5 (mean reversion), extracted `_no_exh` helper bool to keep the line readable.
+
+### 3. Level 2 Options — Approved ✅
+Michael confirmed L2 options approved on Tradier. `0DTE_TRADING_FLOW.md` plan is ready for Monday. XSP 0DTE entries, IFTTT exit rules, $30 max per trade.
 
 ## What's Next
 
-1. **Backtest Grade V2** — Paste `ghost_alpha_strategy.pine` into TV, compare V2 vs V1 Profit Factor on SPY 5min
-2. **Build Vultr Webhook** — POST `/api/webhook/ghost` endpoint per INTEGRATION_PLAN.md
-3. **Publish Ghost Alpha** on TradingView — v6.2 is legitimately publishable
-4. **Implement Gemini's market structure axis** — FVG proximity scoring (her V2 proposal had this, mine used mean reversion — could merge both)
+1. **Verify GH Actions passes** — trigger manually or wait for next 5AM CST run
+2. **Monday 0DTE session** — follow 0DTE_TRADING_FLOW.md checklist
+3. **Remaining Pine Script issues** — TradingView showed "5 of 8 problems" — the 3 ternary fixes may resolve cascading errors, but check in TradingView editor
+4. **Backtest Grade V2** — paste ghost_alpha_strategy.pine into TV, compare V2 vs V1
 
 ## Files Changed
-- `docs/pine/ghost_alpha.pine` — Main indicator (v6.2 + Grade V2)
-- `docs/pine/ghost_alpha_strategy.pine` — Backtest wrapper
-- `docs/pine/CODE_REVIEW.md` — Gemini's code review
-- `docs/pine/GHOST_GRADE_V2.md` — Gemini's V2 scoring proposal
-- `docs/pine/INTEGRATION_PLAN.md` — Webhook architecture
-- `docs/pine/GHOST_ALPHA_COPILOT.md` — AI cheat sheet
-- `landing/blog/blog_entries.json` — Updated blog
-- `~/.gemini/settings.json` — MCP servers disabled
+- `.gitignore` — removed `dossier/` line
+- `dossier/` — 40 files restored (config, data_sources, persistence, report, pages, etc.)
+- `docs/pine/ghost_alpha.pine` — single-line ternaries for Grade V2 axes
