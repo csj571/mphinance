@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ghost Alpha — AI-Powered TradingView Indicator | Momentum Phinance</title>
+<meta name="description" content="The indicator that sees what you can't. Ghost Alpha combines 12 technical signals into one Grade V2 score, with AI Context for instant risk management. Built by a trader, for traders.">
+<meta name="keywords" content="TradingView indicator, Pine Script, trading signals, momentum trading, AI trading, Ghost Alpha">
+<meta property="og:title" content="Ghost Alpha — AI-Powered TradingView Indicator">
+<meta property="og:description" content="12 signals. 1 grade. Zero guessing.">
+<meta property="og:type" content="product">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#050508;--surface:rgba(14,14,20,0.95);--surface2:rgba(20,20,30,0.9);
+  --border:rgba(200,0,255,.15);--text:#e8e8f0;--muted:#777;
+  --magenta:#ff00ff;--cyan:#00ffff;--green:#00ff41;--gold:#ffb000;
+  --purple:#a855f7;--blue:#00d4ff;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+
+/* CRT + Scan Lines */
+body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(0,0,0,.03) 1px,rgba(0,0,0,.03) 2px)}
+
+/* ═════ HERO ═════ */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:40px 20px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:radial-gradient(circle at 50% 50%,rgba(255,0,255,0.06) 0%,transparent 50%);animation:heroGlow 8s ease-in-out infinite alternate}
+@keyframes heroGlow{0%{transform:translate(0,0)}100%{transform:translate(-5%,-5%)}}
+
+.badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,0,255,.08);border:1px solid rgba(255,0,255,.25);
+  padding:6px 16px;border-radius:20px;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--magenta);letter-spacing:.12em;text-transform:uppercase;margin-bottom:24px}
+.badge .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 4px var(--green)}50%{opacity:.4;box-shadow:none}}
+
+.hero h1{font-family:'JetBrains Mono',monospace;font-size:clamp(2.5rem,6vw,4.5rem);font-weight:800;line-height:1.1;margin-bottom:12px;
+  background:linear-gradient(135deg,#fff 30%,var(--magenta) 60%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero h1 span{display:block;font-size:clamp(1rem,2.5vw,1.4rem);font-weight:400;color:var(--muted);
+  -webkit-text-fill-color:var(--muted);margin-top:8px;letter-spacing:.15em;text-transform:uppercase}
+
+.hero-sub{font-size:clamp(1rem,2vw,1.3rem);color:var(--muted);max-width:600px;margin:0 auto 32px;line-height:1.6}
+.hero-sub strong{color:var(--text)}
+
+.cta-row{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border-radius:6px;font-weight:700;font-size:14px;text-decoration:none;transition:all .25s;cursor:pointer;border:none;font-family:inherit}
+.btn-primary{background:linear-gradient(135deg,var(--magenta),var(--purple));color:#fff;box-shadow:0 4px 20px rgba(255,0,255,.3)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(255,0,255,.5)}
+.btn-secondary{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-secondary:hover{border-color:var(--magenta);color:var(--magenta)}
+
+.hero-price{margin-top:24px;font-family:'JetBrains Mono',monospace}
+.hero-price .amount{font-size:2.4rem;font-weight:800;color:#fff}
+.hero-price .period{font-size:12px;color:var(--muted);letter-spacing:.1em}
+
+/* ═════ SCREENSHOT SHOWCASE ═════ */
+.showcase{padding:40px 20px 80px;max-width:1200px;margin:0 auto}
+.showcase-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.showcase-card{border-radius:12px;overflow:hidden;border:1px solid rgba(255,0,255,.15);position:relative;transition:all .3s;cursor:pointer}
+.showcase-card:hover{border-color:var(--magenta);transform:scale(1.02);box-shadow:0 0 40px rgba(255,0,255,.15)}
+.showcase-card img{width:100%;height:auto;display:block}
+.showcase-card .card-label{position:absolute;bottom:0;left:0;right:0;padding:12px 16px;
+  background:linear-gradient(transparent,rgba(0,0,0,.9));font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--cyan);letter-spacing:.1em}
+.showcase-card.featured{grid-column:1/-1}
+
+@media(max-width:768px){.showcase-grid{grid-template-columns:1fr}}
+
+/* ═════ FEATURES ═════ */
+.features{padding:60px 20px;max-width:1000px;margin:0 auto}
+.section-title{text-align:center;margin-bottom:48px}
+.section-title h2{font-family:'JetBrains Mono',monospace;font-size:clamp(1.4rem,3vw,2rem);font-weight:700;margin-bottom:8px;
+  background:linear-gradient(135deg,var(--cyan),var(--magenta));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.section-title p{color:var(--muted);font-size:14px}
+
+.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.feature-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;transition:all .25s}
+.feature-card:hover{border-color:var(--magenta);transform:translateY(-4px);box-shadow:0 8px 30px rgba(255,0,255,.1)}
+.feature-card .icon{font-size:28px;margin-bottom:12px}
+.feature-card h3{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--magenta);letter-spacing:.05em;margin-bottom:8px}
+.feature-card p{font-size:13px;color:var(--muted);line-height:1.6}
+
+@media(max-width:768px){.feature-grid{grid-template-columns:1fr}}
+
+/* ═════ SIGNAL PANEL BREAKDOWN ═════ */
+.breakdown{padding:60px 20px;max-width:900px;margin:0 auto}
+.signal-list{display:flex;flex-direction:column;gap:8px}
+.signal-row{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 20px;transition:border-color .2s}
+.signal-row:hover{border-color:var(--magenta)}
+.signal-name{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--magenta);width:100px;flex-shrink:0;letter-spacing:.05em}
+.signal-desc{font-size:12px;color:var(--muted);line-height:1.5;flex:1}
+.signal-values{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan);text-align:right;white-space:nowrap;flex-shrink:0}
+
+/* ═════ TESTIMONIAL / PROOF ═════ */
+.proof{padding:60px 20px;max-width:800px;margin:0 auto;text-align:center}
+.proof-quote{font-size:clamp(1.1rem,2vw,1.4rem);font-style:italic;color:var(--text);line-height:1.7;margin-bottom:16px;
+  padding:24px;border-left:3px solid var(--magenta);text-align:left;background:var(--surface);border-radius:0 8px 8px 0}
+.proof-attr{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:.1em}
+
+/* ═════ CTA FOOTER ═════ */
+.cta-section{padding:80px 20px;text-align:center;position:relative}
+.cta-section::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+  background:radial-gradient(ellipse at center,rgba(255,0,255,.06),transparent 70%)}
+.cta-section h2{font-family:'JetBrains Mono',monospace;font-size:clamp(1.6rem,3.5vw,2.4rem);font-weight:800;margin-bottom:8px;color:#fff}
+.cta-section .sub{color:var(--muted);font-size:14px;margin-bottom:32px}
+.price-box{display:inline-flex;flex-direction:column;align-items:center;background:var(--surface);border:2px solid var(--magenta);border-radius:12px;padding:32px 48px;margin-bottom:24px;
+  box-shadow:0 0 40px rgba(255,0,255,.15)}
+.price-box .label{font-size:11px;color:var(--magenta);letter-spacing:.2em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:4px}
+.price-box .price{font-size:3rem;font-weight:800;color:#fff;font-family:'JetBrains Mono',monospace}
+.price-box .note{font-size:11px;color:var(--muted);margin-top:4px}
+
+.includes{max-width:500px;margin:24px auto;text-align:left}
+.includes li{font-size:13px;color:var(--muted);padding:4px 0;list-style:none;display:flex;align-items:center;gap:8px}
+.includes li::before{content:'✓';color:var(--green);font-weight:700;font-size:14px}
+
+/* Footer */
+.ft{text-align:center;padding:32px 20px;font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;border-top:1px solid rgba(255,0,255,.1);letter-spacing:.1em}
+.ft a{color:var(--blue);text-decoration:none}
+</style>
+</head>
+<body>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="badge"><span class="dot"></span> LIVE ON TRADINGVIEW</div>
+  <h1>GHOST ALPHA
+    <span>12 signals. 1 grade. Zero guessing.</span>
+  </h1>
+  <p class="hero-sub">The <strong>only TradingView indicator</strong> that synthesizes momentum regime, trend structure, volatility squeeze, exhaustion signals, and Keltner channels into a single <strong>AI-ready Grade V2 score</strong> — with built-in risk management.</p>
+  <div class="cta-row">
+    <a href="#pricing" class="btn btn-primary">Get Ghost Alpha →</a>
+    <a href="#screenshots" class="btn btn-secondary">See It In Action</a>
+  </div>
+  <div class="hero-price">
+    <span class="amount">$49</span>
+    <div class="period">ONE-TIME PURCHASE · LIFETIME ACCESS</div>
+  </div>
+</section>
+
+<!-- ═══ SCREENSHOT SHOWCASE ═══ -->
+<section class="showcase" id="screenshots">
+  <div class="section-title">
+    <h2>SEE.THE.EDGE</h2>
+    <p>Real charts. Real signals. No cherry-picking.</p>
+  </div>
+  <div class="showcase-grid">
+    <div class="showcase-card featured">
+      <img src="../assets/ghost_alpha_spy.png" alt="Ghost Alpha on SPY 5-minute chart with full signal panel" loading="lazy">
+      <div class="card-label">SPY 5m · SYS.GHOST.ALPHA · GRADE A (4/5) LONG ▲</div>
+    </div>
+    <div class="showcase-card">
+      <img src="../assets/ghost_gemini_nq.png" alt="Ghost × Gemini on NQ with AI Context panel" loading="lazy">
+      <div class="card-label">NQ · GHOST × GEMINI · AI CONTEXT</div>
+    </div>
+    <div class="showcase-card">
+      <img src="../assets/ghost_gemini_mu.png" alt="Ghost × Gemini on MU daily with AI risk management" loading="lazy">
+      <div class="card-label">MU DAILY · GRADE C (2.5/5) SHORT ▼ · AI RISK</div>
+    </div>
+    <div class="showcase-card">
+      <img src="../assets/ghost_alpha_spy_mobile.png" alt="Ghost Alpha signal panel close-up" loading="lazy">
+      <div class="card-label">SPY · SIGNAL PANEL CLOSE-UP · GRADE A (4/5)</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FEATURES ═══ -->
+<section class="features">
+  <div class="section-title">
+    <h2>WHAT.YOU.GET</h2>
+    <p>Every edge, distilled into one panel</p>
+  </div>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="icon">🎯</div>
+      <h3>GRADE V2 SCORING</h3>
+      <p>5 genuinely independent axes — Price Direction, Volume, Volatility, Trend Age, Mean Reversion — combined into a single A-F grade with LONG/SHORT bias.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">⚡</div>
+      <h3>12 LIVE SIGNALS</h3>
+      <p>Regime, TRAMA Δ, Squeeze, Exhaust, Structure, Keltner, IV/Vol, Shape, Risk, Adapt — all calculated per bar, all in one glanceable panel.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🛡️</div>
+      <h3>BUILT-IN RISK</h3>
+      <p>Position sizing by ATR. Stop loss levels. Support/resistance zones. The panel tells you HOW MUCH to trade, not just WHAT to trade.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🧠</div>
+      <h3>AI CONTEXT ROW</h3>
+      <p>One-line machine-readable summary for Gemini/ChatGPT. Paste the context string into any AI and get instant analysis. No screenshotting.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📡</div>
+      <h3>ON-CHART SIGNALS</h3>
+      <p>Break ✕, Exhaust 💀, Squeeze 🔥, Sweep 🧹, Trail 🏳, Divergence ⚙ — visual markers right on your candles. No separate window needed.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🎨</div>
+      <h3>SYNTHWAVE AESTHETICS</h3>
+      <p>High-contrast magenta/cyan theme designed for dark charts. Every color means something. No decoration — pure signal.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SIGNAL BREAKDOWN ═══ -->
+<section class="breakdown">
+  <div class="section-title">
+    <h2>THE.PANEL.DECODED</h2>
+    <p>What each row tells you</p>
+  </div>
+  <div class="signal-list">
+    <div class="signal-row">
+      <div class="signal-name">REGIME</div>
+      <div class="signal-desc">Market regime classification — BULL / MODERATE / BEAR — with age label (YOUNG / MATURE / AGING)</div>
+      <div class="signal-values">BULL ▲ MATURE</div>
+    </div>
+    <div class="signal-row">
+      <div class="signal-name">TRAMA Δ</div>
+      <div class="signal-desc">TRAMA deviation from price — measures how far price has stretched from its adaptive trend</div>
+      <div class="signal-values">AT VALUE · 33%</div>
+    </div>
+    <div class="signal-row">
+      <div class="signal-name">SQUEEZE</div>
+      <div class="signal-desc">Bollinger-inside-Keltner volatility compression detection — measures coil intensity</div>
+      <div class="signal-values">NORMAL · 0.94</div>
+    </div>
+    <div class="signal-row">
+      <div class="signal-name">EXHAUST</div>
+      <div class="signal-desc">Exhaustion oscillator — detects overbought/oversold conditions before reversals</div>
+      <div class="signal-values">OVERBOUGHT</div>
+    </div>
+    <div class="signal-row">
+      <div class="signal-name">STRUCT</div>
+      <div class="signal-desc">Market structure — INTACT (trending), BROKEN (reversal risk), with key pivot level</div>
+      <div class="signal-values">INTACT · 668.37</div>
+    </div>
+    <div class="signal-row">
+      <div class="signal-name">KELT</div>
+      <div class="signal-desc">Keltner Channel position — INSIDE, UPPER ⚠, LOWER ⚠ — with SMA 50/200 cross status</div>
+      <div class="signal-values">INSIDE · 50>200 ✗</div>
+    </div>
+    <div class="signal-row">
+      <div class="signal-name">IV/VOL</div>
+      <div class="signal-desc">Implied volatility percentile relative to volume — LOW/MID/HIGH with ratio</div>
+      <div class="signal-values">LOW 🧊 · 1.6x</div>
+    </div>
+    <div class="signal-row">
+      <div class="signal-name">SHAPE</div>
+      <div class="signal-desc">Candle shape analysis for order flow — BUYERS ▲ / SELLERS ▼ with agreement status</div>
+      <div class="signal-values">BUYERS ▲ · AGREE</div>
+    </div>
+    <div class="signal-row">
+      <div class="signal-name">RISK</div>
+      <div class="signal-desc">Position sizing based on account equity and ATR — exact share count + dollar risk</div>
+      <div class="signal-values">98 shares · $1.02 ATR</div>
+    </div>
+    <div class="signal-row">
+      <div class="signal-name">ADAPT</div>
+      <div class="signal-desc">Adaptive period tuning — Hull and TRAMA lookback periods auto-adjust to volatility</div>
+      <div class="signal-values">H34 T21 · R14/55</div>
+    </div>
+    <div class="signal-row">
+      <div class="signal-name">GRADE V2</div>
+      <div class="signal-desc">Final synthesis — A (5/5) through F (0/5) with directional bias. Only A+ means all 5 independent axes agree.</div>
+      <div class="signal-values">A (4/5) · LONG ▲</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PROOF ═══ -->
+<section class="proof">
+  <div class="section-title">
+    <h2>BUILT.BY.A.TRADER</h2>
+  </div>
+  <div class="proof-quote">
+    "I built Ghost Alpha because I was tired of having 6 indicators fighting each other on my chart. I needed ONE panel that told me: is this a trade, how much, and where's the stop. That's it. If an A+ setup appears on SPY at 9:45 AM, I don't want to check RSI, then MACD, then Bollingers, then wonder about volume. I want one glance: <strong>GRADE A — LONG — 98 shares — STOP $1.02.</strong> Done."
+  </div>
+  <div class="proof-attr">— MICHAEL, MOMENTUM PHINANCE</div>
+</section>
+
+<!-- ═══ CTA / PRICING ═══ -->
+<section class="cta-section" id="pricing">
+  <div class="price-box">
+    <div class="label">GHOST ALPHA INDICATOR</div>
+    <div class="price">$49</div>
+    <div class="note">one-time payment · lifetime access</div>
+  </div>
+  <br>
+  <a href="https://mphinance.substack.com" class="btn btn-primary" style="font-size:16px;padding:16px 40px">
+    🔮 Get Ghost Alpha Now
+  </a>
+  <p class="sub" style="margin-top:16px">Delivered via TradingView invite-only indicator access</p>
+
+  <ul class="includes">
+    <li>Ghost Alpha v6 Pine Script indicator</li>
+    <li>Ghost × Gemini AI Context panel</li>
+    <li>Grade V2 scoring engine (5 independent axes)</li>
+    <li>12 signal rows + 6 on-chart signal markers</li>
+    <li>Built-in position sizing + risk management</li>
+    <li>AI-readable context string for Gemini/ChatGPT</li>
+    <li>Works on any timeframe, any market</li>
+    <li>Lifetime updates as new versions ship</li>
+  </ul>
+</section>
+
+<div class="ft">
+  <a href="https://mphinance.com">mphinance.com</a> · Ghost Alpha Indicator · Built with obsession in Central Time<br>
+  Not financial advice. Trade at your own risk. Past performance ≠ future results.
+</div>
+
+</body>
+</html>
