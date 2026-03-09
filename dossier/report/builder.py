@@ -39,8 +39,8 @@ def build_report(
     template = env.get_template("template.html")
 
     from zoneinfo import ZoneInfo
-    est = ZoneInfo("America/New_York")
-    generated_at = datetime.now(est).strftime("%Y-%m-%d %I:%M %p EST")
+    cst = ZoneInfo("America/Chicago")
+    generated_at = datetime.now(cst).strftime("%Y-%m-%d %I:%M %p CST")
 
     # Filenames for download buttons (relative links within docs/reports/)
     pdf_filename = f"{date}_alpha_dossier.pdf"

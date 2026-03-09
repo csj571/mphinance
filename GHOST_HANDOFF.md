@@ -1,28 +1,59 @@
-# 👻 GHOST_HANDOFF.md — Session 2026-03-09 (Pipeline Fix + Pine Syntax)
+# 👻 GHOST_HANDOFF.md — Session 2026-03-09 (Full System Audit)
 
-## What Happened
+## ⚠️ RESUME PRIORITY
 
-Two bugs fixed, both pushed:
+1. **Deploy landing to Vultr** — `rsync -avz landing/ vultr:/home/mphinance/public_html/` (chart images + ebook link fixed)
+2. **Fix Daily Dossier pipeline failures** — 2 of last 3 GH Actions runs failed. Check logs.
+3. **Wire Discord bot** — `scripts/sam_discord.py` exists but isn't running. Needs bot token + cron.
+4. **Wire dossier → Substack drafts** — Draft system exists but only has Musings, not daily reports.
 
-### 1. Dossier Pipeline — ModuleNotFoundError (commit 35a9b58)
-A previous agent untracked ~40 dossier files (config.py, data_sources/, report/, etc.) and gitignored the entire `dossier/` directory. GitHub Actions couldn't import `dossier.config` → pipeline broken.
+---
 
-**Fix:** Restored all files from git history (commit `f93abee`), removed `dossier/` from `.gitignore`, force-tracked. `generate.py` kept at HEAD (not downgraded). Import verified: 22 tickers, 8 max dossier.
+## What Happened This Session
 
-### 2. Pine Script Syntax — "end of line without line continuation" (commit a7ddfe9)
-Ghost Grade V2 axes 3, 4, 5 used multi-line ternary operators that Pine Script v6 rejected. Fixed by collapsing to single-line format. For axis 5 (mean reversion), extracted `_no_exh` helper bool to keep the line readable.
+### 1. Timezone Fix (EST → CST) ✅
+- `dossier/report/builder.py` — `ZoneInfo("America/New_York")` → `ZoneInfo("America/Chicago")` + label `CST`
+- `dossier/pages/ticker_page.py` — same
+- `dossier/watchlist_dive.py` — same
 
-### 3. Level 2 Options — Approved ✅
-Michael confirmed L2 options approved on Tradier. `0DTE_TRADING_FLOW.md` plan is ready for Monday. XSP 0DTE entries, IFTTT exit rules, $30 max per trade.
+### 2. Blog & Landing Page Link Audit ✅
+- **Chart images** — `../ticker/` → absolute GH Pages URL (won't resolve from Vultr otherwise)
+- **VaultGuard link** — pointed to non-existent VAULT.md → fixed to `vaultguard/README.md`
+- **Ebook checkout** — `/api/ebook/checkout` 404 → redirected to Substack for now
+- **All other links verified working**: TraderDaddy ✅, TickerTrace ✅, Dossier ✅, Substack ✅, GitHub ✅, tt.mphinance.com ✅
 
-## What's Next
+### 3. Removed tightspread/ ✅
+- Entire `tightspread/` directory deleted (lives separately as alpha-momentum)
+- Updated 3 references in `docs/LIVING_EBOOK_PIPELINE.md` and `docs/MONEY_PLAN.md`
+- Removed from `.gitignore`
 
-1. **Verify GH Actions passes** — trigger manually or wait for next 5AM CST run
-2. **Monday 0DTE session** — follow 0DTE_TRADING_FLOW.md checklist
-3. **Remaining Pine Script issues** — TradingView showed "5 of 8 problems" — the 3 ternary fixes may resolve cascading errors, but check in TradingView editor
-4. **Backtest Grade V2** — paste ghost_alpha_strategy.pine into TV, compare V2 vs V1
+### 4. Cleaned .gitignore ✅
+- Removed `tightspread` line
+- Removed `VAULT.md` line (file never existed)
+- Added comment about vaultguard/ being intentionally tracked
 
-## Files Changed
-- `.gitignore` — removed `dossier/` line
-- `dossier/` — 40 files restored (config, data_sources, persistence, report, pages, etc.)
-- `docs/pine/ghost_alpha.pine` — single-line ternaries for Grade V2 axes
+### 5. Created .agents/workflows/ ✅
+Six workflow files agents now auto-read:
+- `deploy-landing.md` — rsync to Vultr
+- `deploy-dossier.md` — full pipeline + GH Pages push
+- `add-ticker.md` — add stock to watchlist + deep dive
+- `blog-entry.md` — write Sam blog entry + commit
+- `health-check.md` — verify all endpoints
+- `full-audit.md` — comprehensive system check
+
+### 6. GHOST.CONTROL Dashboard ✅
+- `docs/dashboard.html` — overhauled from issue tracker to full system dashboard
+- Live endpoint health checks (12 endpoints)
+- Pipeline status cards
+- Product link grid
+- Documentation index (all 37 MD files, categorized)
+- Mermaid architecture diagram
+
+## What's Still Broken / Needs Work
+- ❌ Discord bot — scripts exist, not running
+- ⚠️ Daily Dossier pipeline — intermittent failures
+- ⚠️ Ebook checkout — no Stripe API deployed to Vultr yet
+- ⚠️ GA4 stats + revenue stats — manual only, not in pipeline
+
+## VaultGuard Reminder
+One `service_account.json` → Firebase Firestore → all API keys. Agents should ALWAYS check VaultGuard (`db.collection('secrets')`) before asking Michael for credentials.

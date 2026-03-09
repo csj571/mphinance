@@ -355,8 +355,8 @@ def generate_ticker_page(ticker: str, enriched_data: dict, date: str,
     else:
         logo_url = ""
 
-    est = ZoneInfo("America/New_York")
-    generated_at = datetime.now(est).strftime("%Y-%m-%d %I:%M %p EST")
+    cst = ZoneInfo("America/Chicago")
+    generated_at = datetime.now(cst).strftime("%Y-%m-%d %I:%M %p CST")
 
     # ── Assemble full payload ──
     payload = {

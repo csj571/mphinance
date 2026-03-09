@@ -34,7 +34,7 @@ The ebook grows with the platform. Every sprint, blog entry, and lesson learned 
 | Trading Psychology | Recovery wisdom, Trader's Serenity, radical transparency |
 | Infrastructure | Docker, Apache, SSL, multi-machine sync |
 | Revenue Transparency | Stripe integration, the flywheel, funded-to-brokerage |
-| *(NEW)* 0DTE Trading | tightspread engine, econ calendar, GEX regimes |
+| *(NEW)* 0DTE Trading | alpha-momentum engine, econ calendar, GEX regimes |
 | *(NEW)* Case Studies | Real picks, forward returns, what worked vs what didn't |
 
 ### Implementation

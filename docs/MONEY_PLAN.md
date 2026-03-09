@@ -6,7 +6,7 @@
 
 - **Account:** TastyTrade
 - **Balance:** ~$100 (+ $100 backup = $200 total budget)
-- **Strategy:** 0DTE day trading via tightspread
+- **Strategy:** 0DTE day trading via alpha-momentum
 - **Immediate need:** First ~$1,200 gets withdrawn ASAP
 - **Runway:** Two shots at $100 to make this work
 
@@ -103,7 +103,7 @@ The tools that make the money deserve a cut. This 5% goes to:
 ```text
 More Capital → More Contracts → More Premium
      ↑                                    ↓
-  Compound ← Net Gains ← Smart Entries ← tightspread signals
+  Compound ← Net Gains ← Smart Entries ← alpha-momentum signals
      ↓
   Withdraw → Charity / Taxes / Living
 ```

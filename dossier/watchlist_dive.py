@@ -607,8 +607,8 @@ def _render_html(ticker: str, md_content: str, data: dict, output_path: Path):
     html_body = re.sub(r'<tr><td>-+</td>.*?</tr>', '', html_body)
     html_body = re.sub(r'(<tr>.*?</tr>\s*)+', lambda m: '<table>' + m.group(0) + '</table>', html_body, flags=re.DOTALL)
 
-    est = ZoneInfo("America/New_York")
-    generated_at = datetime.now(est).strftime("%Y-%m-%d %I:%M %p EST")
+    cst = ZoneInfo("America/Chicago")
+    generated_at = datetime.now(cst).strftime("%Y-%m-%d %I:%M %p CST")
 
     chg = data.get("change_pct", 0)
     change_cls = "pos" if chg >= 0 else "neg"
