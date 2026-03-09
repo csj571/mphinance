@@ -4,10 +4,9 @@ import pandas as pd
 import yfinance as yf
 import time
 from datetime import datetime, timedelta
-from pathlib import Path
 
-# Paths — resolve relative to this file's location
-PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
+# Paths
+PROJECT_ROOT = "/home/sam/Antigravity/empty/mphinance"
 DAILY_PICKS_PATH = os.path.join(PROJECT_ROOT, "docs/api/daily-picks.json")
 TRACK_RECORD_PATH = os.path.join(PROJECT_ROOT, "docs/backtesting/track_record.json")
 
