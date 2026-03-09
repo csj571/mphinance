@@ -46,7 +46,11 @@ def _run_mphinance_strategies() -> list[dict]:
     """
     print("  Running mphinance strategies...")
 
-    from strategies import get_strategy, get_strategy_names
+    try:
+        from strategies import get_strategy, get_strategy_names
+    except (ImportError, ModuleNotFoundError):
+        print("  [SKIP] strategies module not available — using watchlist fallback only")
+        return []
     available = get_strategy_names()
 
     all_signals = []
