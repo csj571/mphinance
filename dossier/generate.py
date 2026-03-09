@@ -583,7 +583,11 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
 
     # ── Stage 2: Strategy Scanner ──
     print("\n[2/9] STRATEGY SCANNER")
-    scanner_signals = _run_mphinance_strategies()
+    try:
+        scanner_signals = _run_mphinance_strategies()
+    except Exception as e:
+        print(f"  [WARN] Strategy scanner failed: {e}")
+        scanner_signals = []
 
     # Also scan core watchlist with a simple technical check
     from dossier.data_sources.ticker_enrichment import _sma, _rsi, _ema
