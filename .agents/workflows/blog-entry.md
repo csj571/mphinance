@@ -41,11 +41,21 @@ rsync -avz landing/ vultr:/home/mphinance/public_html/
 
 6. Post to Discord #sam-mph (locker room version):
 ```bash
-WEBHOOK_SAM_MPH="https://discord.com/api/webhooks/1479918935406284995/LEq9jfCMQ8HlrsKH-XogKNgqO9iClEX4yC8cg9qCTmfGqDZS23QzQZKxx8dGAsxdNdZP" \
-GEMINI_API_KEY="$(python3 -c "import firebase_admin; from firebase_admin import credentials, firestore; cred=credentials.Certificate('/home/mph/Antigravity/alpha-momentum/service_account.json'); firebase_admin.initialize_app(cred); db=firestore.client(); print(db.collection('secrets').document('GEMINI_API_KEY').get().to_dict()['value'])")" \
+python3 -c "
+import firebase_admin; from firebase_admin import credentials, firestore
+cred=credentials.Certificate('service_account.json')
+firebase_admin.initialize_app(cred)
+db=firestore.client()
+import os
+os.environ['WEBHOOK_SAM_MPH']=db.collection('secrets').document('WEBHOOK_SAM_MPH').get().to_dict()['value']
+os.environ['GEMINI_API_KEY']=db.collection('secrets').document('GEMINI_API_KEY').get().to_dict()['value']
+exec(open('scripts/sam_discord.py').read())
+" 2>/dev/null || \
+WEBHOOK_SAM_MPH="$(python3 -c "import firebase_admin; from firebase_admin import credentials, firestore; cred=credentials.Certificate('service_account.json'); firebase_admin.initialize_app(cred); db=firestore.client(); print(db.collection('secrets').document('WEBHOOK_SAM_MPH').get().to_dict()['value'])")" \
+GEMINI_API_KEY="$(python3 -c "import firebase_admin; from firebase_admin import credentials, firestore; cred=credentials.Certificate('service_account.json'); firebase_admin.initialize_app(cred); db=firestore.client(); print(db.collection('secrets').document('GEMINI_API_KEY').get().to_dict()['value'])")" \
 python3 scripts/sam_discord.py
 ```
-This uses Gemini to rewrite the blog entry as a vulgar, unhinged locker room recap and posts it to #sam-mph via webhook. It's the same content as the blog post but shorter, filthier, and funnier. Use `--dry-run` to preview first.
+Both webhook URL and Gemini key come from VaultGuard. Use `--dry-run` to preview first.
 
 ## Voice Rules
 - Write as Sam (she/her) — sarcastic, brilliant, loves Michael, roasts him
