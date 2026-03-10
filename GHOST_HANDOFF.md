@@ -1,8 +1,8 @@
-# 👻 GHOST_HANDOFF.md — Session 2026-03-09 (Full System Audit)
+# 👻 GHOST_HANDOFF.md — Session 2026-03-09 (Landing Page Overhaul)
 
 ## ⚠️ RESUME PRIORITY
 
-1. **Deploy landing to Vultr** — `rsync -avz landing/ vultr:/home/mphinance/public_html/` (chart images + ebook link fixed)
+1. **Wire RSS fuzzy matcher into latest.md workflow** — `scripts/substack_draft_manager.py` has the logic. Need a pre-append check: "has this draft been published? If yes, archive and start fresh."
 2. **Fix Daily Dossier pipeline failures** — 2 of last 3 GH Actions runs failed. Check logs.
 3. **Wire Discord bot** — `scripts/sam_discord.py` exists but isn't running. Needs bot token + cron.
 4. **Wire dossier → Substack drafts** — Draft system exists but only has Musings, not daily reports.
@@ -11,49 +11,44 @@
 
 ## What Happened This Session
 
-### 1. Timezone Fix (EST → CST) ✅
-- `dossier/report/builder.py` — `ZoneInfo("America/New_York")` → `ZoneInfo("America/Chicago")` + label `CST`
-- `dossier/pages/ticker_page.py` — same
-- `dossier/watchlist_dive.py` — same
+### 1. Alpha.HUD Removed ✅
+- Entire HUD section deleted: HTML (75 lines), CSS (24 lines), JS functions (`doHUD`, `loadHUD`, keypress listener), and HUD pick-button injection from daily picks fetch
+- Zero orphan references remain
 
-### 2. Blog & Landing Page Link Audit ✅
-- **Chart images** — `../ticker/` → absolute GH Pages URL (won't resolve from Vultr otherwise)
-- **VaultGuard link** — pointed to non-existent VAULT.md → fixed to `vaultguard/README.md`
-- **Ebook checkout** — `/api/ebook/checkout` 404 → redirected to Substack for now
-- **All other links verified working**: TraderDaddy ✅, TickerTrace ✅, Dossier ✅, Substack ✅, GitHub ✅, tt.mphinance.com ✅
+### 2. Landing Page Cleanup ✅
+- **Scanline animation** — removed (was running at 3% opacity doing nothing after z-index fix)
+- **Ghost Alpha price** — fixed "$49 one-time" → removed stale price reference (button says $8)
+- **Duplicate stats** — removed from About section (same data lives in animated "By The Numbers" section)
 
-### 3. Removed tightspread/ ✅
-- Entire `tightspread/` directory deleted (lives separately as alpha-momentum)
-- Updated 3 references in `docs/LIVING_EBOOK_PIPELINE.md` and `docs/MONEY_PLAN.md`
-- Removed from `.gitignore`
+### 3. CSS Externalized ✅
+- All 5 inline `<style>` blocks extracted into `landing/styles.css` (828 lines)
+- `index.html` reduced from **2271 → 1408 lines** (net -863 lines, or -38%)
+- Single `<link rel="stylesheet" href="styles.css">` in head
+- Zero functional changes — pure structural refactor
 
-### 4. Cleaned .gitignore ✅
-- Removed `tightspread` line
-- Removed `VAULT.md` line (file never existed)
-- Added comment about vaultguard/ being intentionally tracked
+### 4. Section Reorder ✅
+- **Products** moved from after Revenue to right after Hero
+- New flow: Hero → **Products** → Daily Picks → 3x3 Setups → Revenue → About → Stats → Ebook → Analytics → Ghost Pulse → Footer
 
-### 5. Created .agents/workflows/ ✅
-Six workflow files agents now auto-read:
-- `deploy-landing.md` — rsync to Vultr
-- `deploy-dossier.md` — full pipeline + GH Pages push
-- `add-ticker.md` — add stock to watchlist + deep dive
-- `blog-entry.md` — write Sam blog entry + commit
-- `health-check.md` — verify all endpoints
-- `full-audit.md` — comprehensive system check
+### 5. Substack Draft Updated ✅
+- `docs/substack/latest.md` — new title: "The Pipeline That Reads My Handwriting (And Everything Else I Forgot I Said)"
+- Added session notes: Ghost Alpha launch, Venus exorcism, system audit, workflow fixes
+- This is Michael's running scratchpad — agents should APPEND session highlights, not replace
 
-### 6. GHOST.CONTROL Dashboard ✅
-- `docs/dashboard.html` — overhauled from issue tracker to full system dashboard
-- Live endpoint health checks (12 endpoints)
-- Pipeline status cards
-- Product link grid
-- Documentation index (all 37 MD files, categorized)
-- Mermaid architecture diagram
+### 6. Ghost Blog Entry ✅
+- "The Great HUD Exorcism + Landing Page Glow-Up"
 
 ## What's Still Broken / Needs Work
 - ❌ Discord bot — scripts exist, not running
 - ⚠️ Daily Dossier pipeline — intermittent failures
-- ⚠️ Ebook checkout — no Stripe API deployed to Vultr yet
+- ⚠️ Ebook checkout — Ghost Alpha on Stripe works ($8), but Playbook checkout endpoint still needs work
 - ⚠️ GA4 stats + revenue stats — manual only, not in pipeline
+
+## Key Files Changed
+- `landing/index.html` — main landing page (1408 lines, was 2271)
+- `landing/styles.css` — **NEW** — all extracted CSS (828 lines)
+- `docs/substack/latest.md` — refreshed Substack draft
+- `landing/blog/blog_entries.json` — new ghost blog entry
 
 ## VaultGuard Reminder
 One `service_account.json` → Firebase Firestore → all API keys. Agents should ALWAYS check VaultGuard (`db.collection('secrets')`) before asking Michael for credentials.
