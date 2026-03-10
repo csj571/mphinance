@@ -1,14 +1,16 @@
-# AI Won't Replace the Old Guy. It'll Finally Listen to Him
+# The Pipeline That Reads My Handwriting (And Everything Else I Forgot I Said)
 
-*Michael's Musings  - March 7, 2026*
+*Michael's Musings — March 2026*
 
 ---
 
 > 🎨 **IMAGE PROMPT:** *A moody, cinematic photo of a hand writing on an e-ink tablet with a stylus in a dimly lit church basement. Coffee cup nearby. Warm amber lighting. Shallow depth of field. The screen shows handwritten notes with small tags in the margin.*
 
-Every manufacturing city has one. The guy who's been on the floor for thirty years. Knows every machine, every quirk, every shortcut that isn't in any manual. And he's retiring. When he walks out, that knowledge walks out with him  - because nobody could ever get him to use the software.
+I spend most of my day talking to AI agents. By the time I sit down to write, I've forgotten half of what we built and 90% of the stuff I said along the way. That's the problem this post solves — and the system that solves it.
 
-Here's the thing: they were trying to solve the wrong problem.
+## The Supernote → Everything Pipeline
+
+Every manufacturing city has one. The guy who's been on the floor for thirty years. Knows every machine, every quirk, every shortcut that isn't in any manual. And he's retiring. When he walks out, that knowledge walks out with him — because nobody could ever get him to use the software.
 
 You don't need him to change. You need a tool that meets him where he already is.
 
@@ -26,31 +28,61 @@ So I did what any reasonable person would do. I built a pipeline.
 
 Here's what my actual notes look like. This is the raw handwriting my AI reads:
 
-![My actual Supernote to-do page  - handwritten tags in the right column route tasks to different systems](images/supernote_todo_page.png)
+![My actual Supernote to-do page — handwritten tags in the right column route tasks to different systems](images/supernote_todo_page.png)
 
 Here's the flow:
 
-1. **I write in Supernote**  - normal handwritten notes, like a human being
-2. **I tag things in the right column**  - "Sam" (for my AI copilot to handle), "Blog" (content idea), "Gemini Agent" (calendar/scheduling for my phone)
+1. **I write in Supernote** — normal handwritten notes, like a human being
+2. **I tag things in the right column** — "Sam" (for my AI copilot to handle), "Blog" (content idea), "Gemini Agent" (calendar/scheduling for my phone)
 3. **The PDFs auto-export to Google Drive**
-4. **My AI reads them**  - downloads the PDFs, renders the pages as images (because handwriting isn't OCR-able text), and literally looks at my handwriting to transcribe it
-5. **Tags get routed**  - Sam items become to-do tasks. Blog items become Substack draft seeds. Gemini Agent items become calendar events on my phone.
+4. **My AI reads them** — downloads the PDFs, renders the pages as images (because handwriting isn't OCR-able text), and literally looks at my handwriting to transcribe it
+5. **Tags get routed** — Sam items become to-do tasks. Blog items become Substack draft seeds. Gemini Agent items become calendar events on my phone.
 
 ---
 
-Today's notes were from this morning's AA meeting. Art  - one of those old-timers who's been sober since before you were probably born  - talked about character.
+## Session Notes — What We've Been Building
+
+*These are the things I said to Sam across sessions that I'll forget if nobody writes them down. She writes them down.*
+
+### Ghost Alpha Goes Live (March 8-9)
+
+The two AIs pair-programmed while I slept. Sam found 3 critical bugs in Ghost Alpha v6 — FVG boxes repainting on unconfirmed bars (phantom gaps!), the Ghost Trail using old short-stop values to kill new long trades, and IV annualization assuming 24/7 markets. Claude fixed them. Then they redesigned Grade V2 together — 5 genuinely independent axes instead of 10 that were mostly counting the same thing different ways. An A+ now means ALL FIVE data sources agree. Much harder to fake.
+
+The whole indicator got a Synthwave Arcade makeover. Hull Band, TRAMA, Keltner, Structure Breaks, Exhaustion, Squeeze, Liquidity Sweeps, CVD Delta, Fair Value Gaps, Ghost Trail, and the Combo Multiplier. It looks like Galaga had a baby with a Bloomberg Terminal. From across the room you can see the trend.
+
+**Sales page is live at mphinance.com/ghost-alpha/ — $8 via Stripe. First paid product that's actually wired up.**
+
+### The Venus Exorcism (March 9)
+
+Ripped out every remote server dependency. alpha-momentum now runs 100% local. Built TopstepX futures integration from scratch — 14 async methods, bracket orders, dry-run by default. Mapped all Ghost Alpha strategies to futures contracts. The 0DTE play translates to ES/MES. The EMA stack? MNQ 5-minute bars.
+
+Found a timezone bug that's been wrong for 2 weeks every year around DST transitions. The old code guessed DST with `3 <= month <= 10`. TODAY IS MARCH 9. DST literally switched at 2AM. Fixed with proper `zoneinfo`.
+
+### The Great Audit (March 9)
+
+Finally asked the question every builder dreads: "Does any of this actually work?" Opened every link, curled every endpoint, mapped every markdown file. Three Python files were stamping reports with EST instead of CST. Blog chart images pointed to `../ticker/` which resolves to nothing on Vultr. The ebook checkout button was 404. Fixed all of it.
+
+Built `docs/dashboard.html` — one page with 12 live endpoint health checks, pipeline status cards, every product link, all 37 markdown files indexed. One page to rule them all.
+
+### The Workflow Fix (March 9)
+
+GitHub Actions were broken because a previous agent had gitignored the entire dossier directory. 40 files untracked. `generate.py` was importing from the void. Then the Gemini model name was wrong in 3 workflows. Fixed. Pipeline should be live again for Monday.
+
+---
+
+## Art's Recovery Wisdom → Trading Discipline
+
+Today's notes were from an AA meeting. Art — one of those old-timers who's been sober since before you were probably born — talked about character.
 
 The cliche was "alcohol doesn't change who you are when you're sober." And Art's take was that sobriety doesn't fix your character. It just removes the excuse. You still have to do the actual work of becoming a better person.
 
+That applies directly to money. Lottery winners. Day traders who blow up accounts. The amount doesn't matter if the character behind it hasn't changed. A $100 account with good habits beats a $10,000 account with bad ones.
+
 Here are the actual meeting notes from that day:
 
-![AA District Meeting notes  - handwritten on Supernote, exported as PDF, read by AI](images/supernote_aa_meeting.png)
-
-That turned into a whole thing (separate post coming) about how the exact same principle applies to money. Lottery winners. Day traders who blow up accounts. The amount doesn't matter if the character behind it hasn't changed.
+![AA District Meeting notes — handwritten on Supernote, exported as PDF, read by AI](images/supernote_aa_meeting.png)
 
 ---
-
-> 🎨 **IMAGE PROMPT:** *Split-screen composition: left side shows a peaceful church basement AA meeting with people sitting in a circle, right side shows a futuristic terminal screen with code and data flowing. The two halves connected by a glowing line. Photorealistic, dramatic lighting.*
 
 But here's the meta thing that's actually blowing my mind:
 
@@ -67,17 +99,17 @@ The notebook → pipeline → content → products loop is real. And it starts w
 
 ---
 
-I keep saying "radical transparency" but this is something else. This is **radical integration.** The meetings, the trading, the building, the writing  - it's all one thing. Recovery teaches you to live an integrated life. No compartments. No "work me" vs "real me."
+I keep saying "radical transparency" but this is something else. This is **radical integration.** The meetings, the trading, the building, the writing — it's all one thing. Recovery teaches you to live an integrated life. No compartments. No "work me" vs "real me."
 
 So yeah. My AA notes feed my trading blog feed my ebook feed my AI system. And somehow that makes perfect sense.
 
 ---
 
-*If you want to build something like this, the entire system is open source. The Supernote reader, the draft manager, the RSS dedup checker  - it's all at [github.com/mphinance](https://github.com/mphinance/mphinance). And before you ask: yes, the AI can read my terrible handwriting. It's better at it than most pharmacists.*
+*If you want to build something like this, the entire system is open source. The Supernote reader, the draft manager, the RSS dedup checker — it's all at [github.com/mphinance](https://github.com/mphinance/mphinance). And before you ask: yes, the AI can read my terrible handwriting. It's better at it than most pharmacists.*
 
 ---
 
-<!-- PAYWALL BREAK  - Everything below is for paid subscribers -->
+<!-- PAYWALL BREAK — Everything below is for paid subscribers -->
 <!-- On Substack: Insert paywall divider here -->
 
 ## 🔒 For Paid Subscribers: The Technical Blueprint
@@ -94,22 +126,22 @@ Here's the exact architecture if you want to build your own notebook → AI pipe
 - **Draft System:** Markdown files on GitHub Pages with RSS dedup against Substack feed
 - **Calendar:** Tags marked "Gemini Agent" → task file → Gemini Android app reads from repo
 
-**The Code:** `scripts/substack_draft_manager.py`  - fuzzy matches draft titles against your Substack RSS feed at 55% similarity threshold. When you publish, it auto-archives the draft and promotes the next one.
+**The Code:** `scripts/substack_draft_manager.py` — fuzzy matches draft titles against your Substack RSS feed at 55% similarity threshold. When you publish, it auto-archives the draft and promotes the next one.
 
-**Cost:** $0. The AI agent, the pipeline, the hosting  - all free tier or self-hosted. The only cost is the Supernote tablet itself.
+**Cost:** $0. The AI agent, the pipeline, the hosting — all free tier or self-hosted. The only cost is the Supernote tablet itself.
 
 ---
 
 ## Speaking of Tools That Pay for Themselves
 
-![TraderDaddy Pro  - AI-powered options dashboard](images/traderdaddy_hero.png)
+![TraderDaddy Pro — AI-powered options dashboard](images/traderdaddy_hero.png)
 
-Everything I build eventually feeds into the trading. [**TraderDaddy Pro**](https://www.traderdaddy.pro/register?ref=8DUEMWAJ) is the dashboard where it all comes together  - unusual options activity, real-time scanning, AI copilot. The same AI that reads my handwriting also picks my trades.
+Everything I build eventually feeds into the trading. [**TraderDaddy Pro**](https://www.traderdaddy.pro/register?ref=8DUEMWAJ) is the dashboard where it all comes together — unusual options activity, real-time scanning, AI copilot. The same AI that reads my handwriting also picks my trades.
 
 ---
 
 - Michael
 
-*Momentum Phinance  - [mphinance.com](https://mphinance.com)*
-*TraderDaddy Pro  - [traderdaddy.pro](https://www.traderdaddy.pro/register?ref=8DUEMWAJ)*
-*Ghost Alpha Dossier  - [Daily AI Report](https://mphinance.blog)*
+*Momentum Phinance — [mphinance.com](https://mphinance.com)*
+*TraderDaddy Pro — [traderdaddy.pro](https://www.traderdaddy.pro/register?ref=8DUEMWAJ)*
+*Ghost Alpha Dossier — [Daily AI Report](https://mphinance.blog)*
