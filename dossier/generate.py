@@ -1001,6 +1001,13 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     except Exception as e:
         print(f"  [WARN] Summary API failed: {e}")
 
+    # RSS Feed generation
+    try:
+        from dossier.report.rss_feed import generate_rss_feed
+        generate_rss_feed()
+    except Exception as e:
+        print(f"  [WARN] RSS feed failed: {e}")
+
     # ── Stage 12b: Blog Entry ──
     print("\n[15b/16] GHOST BLOG UPDATE")
     try:
