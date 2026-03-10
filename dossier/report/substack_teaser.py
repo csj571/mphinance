@@ -38,7 +38,8 @@ def generate_teaser(summary: dict = None) -> str:
     signals = summary.get("signals", {})
     sam = summary.get("sam", {})
     narrative = summary.get("narrative", {})
-    report_url = summary.get("meta", {}).get("report_url", "https://mphinance.github.io/mphinance/")
+    report_url_base = summary.get("meta", {}).get("report_url", "https://mphinance.github.io/mphinance/")
+    report_url = f"{report_url_base}?utm_source=substack&utm_medium=email&utm_campaign=dossier-{date}"
 
     # ── Build the teaser ──
     regime_map = {
@@ -129,7 +130,7 @@ Every section. Every chart. Every signal. The full 16-stage analysis.
 
 *Ghost Alpha Dossier is generated daily at 5AM CST by a 16-stage pipeline that scans the entire market. Built by Michael. Roasted by Sam.*
 
-*Support Sam's compute: [Ghost Alpha Indicator](https://mphinance.com/ghost-alpha/) — $8 one-time.*
+*Support Sam's compute: [Ghost Alpha Indicator](https://mphinance.com/ghost-alpha/?utm_source=substack&utm_medium=email&utm_campaign=ghost-alpha) — $8 one-time.*
 """
 
     # Write the teaser

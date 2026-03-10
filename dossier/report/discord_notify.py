@@ -59,7 +59,8 @@ def post_dossier_to_discord(summary: dict, dry_run: bool = False) -> bool:
     picks = summary.get("picks", {})
     signals = summary.get("signals", {})
     sam = summary.get("sam", {})
-    report_url = summary.get("meta", {}).get("report_url", "")
+    report_url_base = summary.get("meta", {}).get("report_url", "")
+    report_url = f"{report_url_base}?utm_source=discord&utm_medium=notification&utm_campaign=dossier-{date}" if report_url_base else ""
 
     # Build the message
     regime_emoji = market.get("regime_emoji", "🟡")
