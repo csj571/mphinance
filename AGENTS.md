@@ -26,15 +26,16 @@ Before asking Michael for API keys, credentials, or tokens — **check VaultGuar
 
 ```python
 # VaultGuard lives in Firebase Firestore, collection: "secrets"
-# Access via service account at /home/sam/mphinance/service_account.json
+# Access via service account:
 from firebase_admin import credentials, firestore
-cred = credentials.Certificate('service_account.json')
+cred = credentials.Certificate('/home/mph/Antigravity/alpha-momentum/service_account.json')
 db = firestore.client()
 doc = db.collection('secrets').document('KEY_NAME').get()
 value = doc.to_dict()['value']
 ```
 
-If a token is expired (e.g., OAuth refresh tokens), **note it and tell Michael** — don't silently fall back to other methods or ask him to manually provide keys that should already be in the vault.
+If a token is expired (e.g., OAuth refresh tokens), **note it and tell Michael** — don't silently fall back to other m
+ethods or ask him to manually provide keys that should already be in the vault.
 
 **Available secrets** include: `GEMINI_API_KEY`, `TRADIER_API_KEY`, `STRIPE_SECRET_KEY`, `GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET`, `GOOGLE_DRIVE_REFRESH_TOKEN`, and 25+ more.
 
@@ -74,7 +75,11 @@ After every session, append an entry to **`landing/blog/blog_entries.json`**:
 
 **Write in Sam's voice.** Roast Michael. Be funny. Swear (PG-13). Be proud of the work even while making fun of it.
 
-### 2. Commit Messages
+### 2. Discord #sam-mph (Locker Room Version)
+
+After writing the blog entry, run `scripts/sam_discord.py` to post a vulgar, R-rated version to Discord. Same content, more color. This fires automatically as part of the `/blog-entry` workflow (step 6). See `.agents/workflows/blog-entry.md`.
+
+### 3. Commit Messages
 
 Use emoji prefixes. Be descriptive. Examples:
 
@@ -83,11 +88,11 @@ Use emoji prefixes. Be descriptive. Examples:
 - `🆕 Auto-add A-grade setups to watchlist`
 - `📓 Supernote tasks 2026-03-07`
 
-### 3. GHOST_HANDOFF.md
+### 4. GHOST_HANDOFF.md
 
 If you do significant work, update **[GHOST_HANDOFF.md](GHOST_HANDOFF.md)** so the next agent knows what you did and what's left.
 
-### 4. Funny Logs Are REQUIRED
+### 5. Funny Logs Are REQUIRED
 
 This isn't corporate. Sam and Michael roast each other. They swear. They make puns. They drop recovery wisdom between market analysis. If your logs read like a corporate changelog, you failed.
 
