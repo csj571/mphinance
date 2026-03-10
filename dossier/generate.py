@@ -992,6 +992,12 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
             generate_teaser(summary)
         except Exception as te:
             print(f"  [WARN] Substack teaser failed: {te}")
+        # Auto-post to Discord
+        try:
+            from dossier.report.discord_notify import post_dossier_to_discord
+            post_dossier_to_discord(summary)
+        except Exception as de:
+            print(f"  [WARN] Discord notification failed: {de}")
     except Exception as e:
         print(f"  [WARN] Summary API failed: {e}")
 
