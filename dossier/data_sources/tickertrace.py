@@ -7,6 +7,7 @@ Calls the deployed TickerTrace API to get what institutions are buying/selling.
 import re
 import httpx
 from dossier.config import TICKERTRACE_API_BASE
+from dossier.utils.retry import retry
 
 
 # ── Junk ticker filter ──
@@ -38,17 +39,14 @@ def _filter_divergences(items: list) -> list:
     return [d for d in items if not _is_junk(d.get("ticker", ""))]
 
 
+@retry(max_retries=3, initial_delay=2.0)
 def _get(endpoint: str, params: dict = None) -> dict:
-    """Make a GET request to the TickerTrace API."""
+    """Make a GET request to the TickerTrace API with automatic retry."""
     url = f"{TICKERTRACE_API_BASE}{endpoint}"
-    try:
-        with httpx.Client(timeout=15.0, follow_redirects=True) as client:
-            resp = client.get(url, params=params)
-            resp.raise_for_status()
-            return resp.json()
-    except Exception as e:
-        print(f"  [WARN] TickerTrace API error ({endpoint}): {e}")
-        return {}
+    with httpx.Client(timeout=15.0, follow_redirects=True) as client:
+        resp = client.get(url, params=params)
+        resp.raise_for_status()
+        return resp.json()
 
 
 def get_signals() -> dict:
@@ -83,7 +81,11 @@ def fetch_institutional_data() -> dict:
     """Main entry point: fetch all institutional data needed for the report."""
     print("  Fetching TickerTrace institutional data...")
 
-    payload = get_signals()
+    try:
+        payload = get_signals()
+    except Exception as e:
+        print(f"  [WARN] TickerTrace unavailable after retries: {e}")
+        payload = {}
     if not payload:
         return {
             "as_of_date": "unknown",

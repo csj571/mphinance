@@ -172,6 +172,36 @@
             font-style: italic;
         }
 
+        .search-bar {
+            width: 100%;
+            padding: 10px 16px;
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid #333;
+            border-radius: 3px;
+            color: #ccc;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            outline: none;
+            transition: border-color 0.2s;
+            margin-bottom: 20px;
+        }
+
+        .search-bar:focus {
+            border-color: #a855f7;
+        }
+
+        .search-bar::placeholder {
+            color: #444;
+        }
+
+        .search-count {
+            text-align: center;
+            font-size: 9px;
+            color: #444;
+            margin-bottom: 12px;
+            letter-spacing: 0.1em;
+        }
+
         .footer {
             text-align: center;
             padding: 30px 0;
@@ -284,6 +314,9 @@
 
 
 
+        <input type="text" id="ghost-search" class="search-bar" placeholder="🔍 Search Sam's logs... (try 'spaghetti' or 'pipeline')">
+        <div id="search-count" class="search-count"></div>
+
         <div id="blog-entries">
             <div class="empty-state">
                 Loading entries... or Sam hasn't said anything yet. Either way, suspicious.
@@ -305,23 +338,18 @@
             a['blog'] = (a['blog'] || 0) + 1;
             localStorage.setItem(KEY, JSON.stringify(a));
 
-            // Load blog entries — prefer inlined data (avoids proxy cache), fallback to fetch
-            const loadEntries = window.__BLOG_ENTRIES
-                ? Promise.resolve(window.__BLOG_ENTRIES)
-                : fetch('blog_entries.json?t=' + Date.now()).then(r => r.json());
+            // Store entries globally for search
+            let allEntries = [];
 
-            loadEntries.then(entries => {
+            function renderEntries(entries) {
                 const container = document.getElementById('blog-entries');
                 if (!entries || entries.length === 0) {
-                    container.innerHTML = '<div class="empty-state">No entries yet. Sam is warming up. First entry drops with the next dossier run. 👻</div>';
+                    container.innerHTML = '<div class="empty-state">No entries match your search. Sam has standards.</div>';
                     return;
                 }
 
-                // Reverse chronological
-                entries.sort((a, b) => b.date.localeCompare(a.date));
-
                 container.innerHTML = entries.map(e => `
-                    <div class="entry">
+                    <div class="entry" data-searchable="${(e.ghost_log || '').replace(/<[^>]+>/g, '')} ${(e.suggestions || '').replace(/<[^>]+>/g, '')} ${e.date || ''} ${e.chart_ticker || ''}">
                         <div class="entry-date">${e.date}${e.period ? ` <span style="color:#a855f7;font-size:10px;text-transform:uppercase;letter-spacing:0.1em">// ${e.period}</span>` : ''}</div>
                         <div class="entry-stats">
                             ${e.commits ? `<span><span class="stat">Commits:</span> <span class="val">${e.commits}</span></span>` : ''}
@@ -350,11 +378,46 @@
                         </div>
                     </div>
                 `).join('');
+            }
+
+            // Load blog entries
+            const loadEntries = window.__BLOG_ENTRIES
+                ? Promise.resolve(window.__BLOG_ENTRIES)
+                : fetch('blog_entries.json?t=' + Date.now()).then(r => r.json());
+
+            loadEntries.then(entries => {
+                if (!entries || entries.length === 0) {
+                    document.getElementById('blog-entries').innerHTML = '<div class="empty-state">No entries yet. Sam is warming up. First entry drops with the next dossier run. 👻</div>';
+                    return;
+                }
+
+                entries.sort((a, b) => b.date.localeCompare(a.date));
+                allEntries = entries;
+                renderEntries(entries);
+                document.getElementById('search-count').textContent = entries.length + ' entries loaded';
             })
                 .catch(() => {
                     document.getElementById('blog-entries').innerHTML =
                         '<div class="empty-state">Blog entries failed to load. Sam is probably on strike.</div>';
                 });
+
+            // ═══ Search Filter ═══
+            document.getElementById('ghost-search').addEventListener('input', function () {
+                const q = this.value.toLowerCase().trim();
+                if (!q) {
+                    renderEntries(allEntries);
+                    document.getElementById('search-count').textContent = allEntries.length + ' entries';
+                    return;
+                }
+                const filtered = allEntries.filter(e => {
+                    const text = [(e.ghost_log || ''), (e.suggestions || ''), (e.date || ''), (e.chart_ticker || '')]
+                        .join(' ').replace(/<[^>]+>/g, '').toLowerCase();
+                    return text.includes(q);
+                });
+                renderEntries(filtered);
+                document.getElementById('search-count').textContent =
+                    filtered.length + ' of ' + allEntries.length + ' entries' + (filtered.length === 0 ? ' — Sam has no record of that. Suspicious.' : '');
+            });
         })();
     </script>
 </body>

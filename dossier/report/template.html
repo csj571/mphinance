@@ -8,6 +8,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ALPHA.DOSSIER // {{ date }}</title>
+    <meta name="description" content="Ghost Alpha Dossier — Daily AI-powered market intelligence report for {{ date }}. Momentum picks, institutional signals, technical analysis, and Sam's market commentary.">
+
+    <!-- Open Graph / Social Sharing -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Alpha Dossier // {{ date }} — Ghost Alpha">
+    <meta property="og:description" content="Daily AI-powered market intelligence: momentum picks, institutional signals, VIX regime, and technical setups.">
+    <meta property="og:url" content="https://mphinance.github.io/mphinance/reports/{{ date }}_alpha_dossier.html">
+    <meta property="og:site_name" content="Ghost Alpha — mphinance">
+    <meta property="og:image" content="https://mphinance.github.io/mphinance/ticker/{{ (dossiers[0].ticker if dossiers) or 'SPY' }}/chart.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Alpha Dossier // {{ date }}">
+    <meta name="twitter:description" content="Daily AI market intel — momentum picks, institutional flows, VIX regime. Built by Michael. Written by Sam. 👻">
+    <meta name="twitter:image" content="https://mphinance.github.io/mphinance/ticker/{{ (dossiers[0].ticker if dossiers) or 'SPY' }}/chart.png">
+
     <link
         href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap"
         rel="stylesheet">
@@ -89,6 +105,36 @@
         .signal-card:hover {
             transform: translateY(-2px);
             border-color: #22d3ee;
+        }
+
+        /* ── Print-Friendly Stylesheet ── */
+        @media print {
+            body {
+                background: #fff !important;
+                color: #111 !important;
+                background-image: none !important;
+                font-size: 10px;
+            }
+            .scanline, .grid-bg { display: none !important; }
+            .hud-panel {
+                background: #f9f9f9 !important;
+                border-color: #ccc !important;
+                box-shadow: none !important;
+                backdrop-filter: none !important;
+                break-inside: avoid;
+            }
+            * {
+                color: #111 !important;
+                text-shadow: none !important;
+            }
+            .text-neon-green, [class*="neon-green"] { color: #059669 !important; }
+            .text-neon-red, [class*="neon-red"] { color: #dc2626 !important; }
+            .text-neon-blue, [class*="neon-blue"] { color: #2563eb !important; }
+            .text-neon-amber, [class*="neon-amber"] { color: #d97706 !important; }
+            .text-white { color: #111 !important; }
+            .text-gray-400, .text-gray-500, .text-gray-600, .text-gray-700 { color: #666 !important; }
+            a { text-decoration: underline; }
+            @page { margin: 0.5in; }
         }
     </style>
 </head>
@@ -1096,6 +1142,113 @@
     </div>
 
     </div>
+
+    <!-- ═══ FLOATING NAV + KEYBOARD SHORTCUTS ═══ -->
+    <!-- Progress bar -->
+    <div id="read-progress" style="position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,#a855f7,#00f3ff);z-index:9999;transition:width 0.15s;width:0%;"></div>
+
+    <!-- Scroll to top -->
+    <button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="position:fixed;bottom:24px;right:24px;width:40px;height:40px;border-radius:50%;background:rgba(10,10,10,0.9);border:1px solid #333;color:#00f3ff;font-size:16px;cursor:pointer;z-index:9998;opacity:0;transition:opacity 0.3s,transform 0.3s;transform:translateY(10px);display:flex;align-items:center;justify-content:center;" title="Scroll to top (T)">↑</button>
+
+    <!-- Keyboard help tooltip -->
+    <div id="kb-help" style="position:fixed;bottom:70px;right:24px;background:rgba(10,10,10,0.95);border:1px solid #333;border-radius:4px;padding:12px 16px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#888;z-index:9998;opacity:0;pointer-events:none;transition:opacity 0.3s;line-height:1.8;">
+        <div style="color:#a855f7;margin-bottom:4px;font-weight:bold;">⌨ KEYBOARD</div>
+        <div><span style="color:#00f3ff;">J</span> / <span style="color:#00f3ff;">K</span> — next / prev section</div>
+        <div><span style="color:#00f3ff;">T</span> — scroll to top</div>
+        <div><span style="color:#00f3ff;">?</span> — toggle this help</div>
+    </div>
+
+    <script>
+    (function() {
+        // Collect all major sections
+        var sectionMarkers = document.querySelectorAll('.hud-panel, [class*="border-l-4"]');
+        var sections = [];
+        sectionMarkers.forEach(function(el) {
+            var header = el.querySelector('h2, h3, .font-tech');
+            if (header && header.textContent.trim()) {
+                sections.push({ el: el, label: header.textContent.trim().slice(0, 30) });
+            }
+        });
+
+        var currentSectionIdx = 0;
+
+        // Read progress bar
+        var progressBar = document.getElementById('read-progress');
+        var scrollTop = document.getElementById('scroll-top');
+        var kbHelp = document.getElementById('kb-help');
+        var helpVisible = false;
+
+        window.addEventListener('scroll', function() {
+            var scrolled = window.scrollY;
+            var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            var pct = docHeight > 0 ? (scrolled / docHeight) * 100 : 0;
+            progressBar.style.width = pct + '%';
+
+            // Show/hide scroll-to-top
+            if (scrolled > 400) {
+                scrollTop.style.opacity = '1';
+                scrollTop.style.transform = 'translateY(0)';
+            } else {
+                scrollTop.style.opacity = '0';
+                scrollTop.style.transform = 'translateY(10px)';
+            }
+
+            // Track current section
+            for (var i = sections.length - 1; i >= 0; i--) {
+                if (sections[i].el.getBoundingClientRect().top <= 100) {
+                    currentSectionIdx = i;
+                    break;
+                }
+            }
+        }, { passive: true });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            // Don't hijack when typing in inputs
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            switch(e.key.toLowerCase()) {
+                case 'j':
+                    e.preventDefault();
+                    if (currentSectionIdx < sections.length - 1) {
+                        currentSectionIdx++;
+                        sections[currentSectionIdx].el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                    break;
+                case 'k':
+                    e.preventDefault();
+                    if (currentSectionIdx > 0) {
+                        currentSectionIdx--;
+                        sections[currentSectionIdx].el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                    break;
+                case 't':
+                    e.preventDefault();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    break;
+                case '?':
+                    e.preventDefault();
+                    helpVisible = !helpVisible;
+                    kbHelp.style.opacity = helpVisible ? '1' : '0';
+                    kbHelp.style.pointerEvents = helpVisible ? 'auto' : 'none';
+                    break;
+            }
+        });
+
+        // Hover over scroll button shows keyboard hint
+        scrollTop.addEventListener('mouseenter', function() {
+            kbHelp.style.opacity = '1';
+            kbHelp.style.pointerEvents = 'auto';
+        });
+        scrollTop.addEventListener('mouseleave', function() {
+            if (!helpVisible) {
+                kbHelp.style.opacity = '0';
+                kbHelp.style.pointerEvents = 'none';
+            }
+        });
+    })();
+    </script>
+
 </body>
 
 </html>

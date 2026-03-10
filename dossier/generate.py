@@ -28,12 +28,61 @@ import sys
 import os
 import argparse
 import subprocess
+import time
 from datetime import datetime, timezone
 from pathlib import Path
+from contextlib import contextmanager
 
 # Ensure project root (mphinance/) is on path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+
+
+# ── Pipeline Instrumentation ──
+class PipelineTimer:
+    """Track per-stage timing and errors for status dashboard."""
+
+    def __init__(self):
+        self.stages: dict[str, dict] = {}
+        self.errors: list[dict] = []
+        self.started_at = datetime.now(timezone.utc).isoformat()
+        self._start_time = time.time()
+
+    @contextmanager
+    def stage(self, name: str):
+        """Context manager for timing a pipeline stage."""
+        t0 = time.time()
+        try:
+            yield
+            self.stages[name] = {
+                "duration": round(time.time() - t0, 2),
+                "status": "ok",
+            }
+        except Exception as e:
+            self.stages[name] = {
+                "duration": round(time.time() - t0, 2),
+                "status": "error",
+                "error": str(e)[:200],
+            }
+            self.errors.append({"stage": name, "message": str(e)[:200]})
+            print(f"  [ERROR] {name}: {e}")
+
+    def skip(self, name: str):
+        """Mark a stage as skipped."""
+        self.stages[name] = {"duration": 0, "status": "skipped"}
+
+    def to_dict(self, date: str, dry_run: bool, summary: dict) -> dict:
+        """Build the full stats dict for the status page."""
+        return {
+            "date": date,
+            "started_at": self.started_at,
+            "finished_at": datetime.now(timezone.utc).isoformat(),
+            "total_duration": round(time.time() - self._start_time, 1),
+            "dry_run": dry_run,
+            "stages": self.stages,
+            "errors": self.errors,
+            "summary": summary,
+        }
 
 from dossier.config import CORE_WATCHLIST, MAX_DOSSIER_TICKERS, OUTPUT_DIR, SCANNER_STRATEGIES
 from dossier.data_sources.tickertrace import _is_junk
@@ -572,6 +621,7 @@ def _update_index_page():
 
 def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     """Execute the full Alpha Dossier pipeline."""
+    timer = PipelineTimer()
 
     print("=" * 72)
     print(f"  🔮 GHOST ALPHA DOSSIER — PIPELINE START")
@@ -580,13 +630,14 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     print("=" * 72)
 
     # ── Stage 1: Market Pulse ──
-    print("\n[1/9] MARKET PULSE")
-    from dossier.data_sources.market_pulse import fetch_market_pulse
-    market_pulse = fetch_market_pulse()
-    print(f"  {len(market_pulse)} benchmarks fetched")
+    print("\n[1/16] MARKET PULSE")
+    with timer.stage("Market Pulse"):
+        from dossier.data_sources.market_pulse import fetch_market_pulse
+        market_pulse = fetch_market_pulse()
+        print(f"  {len(market_pulse)} benchmarks fetched")
 
     # ── Stage 2: Strategy Scanner ──
-    print("\n[2/9] STRATEGY SCANNER")
+    print("\n[2/16] STRATEGY SCANNER")
     try:
         scanner_signals = _run_mphinance_strategies()
     except Exception as e:
@@ -646,17 +697,17 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     scanned_tickers = [s["symbol"] for s in scanner_signals]
 
     # ── Stage 3: Institutional Data ──
-    print("\n[3/9] TICKERTRACE INSTITUTIONAL DATA")
+    print("\n[3/16] TICKERTRACE INSTITUTIONAL DATA")
     from dossier.data_sources.tickertrace import fetch_institutional_data
     institutional = fetch_institutional_data()
 
     # ── Stage 4: Market Regime ──
-    print("\n[4/9] MARKET REGIME")
+    print("\n[4/16] MARKET REGIME")
     from dossier.data_sources.market_regime import fetch_market_regime
     market = fetch_market_regime()
 
     # ── Stage 5: Persistence ──
-    print("\n[5/9] SIGNAL PERSISTENCE")
+    print("\n[5/16] SIGNAL PERSISTENCE")
     from dossier.persistence.tracker import update_persistence
     persistence = update_persistence(scanned_tickers, date)
     print(f"  Lifers: {persistence['summary']['lifers']}")
@@ -664,7 +715,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     print(f"  New Signals: {persistence['summary']['new_signals']}")
 
     # ── Stage 6: Technical Setups ──
-    print("\n[6/11] TECHNICAL SETUPS (Tao of Trading)")
+    print("\n[6/16] TECHNICAL SETUPS (Tao of Trading)")
     from dossier.data_sources.technical_setups import generate_setups
     # Analyze top strategy picks for setup quality
     setup_tickers = [s["symbol"] for s in scanner_signals if s["strategy"] != "Core Watchlist"][:8]
@@ -679,13 +730,13 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     print(f"  {len(technical_setups)} setups analyzed")
 
     # ── Stage 7: CSP Setups ──
-    print("\n[7/11] CSP SETUPS")
+    print("\n[7/16] CSP SETUPS")
     from dossier.data_sources.csp_setups import fetch_csp_setups
     csp_setups = fetch_csp_setups(max_results=8)
     print(f"  {len(csp_setups)} CSP candidates")
 
     # ── Stage 8: Ticker Enrichment ──
-    print(f"\n[8/11] TICKER ENRICHMENT (top {MAX_DOSSIER_TICKERS})")
+    print(f"\n[8/16] TICKER ENRICHMENT (top {MAX_DOSSIER_TICKERS})")
     from dossier.data_sources.ticker_enrichment import enrich_ticker
 
     # Prioritize strategy-found tickers + institutional buying
@@ -703,7 +754,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     print(f"  {len(dossiers)} dossiers enriched")
 
     # ── Stage 8a: Market Regime Detection ──
-    print("\n[8a/14] MARKET REGIME DETECTION")
+    print("\n[9/16] MARKET REGIME DETECTION")
     market_regime = {}
     try:
         from dossier.market_regime import detect_regime
@@ -718,7 +769,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         print(f"  [WARN] Market regime detection failed: {e}")
 
     # ── Stage 8b: Momentum Picks ──
-    print("\n[8b/14] DAILY MOMENTUM PICKS")
+    print("\n[10/16] DAILY MOMENTUM PICKS")
     momentum_picks = {}
     try:
         from dossier.momentum_picks import pick_daily_momentum, format_picks_text
@@ -765,7 +816,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         print(f"  [WARN] Momentum picks failed: {e}")
 
     # ── Stage 8d: Daily Trading Setups (3-Style) ──
-    print("\n[8d/14] DAILY TRADING SETUPS (Day Trade / Swing / CSP)")
+    print("\n[11/16] DAILY TRADING SETUPS (Day Trade / Swing / CSP)")
     daily_setups_data = {}
     try:
         from dossier.daily_setups import build_daily_setups, format_setups_text
@@ -781,7 +832,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         print(f"  [WARN] Daily setups failed: {e}")
 
     # ── Stage 8c: Chart Generation ──
-    print("\n[8c/14] CHART GENERATION")
+    print("\n[12/16] CHART GENERATION")
     try:
         from dossier.charts import generate_charts_for_dossier
         chart_tickers = [d["ticker"] for d in dossiers[:5]]
@@ -796,12 +847,12 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         charts = []
 
     # ── Stage 9: AI Narrative ──
-    print("\n[9/14] AI NARRATIVE")
+    print("\n[13/16] AI NARRATIVE")
     from dossier.report.ai_narrative import generate_narrative
     ai_narrative = generate_narrative(market, institutional, scanner_signals, persistence, dossiers)
 
     # ── Stage 9b: Ghost Dev Log ──
-    print("\n[9b/11] GHOST DEV LOG")
+    print("\n[13b/16] GHOST DEV LOG")
     try:
         from dossier.report.ghost_log import generate_ghost_log
         ghost_log = generate_ghost_log(date)
@@ -812,7 +863,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         ghost_log = ""
 
     # ── Stage 9c: Ghost Suggestions ──
-    print("\n[9c/13] GHOST SUGGESTIONS")
+    print("\n[13c/16] GHOST SUGGESTIONS")
     try:
         from dossier.report.ghost_suggestions import generate_suggestions
         ghost_suggestions = generate_suggestions(date)
@@ -823,7 +874,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         ghost_suggestions = ""
 
     # ── Stage 10: Report Generation ──
-    print("\n[10/13] REPORT GENERATION")
+    print("\n[14/16] REPORT GENERATION")
     from dossier.report.builder import build_report, build_pdf
 
     report_path = build_report(
@@ -848,7 +899,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         pdf_path = build_pdf(report_path)
 
     # ── Stage 11: Ticker Deep-Dive Pages ──
-    print("\n[11/13] TICKER PAGES")
+    print("\n[14b/16] TICKER PAGES")
     try:
         from dossier.pages.ticker_page import generate_all_ticker_pages
         ticker_pages = generate_all_ticker_pages(dossiers, date, institutional)
@@ -858,7 +909,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         ticker_pages = []
 
     # ── Stage 11b: Auto-Watchlist Discovery ──
-    print("\n[11b/13] AUTO-WATCHLIST (A-grade only)")
+    print("\n[14c/16] AUTO-WATCHLIST (A-grade only)")
     try:
         watchlist_path = PROJECT_ROOT / "watchlist.txt"
         existing = set()
@@ -888,7 +939,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         print(f"  [WARN] Auto-watchlist failed: {e}")
 
     # ── Stage 11c: Watchlist Auto-Cleanup ──
-    print("\n[11c/16] WATCHLIST CLEANUP")
+    print("\n[14d/16] WATCHLIST CLEANUP")
     try:
         watchlist_path = PROJECT_ROOT / "watchlist.txt"
         if watchlist_path.exists():
@@ -916,12 +967,30 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     except Exception as e:
         print(f"  [WARN] Watchlist cleanup failed: {e}")
 
-    # ── Stage 12: Update Index ──
-    print("\n[12/13] INDEX UPDATE")
+    # ── Stage 15: Update Index + Summary API ──
+    print("\n[15/16] INDEX + STATUS + SUMMARY API")
     _update_index_page()
 
+    # Generate Dossier Summary API (the atomic content unit)
+    try:
+        from dossier.report.summary_api import generate_summary_api
+        generate_summary_api(
+            date=date,
+            market_pulse=market_pulse,
+            scanner_signals=scanner_signals,
+            dossiers=dossiers,
+            momentum_picks=momentum_picks,
+            market=market,
+            ai_narrative=ai_narrative,
+            technical_setups=technical_setups,
+            daily_setups=daily_setups_data,
+            ghost_log=ghost_log,
+        )
+    except Exception as e:
+        print(f"  [WARN] Summary API failed: {e}")
+
     # ── Stage 12b: Blog Entry ──
-    print("\n[12b/13] GHOST BLOG UPDATE")
+    print("\n[15b/16] GHOST BLOG UPDATE")
     try:
         import json as _json
         blog_path = PROJECT_ROOT / "docs" / "blog" / "blog_entries.json"
@@ -973,7 +1042,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     # ── Stage 13: Git Push ──
     if not dry_run:
         # ── Stage 12c: Revenue Stats Auto-Refresh ──
-        print("\n[12c/16] REVENUE STATS")
+        print("\n[15c/16] REVENUE + GA4 STATS")
         try:
             from dossier.fetch_revenue import fetch_stripe_revenue
             import json as _rev_json
@@ -989,8 +1058,43 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         except Exception as e:
             print(f"  [WARN] Revenue refresh failed: {e}")
 
-        # ── Stage 12d: Auto-Backtest ──
-        print("\n[12d/16] AUTO-BACKTEST")
+        # GA4 Analytics Refresh (only locally — needs OAuth)
+        if not os.environ.get("GITHUB_ACTIONS"):
+            try:
+                from dossier.fetch_ga4_stats import fetch_ga4_stats
+                ga4_result = fetch_ga4_stats()
+                if ga4_result:
+                    print(f"  ✓ GA4 stats refreshed")
+            except Exception as e:
+                print(f"  [WARN] GA4 refresh failed: {e}")
+
+        # Landing stats auto-refresh (scanner strategies count, ETFs, watchlist size)
+        try:
+            import json as _lstats_json
+            landing_stats = {
+                "scanner_strategies": len(SCANNER_STRATEGIES),
+                "etf_count": len(__import__('dossier.config', fromlist=['SECTOR_ETFS']).SECTOR_ETFS),
+                "watchlist_size": len(CORE_WATCHLIST),
+                "signals_today": len(scanner_signals),
+                "dossiers_today": len(dossiers),
+                "updated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+                "market_regime": {
+                    "vix_level": market.get("vix", {}).get("vix_level", 0),
+                    "regime_name": market.get("vix", {}).get("regime_name", "UNKNOWN"),
+                    "spy_change": market_pulse[0].get("change_pct", 0) if market_pulse else 0,
+                    "date": date,
+                },
+            }
+            ls_path = PROJECT_ROOT / "landing" / "data" / "pipeline_stats.json"
+            ls_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(ls_path, "w") as lf:
+                _lstats_json.dump(landing_stats, lf, indent=2)
+            print(f"  ✓ Landing stats updated → {ls_path}")
+        except Exception as e:
+            print(f"  [WARN] Landing stats failed: {e}")
+
+        # ── Stage 15d: Auto-Backtest ──
+        print("\n[15d/16] AUTO-BACKTEST")
         try:
             from dossier.backtesting.auto_backtest import main as run_backtest
             run_backtest()
@@ -998,7 +1102,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         except Exception as e:
             print(f"  [WARN] Auto-backtest failed: {e}")
 
-        print("\n[13/16] GIT PUSH")
+        print("\n[16/16] GIT PUSH")
         print("  Committing to Git...")
         try:
             subprocess.run(["git", "add", "docs/", "dossier/persistence/", "landing/blog/", "landing/data/", "watchlist.txt"],
@@ -1014,9 +1118,9 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     else:
         print("\n[SKIP] Dry run — skipping git push")
 
-    # ── Stage 14: Substack Draft ──
+    # ── Substack Draft (post-push) ──
     if not dry_run:
-        print("\n[14/16] SUBSTACK DRAFT")
+        print("\n[POST] SUBSTACK DRAFT")
         try:
             from substack_dossier import build_dossier_doc, SubstackClient
             client = SubstackClient()
@@ -1033,9 +1137,30 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         except Exception as e:
             print(f"  [WARN] Substack draft failed: {e}")
 
-    # ── Summary ──
+    # ── Summary + Status Dashboard ──
+    pipeline_summary = {
+        "market_pulse": len(market_pulse),
+        "signals_count": len(scanner_signals),
+        "dossiers_enriched": len(dossiers),
+        "ticker_pages": len(ticker_pages),
+        "technical_setups": len(technical_setups) if technical_setups else 0,
+        "csp_setups": len(csp_setups) if csp_setups else 0,
+        "charts_generated": len(charts) if charts else 0,
+    }
+
+    # Generate Pipeline Status Dashboard
+    try:
+        from dossier.report.status_page import generate_status_page
+        stats = timer.to_dict(date, dry_run, pipeline_summary)
+        generate_status_page(stats)
+        print("  ✓ Pipeline Status Dashboard generated")
+    except Exception as e:
+        print(f"  [WARN] Status dashboard failed: {e}")
+
     print("\n" + "=" * 72)
     print("  ✅ PIPELINE COMPLETE")
+    total_time = time.time() - timer._start_time
+    print(f"  ⏱️  Total: {total_time:.1f}s ({total_time / 60:.1f} min)")
     print(f"  Report: {report_path}")
     if pdf_path:
         print(f"  PDF:    {pdf_path}")
@@ -1047,6 +1172,10 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     if momentum_picks and momentum_picks.get("picks"):
         gold = momentum_picks["picks"][0]
         print(f"  🥇 GOLD PICK: {gold['ticker']} (Score: {gold['score']}/100)")
+    if timer.errors:
+        print(f"  ⚠️  Errors: {len(timer.errors)}")
+        for err in timer.errors:
+            print(f"     └─ {err['stage']}: {err['message'][:80]}")
     print("=" * 72)
 
     return report_path

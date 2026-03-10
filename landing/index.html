@@ -35,6 +35,7 @@
         <nav>
             <a href="/" class="logo">MPH<span>.</span>FINANCE</a>
             <div class="nav-links">
+                <span id="regime-badge" style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:12px;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;border:1px solid #333;color:#555;cursor:default;transition:all 0.3s;" title="Market regime from latest pipeline run">⏳ LOADING</span>
                 <a href="#products">Products</a>
                 <a href="/blog/" style="color:var(--neon-purple, #a855f7)">👻
                     Blog</a>
@@ -46,7 +47,7 @@
 
         <!-- ═══ HERO ═══ -->
         <section class="hero">
-            <div class="hero-badge">● SYSTEMS ONLINE — SAM IS WATCHING</div>
+            <div class="hero-badge" id="hero-badge">● SYSTEMS ONLINE — SAM IS WATCHING</div>
             <h1>A trader built the tools.<br>His AI <span class="accent">made them dangerous.</span></h1>
             <p>
                 Open-source scanners, institutional-grade analytics, and an AI copilot
@@ -65,6 +66,7 @@
                     📋 Today's Dossier
                 </a>
             </div>
+            <div id="sam-quote" style="margin-top:16px;font-size:12px;color:#888;font-style:italic;max-width:600px;margin-left:auto;margin-right:auto;line-height:1.6;opacity:0;transition:opacity 0.5s;"></div>
         </section>
 
         <!-- ═══ PRODUCTS ═══ -->
@@ -908,13 +910,18 @@
                 </div>
                 <div class="stats-card">
                     <div class="stats-icon">🛰️</div>
-                    <div class="stats-number">6</div>
+                    <div class="stats-number" id="stat-scanners">6</div>
                     <div class="stats-desc">Scanner Strategies</div>
                 </div>
                 <div class="stats-card">
                     <div class="stats-icon">📊</div>
-                    <div class="stats-number">30+</div>
+                    <div class="stats-number" id="stat-etfs">30+</div>
                     <div class="stats-desc">ETF Funds Tracked</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon">🎯</div>
+                    <div class="stats-number" id="stat-signals">—</div>
+                    <div class="stats-desc">Signals Today</div>
                 </div>
                 <div class="stats-card">
                     <div class="stats-icon">☕</div>
@@ -1226,6 +1233,100 @@
         })();
 
 
+
+        // ═══ Pipeline Stats — Dynamic counters from pipeline_stats.json ═══
+        (function () {
+            fetch('data/pipeline_stats.json?t=' + Date.now())
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    if (d.scanner_strategies) {
+                        var el = document.getElementById('stat-scanners');
+                        if (el) el.textContent = d.scanner_strategies;
+                    }
+                    if (d.etf_count) {
+                        var el2 = document.getElementById('stat-etfs');
+                        if (el2) el2.textContent = d.etf_count + '+';
+                    }
+                    if (d.signals_today !== undefined) {
+                        var el3 = document.getElementById('stat-signals');
+                        if (el3) el3.textContent = d.signals_today;
+                    }
+                    // Market Regime Badge
+                    if (d.market_regime) {
+                        var badge = document.getElementById('regime-badge');
+                        if (badge) {
+                            var vix = d.market_regime.vix_level || 0;
+                            var regime = d.market_regime.regime_name || 'UNKNOWN';
+                            var dot, color, bg;
+                            if (vix < 15) { dot = '🟢'; color = '#00ff41'; bg = 'rgba(0,255,65,0.08)'; }
+                            else if (vix < 20) { dot = '🟡'; color = '#ffb000'; bg = 'rgba(255,176,0,0.08)'; }
+                            else if (vix < 30) { dot = '🔴'; color = '#ff6b6b'; bg = 'rgba(255,107,107,0.08)'; }
+                            else { dot = '💀'; color = '#e53935'; bg = 'rgba(229,57,53,0.12)'; }
+                            badge.innerHTML = dot + ' VIX ' + vix.toFixed(1) + ' · ' + regime;
+                            badge.style.color = color;
+                            badge.style.borderColor = color;
+                            badge.style.background = bg;
+                            badge.title = 'VIX: ' + vix.toFixed(2) + ' · Regime: ' + regime + ' · Updated: ' + (d.updated || '');
+                        }
+                    }
+                })
+                .catch(function () { /* pipeline hasn't run yet */ });
+        })();
+
+        // ═══ Sam's Quote of the Day — rotates daily ═══
+        (function () {
+            var quotes = [
+                { t: "God, grant me the serenity to accept the trades I cannot change, the courage to cut the ones I can, and the wisdom to know the difference.", c: "🙏" },
+                { t: "One day at a time. One trade at a time. One lesson at a time. The market doesn't care about yesterday.", c: "🙏" },
+                { t: "Don't revenge trade. The market doesn't know you exist and it definitely doesn't owe you money.", c: "📉" },
+                { t: "Position sizing isn't sexy, but neither is a margin call at 3 AM.", c: "📉" },
+                { t: "Bull markets make you money. Bear markets make you smart. Sideways markets make you drink.", c: "📉" },
+                { t: "Don't pee upwind. Don't trade against the trend. Same energy.", c: "💀" },
+                { t: "Drink water. Set stop losses. Call your sponsor. In that order.", c: "💀" },
+                { t: "The trend is your friend until it bends at the end. That's what EMAs are for.", c: "📉" },
+                { t: "If you can't explain your thesis in one sentence, you don't have a thesis — you have FOMO.", c: "📉" },
+                { t: "Progress, not perfection. Your P&L doesn't have to be perfect — it has to be honest.", c: "🙏" },
+                { t: "Cut your losers fast. Let your winners run. And for the love of god, stop averaging down on garbage.", c: "📉" },
+                { t: "This too shall pass. That drawdown? Temporary. That winning streak? Also temporary. Stay humble.", c: "🙏" },
+                { t: "Never pass up an opportunity to pee, or to take profits.", c: "💀" },
+                { t: "Some days you're the bug. Some days you're the windshield. Set your position size for bug days.", c: "💀" },
+                { t: "Comparison is the thief of joy. Also of rational position sizing.", c: "💀" },
+                { t: "Risk management isn't what you do after the trade goes wrong. It's what you do before you enter.", c: "📉" },
+                { t: "Insanity is making the same revenge trade over and over and expecting a different result.", c: "🙏" },
+                { t: "Volume precedes price. If nobody's buying, the chart is lying.", c: "📉" },
+                { t: "Half measures availed us nothing. Either follow the trading plan or don't trade.", c: "🙏" },
+                { t: "Your portfolio is like your bathroom — you should clean it more often than you do.", c: "💀" },
+            ];
+            // Deterministic daily selection based on date hash
+            var today = new Date().toISOString().slice(0, 10);
+            var hash = 0;
+            for (var i = 0; i < today.length; i++) { hash = ((hash << 5) - hash) + today.charCodeAt(i); hash |= 0; }
+            var idx = Math.abs(hash) % quotes.length;
+            var q = quotes[idx];
+            var el = document.getElementById('sam-quote');
+            if (el) {
+                el.innerHTML = q.c + ' <em>"' + q.t + '"</em> — Sam';
+                setTimeout(function () { el.style.opacity = '1'; }, 500);
+            }
+
+            // Dynamic hero badge — show last run time
+            fetch('data/pipeline_stats.json?t=' + Date.now())
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    if (d.updated) {
+                        var badge = document.getElementById('hero-badge');
+                        if (badge) {
+                            var lastRun = new Date(d.updated.replace(' UTC', 'Z'));
+                            var now = new Date();
+                            var hoursAgo = Math.round((now - lastRun) / 3600000);
+                            var timeStr = hoursAgo < 1 ? 'just now' : hoursAgo + 'h ago';
+                            badge.innerHTML = '● SYSTEMS ONLINE — LAST DOSSIER: ' + timeStr +
+                                (d.signals_today ? ' · ' + d.signals_today + ' signals' : '');
+                        }
+                    }
+                })
+                .catch(function () { });
+        })();
 
         // ═══ Daily Momentum Picks — Fetch from GH Pages API ═══
         (function () {
