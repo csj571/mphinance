@@ -986,6 +986,12 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
             daily_setups=daily_setups_data,
             ghost_log=ghost_log,
         )
+        # Auto-generate Substack teaser from the summary
+        try:
+            from dossier.report.substack_teaser import generate_teaser
+            generate_teaser(summary)
+        except Exception as te:
+            print(f"  [WARN] Substack teaser failed: {te}")
     except Exception as e:
         print(f"  [WARN] Summary API failed: {e}")
 
@@ -1101,6 +1107,14 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
             print(f"  ✓ Backtest complete")
         except Exception as e:
             print(f"  [WARN] Auto-backtest failed: {e}")
+
+        # ── Stage 15e: Track Record ──
+        print("\n[15e/16] TRACK RECORD UPDATE")
+        try:
+            from dossier.backtesting.track_record_generator import generate_track_record
+            generate_track_record()
+        except Exception as e:
+            print(f"  [WARN] Track record update failed: {e}")
 
         print("\n[16/16] GIT PUSH")
         print("  Committing to Git...")
