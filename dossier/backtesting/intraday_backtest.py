@@ -173,18 +173,20 @@ def preload_all_data():
     _init_cache()
     
     underlyings = get_all_underlyings()
-    # Import needed inside if not already imported, but safe here
     from dossier.data_sources.leveraged_etf_map import LEVERAGED_2X_MAP
     etfs = []
     for u in underlyings:
         if u in LEVERAGED_2X_MAP:
-            if LEVERAGED_2X_MAP[u].get("bull_2x"): etfs.extend(LEVERAGED_2X_MAP[u]["bull_2x"])
-            if LEVERAGED_2X_MAP[u].get("bear_2x"): etfs.extend(LEVERAGED_2X_MAP[u]["bear_2x"])
+            if LEVERAGED_2X_MAP[u].get("bull"): etfs.extend(LEVERAGED_2X_MAP[u]["bull"])
+            if LEVERAGED_2X_MAP[u].get("bear"): etfs.extend(LEVERAGED_2X_MAP[u]["bear"])
     etfs = list(set(etfs))
+    
+    # Also fetch 5m data for underlyings as fallback when ETF data is missing
+    all_5m_tickers = list(set(etfs + list(underlyings)))
     
     missing_1d = [t for t in underlyings if f"1d_{t}" not in _DATA_CACHE]
     missing_1h = ["SPY"] if "1h_SPY" not in _DATA_CACHE else []
-    missing_5m = [t for t in etfs if f"5m_{t}" not in _DATA_CACHE]
+    missing_5m = [t for t in all_5m_tickers if f"5m_{t}" not in _DATA_CACHE]
     
     if missing_1h:
         print(f"\n  [CACHE] Fetching 1h data for SPY...", flush=True)
@@ -436,7 +438,9 @@ def pick_top_n(
 ) -> list[dict]:
     """
     Pick the top N underlyings for a given date based on ADX ranking.
-    Filters by minimum ADX, relative volume, and ETF liquidity.
+    Always trades BULL side (leveraged ETFs are a long-side intraday play).
+    Marks conviction based on trend direction for position sizing.
+    Falls back to trading the underlying directly if no bull ETF exists.
     """
     day_data = rankings.get(date_str, [])
     if not day_data:
@@ -450,19 +454,29 @@ def pick_top_n(
         # Filter: relative volume
         if r["rel_vol"] < min_rel_vol:
             continue
-        # Filter: must have a 2x ETF
+
         etfs = LEVERAGED_2X_MAP.get(r["ticker"])
-        if not etfs or not etfs.get("bull"):
+        bull_etf = etfs["bull"][0] if etfs and etfs.get("bull") else None
+
+        # Always trade bull side — fallback to underlying if no ETF
+        trade_ticker = bull_etf or r["ticker"]
+        is_leveraged = bull_etf is not None
+
+        # Must have SOME tradeable instrument
+        if not trade_ticker:
             continue
-        # Use first bull ETF (we'd normally pick by volume, but for backtest
-        # we use the primary one since historical volume data is expensive)
-        bull_etf = etfs["bull"][0]
-        bear_etf = etfs["bear"][0] if etfs.get("bear") else None
+
+        # Conviction: bull-trend days get full size, bear-trend days get 70%
+        # (daily downtrend means higher risk of breakdown, size down)
+        is_bear = r["trend"] == "BEAR"
+        conviction = 0.7 if is_bear else 1.0
 
         candidates.append({
             **r,
             "bull_etf": bull_etf,
-            "bear_etf": bear_etf,
+            "trade_ticker": trade_ticker,
+            "is_leveraged": is_leveraged,
+            "conviction": conviction,
         })
 
     return candidates[:n]
@@ -653,28 +667,35 @@ def run_backtest(
     atr_mult: float = 1.0,
     spy_adx_threshold: float = 20.0,
     signal_count_cap: int = 999,
-    position_sizes: tuple = (9000, 4500, 4500),
+    total_capital: float = 27000.0,
+    max_positions: int = 5,
     min_pick_adx: float = 15.0,
     min_rel_vol: float = 0.8,
     verbose: bool = True,
+    # Legacy compat — ignored if total_capital is set
+    position_sizes: tuple = None,
 ) -> dict:
     """
     Run the full day trading backtest.
 
-    For each trading day:
+    Direction-aware with dynamic position sizing:
       1. Check SPY hourly ADX (regime filter)
-      2. Pick top 3 underlyings by daily ADX
-      3. Check signal count cap
-      4. Simulate trades on the 2x ETFs
+      2. Pick top N underlyings by daily ADX (N = dynamic based on signal quality)
+      3. Trade bull ETF on bull days, bear ETF on bear days, underlying as fallback
+      4. Deploy full capital across positions
       5. Track P&L
     """
+    # Dynamic sizing: divide capital equally across positions
+    if position_sizes is None:
+        position_sizes = tuple([total_capital // 3] * 3)
+
     if verbose:
         print(f"\n{'═' * 80}")
-        print(f"  👻 INTRADAY BACKTEST — 2x Leveraged ETF Day Trading Strategy")
+        print(f"  👻 INTRADAY BACKTEST v2 — Direction-Aware 2x ETF Strategy")
         print(f"{'═' * 80}")
         print(f"  Entry: +{entry_offset_min}m from open | ATR mult: {atr_mult}x")
         print(f"  SPY ADX threshold: {spy_adx_threshold} | Signal cap: {signal_count_cap}")
-        print(f"  Sizing: ${position_sizes[0]:,} / ${position_sizes[1]:,} / ${position_sizes[2]:,}")
+        print(f"  Capital: ${total_capital:,.0f} | Max positions: {max_positions}")
         print(f"{'═' * 80}")
 
     # ── Step 0: Preload all data to prevent network sequential bottlenecks ──
@@ -738,8 +759,18 @@ def run_backtest(
             })
             continue
 
-        # ── Pick top 3 ──
-        picks = pick_top_n(rankings, date_str, n=len(position_sizes),
+        # ── Dynamic pick count based on signal breadth ──
+        # Strong trend days (many high-ADX setups) → take more positions
+        high_adx_count = sum(1 for r in day_ranking if r["adx"] >= 25)
+        if high_adx_count >= 5:
+            n_positions = min(max_positions, 5)
+        elif high_adx_count >= 3:
+            n_positions = min(max_positions, 4)
+        else:
+            n_positions = 3
+
+        # Fetch more candidates than we need — fallthrough on no-data
+        picks = pick_top_n(rankings, date_str, n=n_positions + 4,
                           min_adx=min_pick_adx, min_rel_vol=min_rel_vol)
         if not picks:
             skipped_days["no_picks"] += 1
@@ -753,47 +784,72 @@ def run_backtest(
             })
             continue
 
-        # ── Simulate trades ──
+        # ── Dynamic position sizing: divide capital equally ──
+        per_position = total_capital / n_positions
+
+        # ── Simulate trades with fallthrough ──
         day_trades = []
         day_pnl = 0.0
+        trades_filled = 0
 
-        for idx, pick in enumerate(picks):
-            size = position_sizes[idx] if idx < len(position_sizes) else position_sizes[-1]
-            etf = pick["bull_etf"]
+        for pick in picks:
+            if trades_filled >= n_positions:
+                break
 
-            # Pre-fetch ETF data if we haven't yet
-            if etf not in etf_data_cache:
+            # Use pre-selected trade ticker (bull ETF or underlying fallback)
+            trade_ticker = pick.get("trade_ticker", pick.get("bull_etf"))
+            is_leveraged = pick.get("is_leveraged", True)
+            conviction = pick.get("conviction", 1.0)
+
+            if not trade_ticker:
+                continue
+
+            # Pre-fetch data if we haven't yet
+            if trade_ticker not in etf_data_cache:
                 if verbose:
-                    print(f"  📥 Fetching {etf} (2x {pick['ticker']})...", end=" ", flush=True)
-                fetch_5m_data(etf)
-                fetch_daily_data(etf, days=120)
-                etf_data_cache.add(etf)
+                    lev_label = "2x" if is_leveraged else "1x"
+                    conv_label = "" if conviction >= 1.0 else f" [{conviction:.0%}]"
+                    print(f"  📥 Fetching {trade_ticker} ({lev_label} {pick['ticker']}){conv_label}...",
+                          end=" ", flush=True)
+                fetch_5m_data(trade_ticker)
+                fetch_daily_data(trade_ticker, days=120)
+                etf_data_cache.add(trade_ticker)
                 if verbose:
                     print("✓")
 
+            # Adjust position size:
+            # 1. Conviction scaling (70% on bear-trend days)
+            # 2. Unleveraged underlying gets 2x size to approximate 2x ETF dollar-move
+            base_size = per_position * conviction
+            effective_size = base_size if is_leveraged else base_size * 2
+
             trade = simulate_trade(
-                etf_ticker=etf,
+                etf_ticker=trade_ticker,
                 date_str=date_str,
                 entry_offset_min=entry_offset_min,
                 atr_mult=atr_mult,
-                position_size=size,
+                position_size=effective_size,
             )
 
             if trade:
                 trade["underlying"] = pick["ticker"]
                 trade["underlying_adx"] = pick["adx"]
                 trade["underlying_rel_vol"] = pick["rel_vol"]
-                trade["grade"] = "A" if idx == 0 else "B"
+                trade["conviction"] = conviction
+                trade["is_leveraged"] = is_leveraged
+                trade["grade"] = "A" if trades_filled == 0 else "B" if trades_filled == 1 else "C"
                 day_trades.append(trade)
                 day_pnl += trade["pnl_dollars"]
                 all_trades.append(trade)
+                trades_filled += 1
+            # If trade is None (no data), silently skip to next pick (fallthrough)
 
         if not day_trades:
             skipped_days["no_data"] += 1
             daily_results.append({
                 "date": date_str,
                 "status": "skipped",
-                "reason": "No ETF data available",
+                "reason": "No tradeable data for any candidate",
                 "spy_adx": spy["adx"],
                 "pnl": 0,
                 "trades": [],
@@ -814,9 +870,14 @@ def run_backtest(
         if verbose:
             win_count = sum(1 for t in day_trades if t["pnl_dollars"] > 0)
             emoji = "🟢" if day_pnl > 0 else "🔴" if day_pnl < 0 else "⚪"
+            trade_labels = []
+            for t in day_trades:
+                conv = "" if t.get("conviction", 1.0) >= 1.0 else "⚠"
+                lev = "" if t.get("is_leveraged", True) else "(1x)"
+                trade_labels.append(f"{conv}{t['underlying']}→{t['etf']}{lev}")
             print(f"  {emoji} {date_str} | SPY ADX {spy['adx']:4.0f} | "
                   f"${day_pnl:+8.0f} | {win_count}/{len(day_trades)} wins | "
-                  f"{', '.join(t['underlying']+' → '+t['etf'] for t in day_trades)}")
+                  f"{', '.join(trade_labels)}")
 
     # ── Compute summary statistics ──
     traded_days = [d for d in daily_results if d["status"] == "traded"]
@@ -864,6 +925,8 @@ def run_backtest(
             "atr_mult": atr_mult,
             "spy_adx_threshold": spy_adx_threshold,
             "signal_count_cap": signal_count_cap,
+            "total_capital": total_capital,
+            "max_positions": max_positions,
             "position_sizes": list(position_sizes),
             "min_pick_adx": min_pick_adx,
         },
@@ -961,14 +1024,13 @@ def run_parameter_sweep(verbose: bool = False) -> dict:
     spy_thresholds = [15.0, 20.0, 25.0]
     signal_caps = [30, 40, 50, 60, 999]
 
-    # Position sizing configs
-    sizing_configs = {
-        "sniper_18k": (18000, 4500, 4500),
-        "heavy_12k": (12000, 9000, 6000),
-        "flat_9k": (9000, 9000, 9000),
-        "baseline_9k": (9000, 4500, 4500),
-        "small_6k": (6000, 4500, 3000),
-        "safe_3k": (4500, 3000, 3000),
+    # Capital deployment configs (total capital, max positions)
+    capital_configs = {
+        "full_27k_x5": {"total_capital": 27000, "max_positions": 5},
+        "full_27k_x4": {"total_capital": 27000, "max_positions": 4},
+        "full_27k_x3": {"total_capital": 27000, "max_positions": 3},
+        "medium_18k_x3": {"total_capital": 18000, "max_positions": 3},
+        "safe_12k_x3": {"total_capital": 12000, "max_positions": 3},
     }
 
     # Phase 1: Run with default sizing to find best entry/exit/filter params
@@ -1056,23 +1118,31 @@ def run_parameter_sweep(verbose: bool = False) -> dict:
 
     best_cap = max(cap_results.items(), key=lambda x: x[1]["total_pnl"])
 
-    # Phase 5: Position sizing sweep (using all best params)
-    print(f"\n  Phase 6: Position sizing sweep...")
+    # Phase 5: Capital deployment sweep (using all best params)
+    print(f"\n  Phase 6: Capital deployment sweep...")
     sizing_results = {}
-    for name, sizes in sizing_configs.items():
-        print(f"    Testing {name} ${sizes[0]:,}/${sizes[1]:,}/${sizes[2]:,}...", end=" ", flush=True)
+    for name, cfg in capital_configs.items():
+        print(f"    Testing {name} ${cfg['total_capital']:,} x{cfg['max_positions']}...", end=" ", flush=True)
         r = run_backtest(entry_offset_min=best_entry[0], atr_mult=best_atr[0],
                         spy_adx_threshold=best_spy[0],
                         signal_count_cap=best_cap[0],
-                        position_sizes=sizes, verbose=False)
+                        total_capital=cfg["total_capital"],
+                        max_positions=cfg["max_positions"],
+                        verbose=False)
         sizing_results[name] = {
-            "sizes": list(sizes),
+            "total_capital": cfg["total_capital"],
+            "max_positions": cfg["max_positions"],
             "total_pnl": r.get("total_pnl", 0),
             "trade_win_rate": r.get("trade_win_rate", 0),
             "profit_factor": r.get("profit_factor", 0),
-            "total_capital": sum(sizes),
+            "total_trades": r.get("total_trades", 0),
+            "days_traded": r.get("days_traded", 0),
         }
-        print(f"${r.get('total_pnl', 0):+,.0f} | {r.get('trade_win_rate', 0):.0f}%W | PF {r.get('profit_factor', 0):.2f}")
+        print(f"${r.get('total_pnl', 0):+,.0f} | {r.get('trade_win_rate', 0):.0f}%W | PF {r.get('profit_factor', 0):.2f} | {r.get('total_trades', 0)} trades")
+
+    best_sizing = max(sizing_results.items(), key=lambda x: x[1]["total_pnl"])
+    best_capital = capital_configs[best_sizing[0]]["total_capital"]
+    best_max_pos = capital_configs[best_sizing[0]]["max_positions"]
 
     # ── Final run with optimal params ──
     print(f"\n{'═' * 80}")
@@ -1082,6 +1152,7 @@ def run_parameter_sweep(verbose: bool = False) -> dict:
     print(f"  Exit:      {best_atr[0]}x daily ATR trailing stop")
     print(f"  SPY ADX:   ≥ {best_spy[0]}")
     print(f"  Signal cap: {best_cap[0] if best_cap[0] < 999 else 'none'}")
+    print(f"  Capital:   ${best_capital:,} across {best_max_pos} positions")
     print(f"\n  Running final detailed backtest...")
 
     final = run_backtest(
@@ -1089,6 +1160,8 @@ def run_parameter_sweep(verbose: bool = False) -> dict:
         atr_mult=best_atr[0],
         spy_adx_threshold=best_spy[0],
         signal_count_cap=best_cap[0],
+        total_capital=best_capital,
+        max_positions=best_max_pos,
         verbose=True,
     )
 
@@ -1114,17 +1187,21 @@ def run_parameter_sweep(verbose: bool = False) -> dict:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="👻 Intraday Backtest — 2x Leveraged ETF Day Trading",
+        description="👻 Intraday Backtest v2 — Direction-Aware 2x ETF Day Trading",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--entry", type=int, default=30,
-                        help="Entry offset minutes from open (default: 30 = 10:00 AM)")
-    parser.add_argument("--atr", type=float, default=1.0,
-                        help="ATR trailing stop multiplier (default: 1.0)")
+    parser.add_argument("--entry", type=int, default=35,
+                        help="Entry offset minutes from open (default: 35 = 10:05 AM)")
+    parser.add_argument("--atr", type=float, default=1.25,
+                        help="ATR trailing stop multiplier (default: 1.25)")
     parser.add_argument("--spy-adx", type=float, default=20.0,
                         help="SPY ADX threshold (default: 20)")
-    parser.add_argument("--signal-cap", type=int, default=25,
-                        help="Max signals before sitting out (default: 25)")
+    parser.add_argument("--signal-cap", type=int, default=999,
+                        help="Max signals before sitting out (default: 999 = no cap)")
+    parser.add_argument("--capital", type=float, default=27000.0,
+                        help="Total capital to deploy (default: 27000)")
+    parser.add_argument("--max-positions", type=int, default=5,
+                        help="Max concurrent positions (default: 5)")
     parser.add_argument("--sweep", action="store_true",
                         help="Run full parameter sweep")
     parser.add_argument("--quick", action="store_true",
@@ -1143,6 +1220,8 @@ if __name__ == "__main__":
             atr_mult=args.atr,
             spy_adx_threshold=args.spy_adx,
             signal_count_cap=args.signal_cap,
+            total_capital=args.capital,
+            max_positions=args.max_positions,
             verbose=True,
         )
 

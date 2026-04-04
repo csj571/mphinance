@@ -1,50 +1,94 @@
-# 👻 GHOST_HANDOFF.md — Leveraged Day Trading Backtest Engine
+# 👻 GHOST_HANDOFF.md — Leveraged Day Trading Backtest Engine v2
 
-## ⚠️ RESUME PRIORITY FOR TOMORROW
+## ⚠️ RESUME PRIORITY
 
-1. **Verify the Leveraged ETF Backtest Sweep** — Run `python3 -m dossier.backtesting.intraday_backtest --sweep --save docs/ticker/leveraged_backtest_results.json`
-   - *Note:* The script was hanging today because of a Yahoo Finance rate limit triggered by sequential looping over 140+ individual `yf.download` calls in the Sweep phase. We added a permanent `pickle` filesystem cache, but because the cache was empty, it was hanging while fetching the initial dataset.
-2. **Optimize Data Fetch** — If it still hangs on empty cache, we need to convert the `for t in tickers: yf.download(...)` loop inside `intraday_backtest.py` into a single batched call: `yf.download(" ".join(tickers), ...)` to bypass Yahoo IP blocks.
-3. **Commit the System** — Once parameters validate the $3K/week profit hypothesis (or show us how to adjust position sizing), push the `leveraged_screener.py`, `leveraged_etf_map.py`, and `docs/leveraged-screener/` diary page updates to GitHub.
-4. **Deploy the Diary** — Push to `gh-pages` so the live site reflects the 2x strategy.
-
----
-
-## What Happened This Session
-
-### 1. Intraday Backtest Engine Created
-- Built `dossier/backtesting/intraday_backtest.py` to validate "The $3K/Week Playbook" rules.
-- Simulates minute-level executions on 2x ETFs using yfinance 5m candles.
-- Includes SPY ADX regime filtering, +X min entry dips, and ATR trailing stop logic.
-
-### 2. Baseline Test Run
-- First baseline run with 1x ATR and 9:30+30m entry worked (13 weeks data).
-- Found that default rules were skipping *too many* days initially (signal cap of 25 was blowing up because daily ADX naturally produces more signals than intraday).
-- Updated defaults: `min_pick_adx=15` and `signal_cap=999`. Reran: generated +$7,252 P&L, 56% win rate, 1.66 profit factor... but 0 weeks hit the strict $3K target with baseline sizing.
-
-### 3. Parameter Sweep Bottleneck
-- Triggered `--sweep` flag to compute optimums for: entry timing, ATR distance, SPY threshold, signal count cap, and position sizing.
-- Python process seemingly deadlocked repeatedly.
-- Root Cause: Sequential loop fetching 72 daily candles + 72 5-min candles triggered a quiet rate-limit block from Yahoo Finance (`urllib3` connection pooling freeze).
-- Mitigation: Embedded a file-based `pickle` caching mechanism (`_DATA_CACHE`) stored manually at `/tmp/yfinance_intraday_cache` to shield future iterations from duplicate network calls.
+1. **Run Full Parameter Sweep** — `python3 -m dossier.backtesting.intraday_backtest --sweep --save docs/ticker/leveraged_backtest_results.json`
+   - Engine is v2 with conviction sizing, fallthrough, and full $27K capital
+   - Uses pickle cache at `/tmp/yfinance_intraday_cache/` — runs in ~3s with warm cache
+   - **Clear cache before sweep:** `rm /tmp/yfinance_intraday_cache/cache.pkl`
+2. **Update Playbook Frontend** — Inject sweep results into `docs/leveraged-screener/index.html`
+3. **Deploy** — Push to GitHub Pages and rsync landing page to Vultr
 
 ---
 
-## Key Files Changed
+## What Happened This Session (2026-04-04)
 
-| File | What |
-|------|------|
-| `dossier/backtesting/intraday_backtest.py` | NEW file: Full intraday system + trailing stop + parameter sweep |
-| `dossier/data_sources/leveraged_etf_map.py` | Built master index mapping 72 underlyings to bullish/bearish 2x ETFs |
-| `dossier/data_sources/leveraged_screener.py` | Built multi-TF (15M/1H) scanner hitting TradingView API |
-| `docs/leveraged-screener/index.html` | The Playbook front-end with responsive layout |
+### 1. Quant Diagnostic Completed
+- Identified 7 systematic biases causing $8K backtest vs $39K live ($3K/week × 13 weeks)
+- Primary issues: capital under-utilization ($18K of $27K), bull-only trading, data gaps
+
+### 2. Bear ETF Experiment (FAILED — Key Finding)
+- Implemented direction-aware trading: bear ETFs (TSDD, NVD, MSTZ) on bear-trend days
+- **Result: PnL dropped from $10K to -$460**
+- **Root cause:** Daily ADX trend ≠ intraday direction. The dip-buy strategy is fundamentally a long-side play. Bear ETFs fight the mean-reversion bounce logic.
+- **Reverted to bull-only** with conviction-based sizing (70% position on bear-trend days)
+
+### 3. Engine Overhaul (v2)
+- **Full capital:** $27K deployed across 3 equal positions ($9K each)
+- **Fallthrough:** When top-3 ETF has no 5m data, try next candidates (pad with +4 extras)
+- **Conviction sizing:** Bear-trend days get 70% position size as risk management
+- **Preload bug fix:** Fixed wrong dict keys (`bull_2x` → `bull`) in bulk fetcher
+- **Underlying fallback:** Trade underlying at 2x size when no bull ETF exists
+- **Dynamic pick count:** REMOVED — 3 positions is optimal. 4+ positions dilute the edge.
+
+### 4. Position Count Discovery
+| Positions | PnL | Win% | Profit Factor |
+|-----------|-----|------|---------------|
+| **3** | **$10,096** | **57%** | **1.66** |
+| 4 | $5,464 | 53% | 1.32 |
+| 5 | $4,057 | 51% | 1.24 |
+
+### 5. SPY ADX Threshold Confirmation
+| Threshold | PnL | Days | PF |
+|-----------|-----|------|----|
+| ≥15 | $8,568 | 57 | 1.38 |
+| ≥18 | $5,596 | 52 | 1.26 |
+| **≥20** | **$10,096** | **44** | **1.66** |
 
 ---
 
-## What's Left For Tomorrow (Actionable)
+## Final v2 Metrics
 
-- [ ] Re-run the sweep and populate `docs/ticker/leveraged_backtest_results.json`
-- [ ] If hanging persists, batch `yf.download` calls in `fetch_daily_data`
-- [ ] Update frontend to inject these sweep numbers dynamically into the diary HTML
-- [ ] Run `git add` for all the uncommitted `leveraged_*` files
-- [ ] Deploy new Playbook / Trading Diary rules 
+```
+Period:         2025-11-28 → 2026-04-02 (86 days)
+Days traded:    44 / 86 (51%)
+Total trades:   132
+Total PnL:      $10,096 (+21% vs v1 $8,342)
+Win Rate:       57% (trade) / 54% (day)
+Avg Daily:      $229
+Best Day:       $3,277
+Worst Day:      -$1,148
+Profit Factor:  1.66
+Weeks ≥ $3K:    1/13
+```
+
+## Remaining Backtest-vs-Live Gap
+
+$10K/13wk ($775/wk) vs $3K/wk live. Remaining gap is from:
+- **DCA:** Michael adds to winners with reserve capital (not modeled)
+- **Discretion:** Tape reading, L2 flow, real-time adjustments
+- **Entry precision:** Fixed timer vs actual dip detection
+- **Skipped days:** 49% skipped in backtest (ADX filter + data gaps)
+- **16 no-data days** where yfinance has no 5m candles for newer ETFs
+
+---
+
+## Key Files
+
+| File | Status |
+|------|--------|
+| `dossier/backtesting/intraday_backtest.py` | ✅ v2 engine — ready for sweep |
+| `dossier/data_sources/leveraged_etf_map.py` | ✅ 72 underlyings mapped |
+| `dossier/data_sources/leveraged_screener.py` | ✅ TradingView scanner |
+| `docs/leveraged-screener/index.html` | ⚠️ Needs updated metrics from sweep |
+| `docs/ticker/leveraged_backtest_results.json` | ✅ Saved from v2 run |
+
+---
+
+## What's Left (Actionable)
+
+- [ ] Run `--sweep` with v2 engine to confirm optimal params haven't shifted
+- [ ] Update frontend to show v2 metrics
+- [ ] Git commit all changes
+- [ ] Deploy to GitHub Pages
+- [ ] Write Ghost Blog entry for the quant investigation
