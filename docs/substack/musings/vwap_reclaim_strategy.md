@@ -14,16 +14,14 @@ I'm going to show you all of it. With data.
 
 Here's what I backtested over 13 weeks (Nov 2025 – Apr 2026) using **$27,000 in capital** — roughly the size of most retail day trading accounts:
 
-| Metric | Value |
-|--------|-------|
-| **Total P&L** | **$20,349** |
-| **Daily Return** | 1.71% |
-| **Profit Factor** | 2.75 |
-| **Win Rate** | 59% |
-| **Avg Win** | $614 |
-| **Avg Loss** | $322 |
-| **Weekly Avg** | $1,565 |
-| **Trading Days** | 44 out of 86 (51%) |
+- **Total P&L:** **$20,349**
+- **Daily Return:** 1.71%
+- **Profit Factor:** 2.75
+- **Win Rate:** 59%
+- **Avg Win:** $614
+- **Avg Loss:** $322
+- **Weekly Avg:** $1,565
+- **Trading Days:** 44 out of 86 (51%)
 
 That last stat is important. **I only traded half the days.** The system sat out the other half because the market lacked direction. More on that below.
 
@@ -75,13 +73,11 @@ If no reclaim happens by end of day, no trade on that ticker. This is *condition
 
 I tested 5 different entry modes across 294 parameter combinations:
 
-| Entry Mode | Best PnL | Profit Factor |
-|-----------|----------|---------------|
-| **VWAP Reclaim** | **$20,349** | **2.75** |
-| Timer (+35m) | $11,089 | 1.74 |
-| EMA+RSI | $5,867 | 2.36 |
-| EMA Cross | $2,930 | 1.42 |
-| RSI Bounce | $1,267 | 1.15 |
+- **VWAP Reclaim:** **$20,349** (Profit Factor: 2.75)
+- **Timer (+35m):** $11,089 (Profit Factor: 1.74)
+- **EMA+RSI:** $5,867 (Profit Factor: 2.36)
+- **EMA Cross:** $2,930 (Profit Factor: 1.42)
+- **RSI Bounce:** $1,267 (Profit Factor: 1.15)
 
 VWAP reclaim nearly **doubled** the next best strategy. The entire top 20 was VWAP reclaim configs — not a single timer entry made the leaderboard.
 
@@ -115,22 +111,20 @@ That last part matters. If I hit $1,500 on Monday, Tuesday's capital is $28,500.
 
 I'll show you every week because transparency isn't optional here:
 
-| Week | P&L | Status |
-|------|-----|--------|
-| W02 Jan 6 | -$186 | 🔴 Light |
-| W03 Jan 13 | +$2,112 | 🟡 Single day banger |
-| W04 Jan 20 | +$2,127 | 🟡 Grind |
-| W05 Jan 27 | -$1,868 | 🔴 Bad opener |
-| W06 Feb 3 | -$446 | 🔴 Mixed |
-| **W07 Feb 9** | **+$7,507** | **🟢 MONSTER WEEK** |
-| W08 Feb 17 | +$1,332 | 🟡 Holiday week |
-| W09 Feb 24 | +$2,127 | 🟡 Consistent |
-| **W10 Mar 2** | **+$5,136** | **🟢 Strong week** |
-| W11 Mar 9 | +$798 | 🟡 Grind |
-| W12 Mar 17 | +$546 | 🟡 Light green |
-| W13 Mar 23 | +$221 | 🟡 Barely green |
-| W14 Mar 30 | +$944 | 🟡 Volatile |
-| **TOTAL** | **+$20,349** | |
+- **W02 Jan 6:** -$186 (🔴 Light)
+- **W03 Jan 13:** +$2,112 (🟡 Single day banger)
+- **W04 Jan 20:** +$2,127 (🟡 Grind)
+- **W05 Jan 27:** -$1,868 (🔴 Bad opener)
+- **W06 Feb 3:** -$446 (🔴 Mixed)
+- **W07 Feb 9:** **+$7,507** (🟢 **MONSTER WEEK**)
+- **W08 Feb 17:** +$1,332 (🟡 Holiday week)
+- **W09 Feb 24:** +$2,127 (🟡 Consistent)
+- **W10 Mar 2:** **+$5,136** (🟢 **Strong week**)
+- **W11 Mar 9:** +$798 (🟡 Grind)
+- **W12 Mar 17:** +$546 (🟡 Light green)
+- **W13 Mar 23:** +$221 (🟡 Barely green)
+- **W14 Mar 30:** +$944 (🟡 Volatile)
+- **TOTAL: +$20,349**
 
 Notice the losing weeks. W05-W06 was a **$2,314 drawdown**. The system doesn't avoid drawdowns — it manages them with position sizing and the SPY filter. Two red weeks out of thirteen isn't fun, but it's survivable.
 
@@ -269,17 +263,15 @@ This is the same system I use manually. The algo just removes the times I'm in a
 
 ## 📎 All Links
 
-| What | Link |
-|------|------|
-| **Daily Screener** (updated 5AM CST) | [mphinance.github.io/mphinance/leveraged-screener/daily.html](https://mphinance.github.io/mphinance/leveraged-screener/daily.html) |
-| **Full Backtest & Methodology** | [mphinance.github.io/mphinance/leveraged-screener/](https://mphinance.github.io/mphinance/leveraged-screener/) |
-| **Ghost Alpha Dossier** (daily report) | [mphinance.github.io/mphinance/](https://mphinance.github.io/mphinance/) |
-| **Landing Page** | [mphinance.com](https://mphinance.com) |
-| **Ghost Alpha Indicator** (TradingView) | [mphinance.com/ghost-alpha/](https://mphinance.com/ghost-alpha/) |
-| **TraderDaddy Pro** (Whop community) | [traderdaddy.pro](https://www.traderdaddy.pro/register?ref=8DUEMWAJ) |
-| **TickerTrace Pro** (ETF tracker) | [tickertrace.pro](https://www.tickertrace.pro) |
-| **Ghost Blog** (dev log) | [mphinance.com/blog/](https://mphinance.com/blog/) |
-| **GitHub** (all source code) | [github.com/mphinance](https://github.com/mphinance/mphinance) |
-| **Substack** | [mphinance.substack.com](https://mphinance.substack.com) |
+- **Daily Screener (updated 5AM CST):** [mphinance.github.io/mphinance/leveraged-screener/daily.html](https://mphinance.github.io/mphinance/leveraged-screener/daily.html)
+- **Full Backtest & Methodology:** [mphinance.github.io/mphinance/leveraged-screener/](https://mphinance.github.io/mphinance/leveraged-screener/)
+- **Ghost Alpha Dossier (daily report):** [mphinance.github.io/mphinance/](https://mphinance.github.io/mphinance/)
+- **Landing Page:** [mphinance.com](https://mphinance.com)
+- **Ghost Alpha Indicator (TradingView):** [mphinance.com/ghost-alpha/](https://mphinance.com/ghost-alpha/)
+- **TraderDaddy Pro (Whop community):** [traderdaddy.pro](https://www.traderdaddy.pro/register?ref=8DUEMWAJ)
+- **TickerTrace Pro (ETF tracker):** [tickertrace.pro](https://www.tickertrace.pro)
+- **Ghost Blog (dev log):** [mphinance.com/blog/](https://mphinance.com/blog/)
+- **GitHub (all source code):** [github.com/mphinance](https://github.com/mphinance/mphinance)
+- **Substack:** [mphinance.substack.com](https://mphinance.substack.com)
 
 *P.S. — "Don't pee upwind. Don't trade against the trend. Same energy." — Sam*
