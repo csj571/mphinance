@@ -168,6 +168,87 @@ def _flatten_cols(df):
     return df
 
 
+def preload_all_data():
+    """Bulk download all needed data in just 3 yfinance requests to avoid rate limits."""
+    _init_cache()
+    
+    underlyings = get_all_underlyings()
+    # Import needed inside if not already imported, but safe here
+    from dossier.data_sources.leveraged_etf_map import LEVERAGED_2X_MAP
+    etfs = []
+    for u in underlyings:
+        if u in LEVERAGED_2X_MAP:
+            if LEVERAGED_2X_MAP[u].get("bull_2x"): etfs.extend(LEVERAGED_2X_MAP[u]["bull_2x"])
+            if LEVERAGED_2X_MAP[u].get("bear_2x"): etfs.extend(LEVERAGED_2X_MAP[u]["bear_2x"])
+    etfs = list(set(etfs))
+    
+    missing_1d = [t for t in underlyings if f"1d_{t}" not in _DATA_CACHE]
+    missing_1h = ["SPY"] if "1h_SPY" not in _DATA_CACHE else []
+    missing_5m = [t for t in etfs if f"5m_{t}" not in _DATA_CACHE]
+    
+    if missing_1h:
+        print(f"\n  [CACHE] Fetching 1h data for SPY...", flush=True)
+        try:
+            df_1h = yf.download("SPY", period="90d", interval="1h", progress=False, auto_adjust=True)
+            if df_1h is not None and not df_1h.empty:
+                _DATA_CACHE["1h_SPY"] = _flatten_cols(df_1h)
+                _save_cache()
+        except Exception as e:
+            print(f"  [WARN] SPY 1h fetch failed: {e}")
+
+    if missing_1d:
+        print(f"\n  [CACHE] Bulk fetching 1d data for {len(missing_1d)} underlyings...", flush=True)
+        try:
+            df_1d = yf.download(" ".join(missing_1d), period="120d", interval="1d", progress=False, auto_adjust=True)
+            if df_1d is not None and not df_1d.empty:
+                if len(missing_1d) == 1:
+                    _DATA_CACHE[f"1d_{missing_1d[0]}"] = _flatten_cols(df_1d)
+                elif isinstance(df_1d.columns, pd.MultiIndex):
+                    for t in missing_1d:
+                        if t in df_1d.columns.get_level_values(1):
+                            df_t = df_1d.xs(t, level=1, axis=1).dropna(how='all')
+                            if not df_t.empty:
+                                _DATA_CACHE[f"1d_{t}"] = df_t
+                            else:
+                                _DATA_CACHE[f"1d_{t}"] = None
+                        else:
+                            _DATA_CACHE[f"1d_{t}"] = None
+            _save_cache()
+        except Exception as e:
+            print(f"  [WARN] Bulk 1d fetch failed: {e}")
+            for t in missing_1d:
+                if f"1d_{t}" not in _DATA_CACHE:
+                    _DATA_CACHE[f"1d_{t}"] = None
+
+    if missing_5m:
+        print(f"\n  [CACHE] Bulk fetching 5m data for {len(missing_5m)} ETFs...", flush=True)
+        try:
+            chunk_size = 50
+            for i in range(0, len(missing_5m), chunk_size):
+                chunk = missing_5m[i:i+chunk_size]
+                print(f"    -> Chunk {i//chunk_size + 1}/{len(missing_5m)//chunk_size + 1}: {len(chunk)} ETFs...", flush=True)
+                df_5m = yf.download(" ".join(chunk), period="60d", interval="5m", progress=False, auto_adjust=True)
+                if df_5m is not None and not df_5m.empty:
+                    if len(chunk) == 1:
+                        _DATA_CACHE[f"5m_{chunk[0]}"] = _flatten_cols(df_5m)
+                    elif isinstance(df_5m.columns, pd.MultiIndex):
+                        for t in chunk:
+                            if t in df_5m.columns.get_level_values(1):
+                                df_t = df_5m.xs(t, level=1, axis=1).dropna(how='all')
+                                if not df_t.empty:
+                                    _DATA_CACHE[f"5m_{t}"] = df_t
+                                else:
+                                    _DATA_CACHE[f"5m_{t}"] = None
+                            else:
+                                _DATA_CACHE[f"5m_{t}"] = None
+                _save_cache()
+        except Exception as e:
+            print(f"  [WARN] Bulk 5m fetch failed: {e}")
+            for t in missing_5m:
+                if f"5m_{t}" not in _DATA_CACHE:
+                    _DATA_CACHE[f"5m_{t}"] = None
+
+
 def fetch_5m_data(ticker: str) -> pd.DataFrame | None:
     """Fetch 5-minute candles (max ~60 days from yfinance)."""
     _init_cache()
@@ -596,6 +677,9 @@ def run_backtest(
         print(f"  Sizing: ${position_sizes[0]:,} / ${position_sizes[1]:,} / ${position_sizes[2]:,}")
         print(f"{'═' * 80}")
 
+    # ── Step 0: Preload all data to prevent network sequential bottlenecks ──
+    preload_all_data()
+
     # ── Step 1: Compute SPY regime for each date ──
     if verbose:
         print("\n  🔍 Computing SPY hourly ADX (regime filter)...")
@@ -867,15 +951,15 @@ def run_parameter_sweep(verbose: bool = False) -> dict:
     print(f"  🔬 PARAMETER SWEEP — Testing all combinations")
     print(f"{'═' * 80}")
 
-    # Pre-compute shared data (rankings + SPY regime)
-    # These are cached globally, so first run populates, rest are instant
+    # Phase 1: Pre-computing shared data (one-time)...
     print("\n  Phase 1: Pre-computing shared data (one-time)...")
+    preload_all_data()
 
     # Parameters to sweep
     entry_offsets = [0, 15, 25, 30, 35, 45, 60, 90]  # minutes after open
-    atr_mults = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
-    spy_thresholds = [15, 18, 20, 22, 25]
-    signal_caps = [15, 20, 25, 30, 999]
+    atr_mults = [0.5, 0.75, 1.0, 1.25, 1.5]
+    spy_thresholds = [15.0, 20.0, 25.0]
+    signal_caps = [30, 40, 50, 60, 999]
 
     # Position sizing configs
     sizing_configs = {
@@ -893,8 +977,8 @@ def run_parameter_sweep(verbose: bool = False) -> dict:
     for offset in entry_offsets:
         print(f"    Testing +{offset}m entry...", end=" ", flush=True)
         r = run_backtest(entry_offset_min=offset, atr_mult=1.0,
-                        spy_adx_threshold=20, signal_count_cap=25,
-                        verbose=False)
+                         spy_adx_threshold=20, signal_count_cap=999,
+                         verbose=False)
         entry_results[offset] = {
             "total_pnl": r.get("total_pnl", 0),
             "trade_win_rate": r.get("trade_win_rate", 0),
@@ -915,7 +999,7 @@ def run_parameter_sweep(verbose: bool = False) -> dict:
     for mult in atr_mults:
         print(f"    Testing {mult}x ATR...", end=" ", flush=True)
         r = run_backtest(entry_offset_min=best_entry[0], atr_mult=mult,
-                        spy_adx_threshold=20, signal_count_cap=25,
+                        spy_adx_threshold=20, signal_count_cap=999,
                         verbose=False)
         atr_results[mult] = {
             "total_pnl": r.get("total_pnl", 0),
@@ -937,7 +1021,7 @@ def run_parameter_sweep(verbose: bool = False) -> dict:
     for thresh in spy_thresholds:
         print(f"    Testing ADX ≥ {thresh}...", end=" ", flush=True)
         r = run_backtest(entry_offset_min=best_entry[0], atr_mult=best_atr[0],
-                        spy_adx_threshold=thresh, signal_count_cap=25,
+                        spy_adx_threshold=thresh, signal_count_cap=999,
                         verbose=False)
         spy_results[thresh] = {
             "total_pnl": r.get("total_pnl", 0),
