@@ -265,4 +265,21 @@ This is the same system I use manually. The algo just removes the times I'm in a
 
 *— Michael*
 
+---
+
+## 📎 All Links
+
+| What | Link |
+|------|------|
+| **Daily Screener** (updated 5AM CST) | [mphinance.github.io/mphinance/leveraged-screener/daily.html](https://mphinance.github.io/mphinance/leveraged-screener/daily.html) |
+| **Full Backtest & Methodology** | [mphinance.github.io/mphinance/leveraged-screener/](https://mphinance.github.io/mphinance/leveraged-screener/) |
+| **Ghost Alpha Dossier** (daily report) | [mphinance.github.io/mphinance/](https://mphinance.github.io/mphinance/) |
+| **Landing Page** | [mphinance.com](https://mphinance.com) |
+| **Ghost Alpha Indicator** (TradingView) | [mphinance.com/ghost-alpha/](https://mphinance.com/ghost-alpha/) |
+| **TraderDaddy Pro** (Whop community) | [traderdaddy.pro](https://www.traderdaddy.pro/register?ref=8DUEMWAJ) |
+| **TickerTrace Pro** (ETF tracker) | [tickertrace.pro](https://www.tickertrace.pro) |
+| **Ghost Blog** (dev log) | [mphinance.com/blog/](https://mphinance.com/blog/) |
+| **GitHub** (all source code) | [github.com/mphinance](https://github.com/mphinance/mphinance) |
+| **Substack** | [mphinance.substack.com](https://mphinance.substack.com) |
+
 *P.S. — "Don't pee upwind. Don't trade against the trend. Same energy." — Sam*
