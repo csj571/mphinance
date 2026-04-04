@@ -166,7 +166,7 @@ On no-trade days (SPY ADX < 20), the screener shows a single message: *"SPY ADX 
 If you just want the exact steps to fire this off every day, here it is in 5 steps:
 
 1. **5:00 AM CST:** Check the [Daily Screener](https://mphinance.github.io/mphinance/leveraged-screener/daily.html). Identify the top 2 Grade A or Grade B picks.
-2. **9:30 AM EST:** Check the SPY ADX. If the screener says "sit on hands" (ADX < 20), close the laptop. You're done for the day.
+2. **9:30 AM EST:** Check the **SPY hourly ADX(14)**. If the screener says "sit on hands" (ADX < 20), close the laptop. You're done for the day.
 3. **9:45 AM+ EST:** For your top 2 targets, pull up the 5-minute chart with the VWAP indicator. Wait for the price to dip *below* VWAP.
 4. **The Entry:** The moment a 5-minute candle closes *back above* VWAP (a reclaim), buy the ETF.
 5. **The Exit:** Set a trailing stop at 1.25x the daily ATR from the high. If it doesn't hit, sell right before the bell at 3:55 PM EST. **No overnight holds.**
