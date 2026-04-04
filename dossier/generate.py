@@ -831,6 +831,22 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     except Exception as e:
         print(f"  [WARN] Daily setups failed: {e}")
 
+    # ── Stage 8e: Leveraged ETF Daily Screener ──
+    print("\n[11b/16] LEVERAGED ETF SCREENER")
+    leveraged_top_pick = None
+    try:
+        from dossier.data_sources.leveraged_daily_screener import generate_daily_screener
+        lev_result = generate_daily_screener(date_str=date)
+        if lev_result.get("top_picks"):
+            leveraged_top_pick = lev_result["top_picks"][0]
+            print(f"  ☢️ Top pick: {leveraged_top_pick['underlying']} → {leveraged_top_pick['etf']} (Grade {leveraged_top_pick['grade']}, ADX {leveraged_top_pick['adx']})")
+        elif not lev_result.get("is_trade_day"):
+            print(f"  ⚠️ No trade day (SPY ADX {lev_result['spy_adx']:.1f} < 20)")
+        else:
+            print(f"  No A/B grade picks today")
+    except Exception as e:
+        print(f"  [WARN] Leveraged screener failed: {e}")
+
     # ── Stage 8c: Chart Generation ──
     print("\n[12/16] CHART GENERATION")
     try:
@@ -892,6 +908,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         ghost_suggestions=ghost_suggestions,
         momentum_picks=momentum_picks,
         market_regime=market_regime,
+        leveraged_top_pick=leveraged_top_pick,
     )
 
     pdf_path = None

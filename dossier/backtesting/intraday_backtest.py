@@ -486,6 +486,53 @@ def pick_top_n(
 # TRADE SIMULATION
 # ══════════════════════════════════════════════════════════════════════════════
 
+def _ema(data: list, period: int) -> list:
+    """Compute EMA over a list of values. Returns list same length as input (NaN-padded)."""
+    if len(data) < period:
+        return [float('nan')] * len(data)
+    emas = [float('nan')] * (period - 1)
+    # Seed with SMA
+    emas.append(sum(data[:period]) / period)
+    mult = 2.0 / (period + 1)
+    for i in range(period, len(data)):
+        emas.append(data[i] * mult + emas[-1] * (1 - mult))
+    return emas
+
+
+def _rsi(data: list, period: int = 14) -> list:
+    """Compute RSI over a list of close prices. Returns list same length as input."""
+    if len(data) < period + 1:
+        return [50.0] * len(data)  # Default to neutral
+    
+    rsis = [50.0] * period  # Pad initial values
+    gains = []
+    losses = []
+    for i in range(1, len(data)):
+        delta = data[i] - data[i-1]
+        gains.append(max(0, delta))
+        losses.append(max(0, -delta))
+    
+    avg_gain = sum(gains[:period]) / period
+    avg_loss = sum(losses[:period]) / period
+    
+    if avg_loss == 0:
+        rsis.append(100.0)
+    else:
+        rs = avg_gain / avg_loss
+        rsis.append(100 - (100 / (1 + rs)))
+    
+    for i in range(period, len(gains)):
+        avg_gain = (avg_gain * (period - 1) + gains[i]) / period
+        avg_loss = (avg_loss * (period - 1) + losses[i]) / period
+        if avg_loss == 0:
+            rsis.append(100.0)
+        else:
+            rs = avg_gain / avg_loss
+            rsis.append(100 - (100 / (1 + rs)))
+    
+    return rsis
+
+
 def simulate_trade(
     etf_ticker: str,
     date_str: str,
@@ -493,6 +540,7 @@ def simulate_trade(
     atr_mult: float = 1.0,
     underlying_atr: float = None,
     position_size: float = 9000.0,
+    entry_mode: str = "timer",  # "timer", "ema_cross", "rsi_bounce", "ema_rsi", "vwap_reclaim"
 ) -> dict | None:
     """
     Simulate a single day trade on a 2x ETF.
@@ -563,26 +611,111 @@ def simulate_trade(
     if len(day_candles) < 10:
         return None
 
-    # ── Find entry candle ──
+    # ── Find entry candle based on entry_mode ──
     market_open = dtime(9, 30)
     entry_minutes = entry_offset_min
     entry_hour = 9 + (30 + entry_minutes) // 60
     entry_min = (30 + entry_minutes) % 60
-    entry_time = dtime(entry_hour, entry_min)
+    earliest_entry = dtime(entry_hour, entry_min)
+
+    # Compute intraday indicators for signal-based entries
+    closes = [c["close"] for c in day_candles]
+
+    # EMA 9 and 21
+    ema9 = _ema(closes, 9)
+    ema21 = _ema(closes, 21)
+
+    # RSI 14 on 5m candles
+    rsi14 = _rsi(closes, 14)
 
     entry_candle = None
     entry_idx = None
-    for i, c in enumerate(day_candles):
-        ct = c["time"].time()
-        if ct.hour == entry_time.hour and ct.minute == entry_time.minute:
-            entry_candle = c
-            entry_idx = i
-            break
-        # Allow 5m tolerance
-        if ct >= entry_time and entry_candle is None:
-            entry_candle = c
-            entry_idx = i
-            break
+
+    if entry_mode == "timer":
+        # Legacy: fixed time entry
+        for i, c in enumerate(day_candles):
+            ct = c["time"].time()
+            if ct.hour == earliest_entry.hour and ct.minute == earliest_entry.minute:
+                entry_candle = c
+                entry_idx = i
+                break
+            if ct >= earliest_entry and entry_candle is None:
+                entry_candle = c
+                entry_idx = i
+                break
+
+    elif entry_mode == "ema_cross":
+        # Enter when 9 EMA crosses above 21 EMA (bullish momentum)
+        for i, c in enumerate(day_candles):
+            ct = c["time"].time()
+            if ct < earliest_entry:
+                continue
+            if i < 1 or i >= len(ema9) or i >= len(ema21):
+                continue
+            # Cross: ema9 was below ema21 on prior bar, now above
+            if ema9[i] > ema21[i] and ema9[i-1] <= ema21[i-1]:
+                entry_candle = c
+                entry_idx = i
+                break
+
+    elif entry_mode == "rsi_bounce":
+        # Enter when RSI(14) drops below 35 then recovers above 35
+        rsi_dipped = False
+        for i, c in enumerate(day_candles):
+            ct = c["time"].time()
+            if ct < earliest_entry:
+                continue
+            if i >= len(rsi14):
+                continue
+            if rsi14[i] < 35:
+                rsi_dipped = True
+            if rsi_dipped and rsi14[i] >= 35:
+                entry_candle = c
+                entry_idx = i
+                break
+
+    elif entry_mode == "ema_rsi":
+        # Combined: RSI dipped below 35, AND 9 EMA crosses above 21 EMA
+        rsi_dipped = False
+        for i, c in enumerate(day_candles):
+            ct = c["time"].time()
+            if ct < earliest_entry:
+                continue
+            if i < 1 or i >= len(ema9) or i >= len(ema21) or i >= len(rsi14):
+                continue
+            if rsi14[i] < 40:
+                rsi_dipped = True
+            # Need RSI to have dipped AND EMA cross happening
+            if rsi_dipped and ema9[i] > ema21[i] and ema9[i-1] <= ema21[i-1]:
+                entry_candle = c
+                entry_idx = i
+                break
+
+    elif entry_mode == "vwap_reclaim":
+        # Enter when price closes above VWAP after being below it
+        # Calculate running VWAP
+        cum_vol = 0.0
+        cum_tp_vol = 0.0
+        vwaps = []
+        for c in day_candles:
+            tp = (c["high"] + c["low"] + c["close"]) / 3
+            cum_vol += c["volume"]
+            cum_tp_vol += tp * c["volume"]
+            vwaps.append(cum_tp_vol / cum_vol if cum_vol > 0 else tp)
+
+        was_below = False
+        for i, c in enumerate(day_candles):
+            ct = c["time"].time()
+            if ct < earliest_entry:
+                if c["close"] < vwaps[i]:
+                    was_below = True
+                continue
+            if c["close"] < vwaps[i]:
+                was_below = True
+            elif was_below and c["close"] > vwaps[i]:
+                entry_candle = c
+                entry_idx = i
+                break
 
     if entry_candle is None:
         return None
@@ -671,6 +804,8 @@ def run_backtest(
     max_positions: int = 5,
     min_pick_adx: float = 15.0,
     min_rel_vol: float = 0.8,
+    sizing_mode: str = "equal",  # "equal", "lead_heavy", "conditional"
+    entry_mode: str = "timer",   # "timer", "ema_cross", "rsi_bounce", "ema_rsi", "vwap_reclaim"
     verbose: bool = True,
     # Legacy compat — ignored if total_capital is set
     position_sizes: tuple = None,
@@ -678,12 +813,10 @@ def run_backtest(
     """
     Run the full day trading backtest.
 
-    Direction-aware with dynamic position sizing:
-      1. Check SPY hourly ADX (regime filter)
-      2. Pick top N underlyings by daily ADX (N = dynamic based on signal quality)
-      3. Trade bull ETF on bull days, bear ETF on bear days, underlying as fallback
-      4. Deploy full capital across positions
-      5. Track P&L
+    Sizing modes:
+      - equal: divide capital equally across N positions
+      - lead_heavy: 50% on pick #1, 25% each on picks #2 and #3
+      - conditional: 50% on pick #1, only take #2/#3 if #1 loses
     """
     # Dynamic sizing: divide capital equally across positions
     if position_sizes is None:
@@ -695,7 +828,7 @@ def run_backtest(
         print(f"{'═' * 80}")
         print(f"  Entry: +{entry_offset_min}m from open | ATR mult: {atr_mult}x")
         print(f"  SPY ADX threshold: {spy_adx_threshold} | Signal cap: {signal_count_cap}")
-        print(f"  Capital: ${total_capital:,.0f} | Max positions: {max_positions}")
+        print(f"  Capital: ${total_capital:,.0f} | Max positions: {max_positions} | Sizing: {sizing_mode}")
         print(f"{'═' * 80}")
 
     # ── Step 0: Preload all data to prevent network sequential bottlenecks ──
@@ -784,17 +917,33 @@ def run_backtest(
             })
             continue
 
-        # ── Dynamic position sizing: divide capital equally ──
-        per_position = total_capital / n_positions
+        # ── Position sizing based on mode ──
+        if sizing_mode == "lead_heavy":
+            # 50% on #1, 25% each on #2 and #3
+            position_allocations = [total_capital * 0.50, total_capital * 0.25, total_capital * 0.25]
+        elif sizing_mode == "conditional":
+            # 50% on #1 — only take #2/#3 if #1 loses
+            position_allocations = [total_capital * 0.50, total_capital * 0.25, total_capital * 0.25]
+        else:
+            # Equal split
+            per_position = total_capital / n_positions
+            position_allocations = [per_position] * n_positions
 
         # ── Simulate trades with fallthrough ──
         day_trades = []
         day_pnl = 0.0
         trades_filled = 0
+        lead_trade_pnl = None  # Track pick #1 result for conditional mode
 
         for pick in picks:
-            if trades_filled >= n_positions:
+            if trades_filled >= len(position_allocations):
                 break
+
+            # Conditional mode: skip picks #2+ if pick #1 was profitable
+            if sizing_mode == "conditional" and trades_filled > 0 and lead_trade_pnl is not None:
+                if lead_trade_pnl > 0:
+                    # Pick #1 won — bank the profit, don't risk more
+                    break
 
             # Use pre-selected trade ticker (bull ETF or underlying fallback)
             trade_ticker = pick.get("trade_ticker", pick.get("bull_etf"))
@@ -818,9 +967,11 @@ def run_backtest(
                     print("✓")
 
             # Adjust position size:
-            # 1. Conviction scaling (70% on bear-trend days)
-            # 2. Unleveraged underlying gets 2x size to approximate 2x ETF dollar-move
-            base_size = per_position * conviction
+            # 1. Use allocation for this position slot
+            # 2. Apply conviction scaling (70% on bear-trend days)
+            # 3. Unleveraged underlying gets 2x size to approximate 2x ETF dollar-move
+            alloc = position_allocations[trades_filled] if trades_filled < len(position_allocations) else position_allocations[-1]
+            base_size = alloc * conviction
             effective_size = base_size if is_leveraged else base_size * 2
 
             trade = simulate_trade(
@@ -829,6 +980,7 @@ def run_backtest(
                 entry_offset_min=entry_offset_min,
                 atr_mult=atr_mult,
                 position_size=effective_size,
+                entry_mode=entry_mode,
             )
 
             if trade:
@@ -841,6 +993,11 @@ def run_backtest(
                 day_trades.append(trade)
                 day_pnl += trade["pnl_dollars"]
                 all_trades.append(trade)
+
+                # Track lead trade result for conditional mode
+                if trades_filled == 0:
+                    lead_trade_pnl = trade["pnl_dollars"]
+
                 trades_filled += 1
             # If trade is None (no data), silently skip to next pick (fallthrough)
 
@@ -1202,6 +1359,12 @@ if __name__ == "__main__":
                         help="Total capital to deploy (default: 27000)")
     parser.add_argument("--max-positions", type=int, default=5,
                         help="Max concurrent positions (default: 5)")
+    parser.add_argument("--sizing", type=str, default="equal",
+                        choices=["equal", "lead_heavy", "conditional"],
+                        help="Sizing mode: equal, lead_heavy (50/25/25), conditional (50 then backup if loss)")
+    parser.add_argument("--entry-mode", type=str, default="timer",
+                        choices=["timer", "ema_cross", "rsi_bounce", "ema_rsi", "vwap_reclaim"],
+                        help="Entry signal: timer (fixed), ema_cross (9/21), rsi_bounce (RSI<35 recovery), ema_rsi (combined), vwap_reclaim")
     parser.add_argument("--sweep", action="store_true",
                         help="Run full parameter sweep")
     parser.add_argument("--quick", action="store_true",
@@ -1222,6 +1385,8 @@ if __name__ == "__main__":
             signal_count_cap=args.signal_cap,
             total_capital=args.capital,
             max_positions=args.max_positions,
+            sizing_mode=args.sizing,
+            entry_mode=args.entry_mode,
             verbose=True,
         )
 

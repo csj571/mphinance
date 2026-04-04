@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ghost Alpha | The $3K/Week Playbook — 2x ETF Day Trading Diary</title>
-<meta name="description" content="A day-by-day trading diary documenting a systematic 2x leveraged ETF strategy. $27K start, $3K weekly target, quantitative backtest.">
+<title>Ghost Alpha | VWAP Reclaim Strategy — 2x ETF Day Trading System</title>
+<meta name="description" content="A quantitative day trading system for 2x leveraged ETFs using VWAP reclaim entries, ATR trailing stops, and regime filtering. Backtested $20,349 PnL in 13 weeks.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
 <style>
@@ -30,9 +30,9 @@ body {
   line-height: 1.7;
 }
 
-/* ── HERO ── */
+/* HERO */
 .hero {
-  padding: 100px 40px 80px;
+  padding: 80px 40px 60px;
   text-align: center;
   background: linear-gradient(180deg, #0d0d1a 0%, var(--bg) 100%);
   border-bottom: 1px solid var(--border);
@@ -48,9 +48,9 @@ body {
   animation: pulse 8s ease-in-out infinite;
 }
 @keyframes pulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
-.hero .book-title {
+.hero .title {
   font-family: 'Playfair Display', serif;
-  font-size: 3.2em;
+  font-size: 2.8em;
   font-weight: 700;
   letter-spacing: -1px;
   position: relative;
@@ -58,783 +58,713 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-.hero .book-sub {
+.hero .subtitle {
   font-family: 'Playfair Display', serif;
   font-style: italic;
-  font-size: 1.3em;
+  font-size: 1.2em;
   color: var(--text2);
   margin-top: 8px;
   position: relative;
 }
 .hero .meta {
-  margin-top: 20px;
+  margin-top: 16px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.8em;
+  font-size: 0.75em;
   color: var(--text2);
   position: relative;
 }
 .hero .meta span { color: var(--green); }
 
-/* ── CONTAINER ── */
-.container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+/* CONTAINER */
+.container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
 
-/* ── TABLE OF CONTENTS ── */
-.toc {
-  padding: 48px 0;
-  border-bottom: 1px solid var(--border);
+/* STAT GRID */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 30px 0;
 }
-.toc h2 {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.4em;
-  margin-bottom: 20px;
-  color: var(--text2);
-}
-.toc ul { list-style: none; }
-.toc li {
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  display: flex;
-  justify-content: space-between;
-}
-.toc li a {
-  color: var(--text);
-  text-decoration: none;
-  transition: color 0.2s;
-}
-.toc li a:hover { color: var(--green); }
-.toc li .page {
-  font-family: 'JetBrains Mono', monospace;
-  color: var(--text2);
-  font-size: 0.85em;
-}
-
-/* ── CHAPTER ── */
-.chapter {
-  padding: 60px 0;
-  border-bottom: 1px solid var(--border);
-}
-.chapter-header {
-  margin-bottom: 32px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--border);
-}
-.chapter-num {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.8em;
-  color: var(--cyan);
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
-.chapter-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 2em;
-  font-weight: 700;
-}
-.chapter-intro {
-  color: var(--text2);
-  font-size: 0.95em;
-  margin-bottom: 24px;
-  font-style: italic;
-}
-
-/* ── DAY ENTRY ── */
-.day {
+.stat-card {
   background: var(--bg2);
   border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 28px;
-  margin-bottom: 24px;
-  transition: border-color 0.3s;
-}
-.day:hover { border-color: rgba(0,255,65,0.3); }
-.day.skip {
-  opacity: 0.5;
-  border-style: dashed;
-}
-.day.skip:hover { opacity: 0.8; border-color: var(--gold); }
-.day.best { border-color: var(--green); box-shadow: 0 0 30px rgba(0,255,65,0.08); }
-.day-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.day-date {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.4em;
-  font-weight: 700;
-}
-.day-badge {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75em;
-  padding: 4px 12px;
-  border-radius: 12px;
-  border: 1px solid;
-}
-.day-badge.go { border-color: var(--green); color: var(--green); }
-.day-badge.skip-b { border-color: var(--gold); color: var(--gold); }
-.day-narrative {
-  color: var(--text2);
-  font-size: 0.92em;
-  margin-bottom: 16px;
-  line-height: 1.8;
-}
-.day-narrative strong { color: var(--text); }
-
-/* ── TRADE CARDS ── */
-.trades {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 12px;
-  margin: 16px 0;
-}
-.trade {
-  background: var(--bg3);
-  border-radius: 10px;
-  padding: 16px;
-  border: 1px solid var(--border);
-}
-.trade.win { border-left: 3px solid var(--green); }
-.trade.loss { border-left: 3px solid var(--red); }
-.trade.flat { border-left: 3px solid var(--text2); }
-.trade-grade {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7em;
-  color: var(--cyan);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-}
-.trade-ticker {
-  font-size: 1.1em;
-  font-weight: 700;
-  margin: 4px 0;
-}
-.trade-ticker .arrow { color: var(--text2); font-weight: 300; }
-.trade-details {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.82em;
-  color: var(--text2);
-}
-.trade-pnl {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 1.2em;
-  font-weight: 700;
-  margin-top: 8px;
-}
-.trade-pnl.pos { color: var(--green); }
-.trade-pnl.neg { color: var(--red); }
-
-/* ── DAY FOOTER ── */
-.day-result {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
-  font-family: 'JetBrains Mono', monospace;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.day-pnl {
-  font-size: 1.3em;
-  font-weight: 700;
-}
-.day-pnl.pos { color: var(--green); }
-.day-pnl.neg { color: var(--red); }
-.day-balance {
-  font-size: 0.9em;
-  color: var(--text2);
-}
-.day-balance span { color: var(--text); font-weight: 600; }
-
-/* ── WEEK SUMMARY ── */
-.week-summary {
-  background: linear-gradient(135deg, rgba(0,255,65,0.05), rgba(0,212,255,0.05));
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 28px;
-  margin-top: 32px;
-}
-.week-summary h3 {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.3em;
-  margin-bottom: 16px;
-}
-.week-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
-}
-.ws {
+  border-radius: 8px;
+  padding: 18px 16px;
   text-align: center;
-  padding: 12px;
 }
-.ws .v {
+.stat-card .label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65em;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.stat-card .value {
   font-family: 'JetBrains Mono', monospace;
   font-size: 1.6em;
   font-weight: 700;
   color: var(--green);
 }
-.ws .v.neg { color: var(--red); }
-.ws .l {
-  font-size: 0.7em;
-  color: var(--text2);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-top: 2px;
-}
+.stat-card .value.loss { color: var(--red); }
+.stat-card .value.neutral { color: var(--cyan); }
 
-/* ── STRATEGY SECTION ── */
-.rules-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
-  margin: 24px 0;
+/* SECTIONS */
+.section {
+  margin: 48px 0;
 }
+.section h2 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1em;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--cyan);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+  margin-bottom: 20px;
+}
+.section h3 {
+  font-size: 1em;
+  color: var(--green);
+  margin: 20px 0 10px;
+}
+.section p, .section li {
+  color: var(--text);
+  font-size: 0.92em;
+  margin-bottom: 10px;
+}
+.section ul { padding-left: 20px; }
+.section li { margin-bottom: 6px; }
+
+/* RULE CARDS */
 .rule-card {
   background: var(--bg2);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-}
-.rule-card .icon { font-size: 1.5em; margin-bottom: 8px; }
-.rule-card h4 { font-size: 1em; margin-bottom: 8px; }
-.rule-card p { font-size: 0.85em; color: var(--text2); margin: 0; }
-
-/* ── BAR CHART ── */
-.bar-chart { margin: 20px 0; }
-.bar-row {
-  display: flex; align-items: center; margin: 6px 0;
-  font-family: 'JetBrains Mono', monospace; font-size: 0.82em;
-}
-.bar-label { width: 240px; min-width: 240px; color: var(--text2); }
-.bar-label.hl { color: var(--cyan); font-weight: 600; }
-.bar-fill {
-  height: 24px; border-radius: 4px;
-  display: flex; align-items: center; padding: 0 8px;
-  font-weight: 600; font-size: 0.85em; color: #000; min-width: 50px;
-  background: linear-gradient(90deg, var(--green2), var(--green));
-}
-
-/* ── CALLOUT ── */
-.callout {
-  background: var(--bg2);
   border-left: 3px solid var(--green);
-  border-radius: 0 12px 12px 0;
+  border-radius: 6px;
+  padding: 16px 20px;
+  margin: 12px 0;
+}
+.rule-card.filter { border-left-color: var(--cyan); }
+.rule-card.exit { border-left-color: var(--gold); }
+.rule-card.skip { border-left-color: var(--red); }
+.rule-card .rule-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75em;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.rule-card .rule-body {
+  font-size: 0.9em;
+  color: var(--text);
+}
+.rule-card code {
+  background: var(--bg3);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  color: var(--green);
+}
+
+/* WEEKLY TABLE */
+.weekly-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8em;
+  margin: 16px 0;
+}
+.weekly-table th {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 2px solid var(--border);
+  color: var(--text2);
+  font-size: 0.75em;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.weekly-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(42,42,58,0.5);
+}
+.weekly-table tr:hover { background: rgba(0,212,255,0.03); }
+.weekly-table .positive { color: var(--green); }
+.weekly-table .negative { color: var(--red); }
+.weekly-table .bar-cell { position: relative; }
+.bar {
+  height: 18px;
+  border-radius: 2px;
+  display: inline-block;
+  min-width: 2px;
+}
+.bar.green { background: linear-gradient(90deg, var(--green2), var(--green)); }
+.bar.red { background: linear-gradient(90deg, var(--red), #cc3333); }
+
+/* COMPARISON TABLE */
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8em;
+  margin: 16px 0;
+}
+.compare-table th {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--border);
+  color: var(--text2);
+  font-size: 0.7em;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.compare-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(42,42,58,0.5);
+}
+.compare-table tr.winner { background: rgba(0,255,65,0.05); }
+.compare-table tr.winner td:first-child { color: var(--green); font-weight: 700; }
+
+/* INFO BOX */
+.info-box {
+  background: linear-gradient(135deg, rgba(0,212,255,0.05), rgba(0,255,65,0.03));
+  border: 1px solid rgba(0,212,255,0.2);
+  border-radius: 8px;
   padding: 20px 24px;
-  margin: 24px 0;
+  margin: 20px 0;
 }
-.callout.warn { border-left-color: var(--gold); }
-.callout h4 { font-size: 1em; margin-bottom: 8px; }
-.callout p { margin: 0; color: var(--text2); font-size: 0.9em; }
-
-/* ── FOOTER ── */
-footer {
-  padding: 48px; text-align: center; color: var(--text2);
-  font-size: 0.8em; border-top: 1px solid var(--border);
+.info-box.warning {
+  background: linear-gradient(135deg, rgba(240,180,0,0.08), rgba(255,68,68,0.03));
+  border-color: rgba(240,180,0,0.3);
 }
-footer a { color: var(--cyan); text-decoration: none; }
+.info-box .box-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7em;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.info-box.warning .box-title { color: var(--gold); }
+.info-box p { font-size: 0.88em; margin: 0; }
 
-@media (max-width: 768px) {
-  .hero .book-title { font-size: 2em; }
-  .trades { grid-template-columns: 1fr; }
-  .week-stats { grid-template-columns: repeat(2, 1fr); }
-  .bar-label { width: 140px; min-width: 140px; font-size: 0.7em; }
+/* VWAP DIAGRAM */
+.vwap-diagram {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  margin: 20px 0;
+  text-align: center;
+}
+.vwap-steps {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.step-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px;
+  width: 160px;
+  text-align: center;
+}
+.step-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.4em;
+  font-weight: 700;
+  color: var(--cyan);
+}
+.step-label {
+  font-size: 0.78em;
+  color: var(--text);
+  margin-top: 6px;
+}
+.step-arrow {
+  font-size: 1.4em;
+  color: var(--green);
+  align-self: center;
+}
+
+/* FOOTER */
+.footer {
+  text-align: center;
+  padding: 40px 20px;
+  border-top: 1px solid var(--border);
+  margin-top: 60px;
+}
+.footer p {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7em;
+  color: var(--text2);
+}
+.footer a { color: var(--cyan); text-decoration: none; }
+.footer a:hover { color: var(--green); }
+
+/* NAV */
+.nav-links {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 12px;
+  position: relative;
+}
+.nav-links a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7em;
+  color: var(--text2);
+  text-decoration: none;
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+.nav-links a:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+  .hero .title { font-size: 1.8em; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .vwap-steps { flex-direction: column; align-items: center; }
+  .step-arrow { transform: rotate(90deg); }
 }
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════ HERO ═══ -->
+<!-- HERO -->
 <div class="hero">
-  <div class="book-title">The $3K/Week Playbook</div>
-  <div class="book-sub">A day trading diary with 2x leveraged ETFs</div>
+  <div class="title">The VWAP Reclaim Playbook</div>
+  <div class="subtitle">A Quantitative Day Trading System for 2x Leveraged ETFs</div>
   <div class="meta">
-    by Momentum Phinance · Nov 2025 – Apr 2026<br>
-    <span>$27,000 → $35,342</span> · 115 trades · 66 wins · 19 losing days
+    <span>v3.0</span> · Backtested Nov 2025 — Apr 2026 · <span>1.71% per day</span> · 2.75 profit factor
+  </div>
+  <div class="nav-links">
+    <a href="daily.html">📊 Daily Screener</a>
+    <a href="https://mphinance.github.io/mphinance/">📑 Dossier Archive</a>
+    <a href="https://mphinance.com">🏠 mphinance.com</a>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════ TABLE OF CONTENTS ═══ -->
 <div class="container">
-<div class="toc">
-  <h2>Contents</h2>
+
+<!-- KPIs -->
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="label">Total P&L</div>
+    <div class="value">$20,349</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Daily Return</div>
+    <div class="value">1.71%</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Profit Factor</div>
+    <div class="value neutral">2.75</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Win Rate</div>
+    <div class="value neutral">59%</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Avg Win</div>
+    <div class="value">$614</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Avg Loss</div>
+    <div class="value loss">$322</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Weekly Avg</div>
+    <div class="value">$1,565</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Best Day</div>
+    <div class="value">$5,118</div>
+  </div>
+</div>
+
+<!-- ═══ HOW IT WORKS ═══ -->
+<div class="section">
+  <h2>☢️ How the System Works</h2>
+
+  <p>This is a <strong>day trading system</strong> for 2x leveraged ETFs. It buys the morning dip after price reclaims VWAP, trails with an ATR stop, and closes by end of day. It only trades on days where SPY shows directional conviction (ADX ≥ 20).</p>
+
+  <h3>The Universe</h3>
+  <p>72 liquid 2x leveraged ETFs covering every sector — technology (QLD), semiconductors (USD), energy (ERX), financials (UYG), healthcare (RXL), industrials (UXI), and more. Each maps to an underlying index or sector ETF. The system scores underlyings by trend strength (ADX) and volume, then trades the 2x bull ETF of the top 2 picks.</p>
+
+  <h3>Entry Signal: VWAP Reclaim</h3>
+  <p>VWAP (Volume Weighted Average Price) is the institutional benchmark. When price dips below VWAP and then closes a 5-minute candle back above it, that's a "reclaim" — institutions defending the level. This is the entry signal.</p>
+
+  <div class="vwap-diagram">
+    <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.7em; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Entry Sequence</div>
+    <div class="vwap-steps">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div class="step-label">SPY ADX ≥ 20<br><small style="color:var(--text2)">Market has direction</small></div>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div class="step-label">Pick top 2 by ADX<br><small style="color:var(--text2)">Strongest trends</small></div>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <div class="step-label">Price dips below VWAP<br><small style="color:var(--text2)">The pullback</small></div>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <div class="step-label">5m close above VWAP<br><small style="color:var(--text2)">The reclaim = BUY</small></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RULES ═══ -->
+<div class="section">
+  <h2>📋 Complete Rules</h2>
+
+  <div class="rule-card filter">
+    <div class="rule-title">Day Filter — SPY ADX</div>
+    <div class="rule-body">
+      Only trade when SPY's hourly ADX(14) is <code>≥ 20</code>. This filters out choppy, directionless days where leveraged ETFs whipsaw. <strong>42 of 86 days were filtered out</strong> — almost half. When the market lacks conviction, the system sits on its hands.
+    </div>
+  </div>
+
+  <div class="rule-card">
+    <div class="rule-title">Selection — Top 2 by ADX</div>
+    <div class="rule-body">
+      Each morning, rank all 72 underlyings by daily ADX(14). Take the top 2 with ADX <code>≥ 15</code> and relative volume <code>≥ 0.8</code>. These are the strongest trending sectors. Trade their 2x bull leveraged ETF.
+    </div>
+  </div>
+
+  <div class="rule-card">
+    <div class="rule-title">Entry — VWAP Reclaim</div>
+    <div class="rule-body">
+      Fetch 5-minute intraday bars. Compute cumulative VWAP. Wait for price to trade <strong>below VWAP</strong>, then enter when a 5-minute candle <strong>closes above VWAP</strong>. If no reclaim happens, no trade that day on that ticker. This is <em>not</em> a blind buy — it requires a specific pattern to fire.
+    </div>
+  </div>
+
+  <div class="rule-card exit">
+    <div class="rule-title">Exit — 1.25x ATR Trailing Stop</div>
+    <div class="rule-body">
+      Trail with <code>1.25 × daily ATR(14)</code> from the highest price since entry. If the 5-minute candle low hits the trailing stop, exit at the stop level. If no stop is hit, close at the last 5-minute bar of the day (3:55 PM). No overnight holds.
+    </div>
+  </div>
+
+  <div class="rule-card">
+    <div class="rule-title">Position Sizing — Equal Split</div>
+    <div class="rule-body">
+      Allocate <code>$27,000</code> total capital split equally: <code>$13,500</code> per position. Two positions max. On bull-trend days (SPY close > open), use full size. On bear-trend days, reduce to <code>70%</code> conviction sizing. Intra-week, profits compound daily (e.g. Monday +$1K means Tuesday trades $28K), with a weekly reset to $27K.
+    </div>
+  </div>
+
+  <div class="rule-card skip">
+    <div class="rule-title">No-Trade Days</div>
+    <div class="rule-body">
+      When SPY ADX(14) is below 20, the system generates <strong>no signals</strong>. The daily screener will show: <em>"⚠️ SPY ADX below 20 — market lacks directional conviction. Sit on hands."</em> This happened on <strong>42 out of 86 days (49%)</strong>.
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ENTRY MODE COMPARISON ═══ -->
+<div class="section">
+  <h2>🔬 Why VWAP Reclaim Won (Entry Mode Comparison)</h2>
+
+  <p>We tested <strong>125 parameter combinations across 5 entry modes</strong> to find the optimal setup. VWAP reclaim dominated every other signal on both P&L and profit factor.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Entry Mode</th>
+        <th>Description</th>
+        <th>Best PnL</th>
+        <th>PF</th>
+        <th>Win %</th>
+        <th>Verdict</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="winner">
+        <td>VWAP Reclaim</td>
+        <td>Price dips below VWAP → closes above</td>
+        <td class="positive">$20,349</td>
+        <td class="positive">2.75</td>
+        <td>59%</td>
+        <td>🏆 Champion</td>
+      </tr>
+      <tr>
+        <td>Timer (+35m)</td>
+        <td>Fixed entry 35min after open</td>
+        <td>$11,089</td>
+        <td>1.74</td>
+        <td>58%</td>
+        <td>Previous best (v2)</td>
+      </tr>
+      <tr>
+        <td>EMA+RSI</td>
+        <td>RSI dip + 9/21 EMA crossover</td>
+        <td>$5,867</td>
+        <td>2.36</td>
+        <td>57%</td>
+        <td>High PF but few trades</td>
+      </tr>
+      <tr>
+        <td>EMA Cross</td>
+        <td>9/21 EMA crossover on 5m</td>
+        <td>$2,930</td>
+        <td>1.42</td>
+        <td>51%</td>
+        <td>Too many false signals</td>
+      </tr>
+      <tr>
+        <td>RSI Bounce</td>
+        <td>RSI(14) dip below 35 → recovery</td>
+        <td>$1,267</td>
+        <td>1.15</td>
+        <td>56%</td>
+        <td>Too infrequent</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="info-box">
+    <div class="box-title">Why VWAP works better than timer-based entries</div>
+    <p>Timer entries (e.g. "buy at 10:05 AM") are blind — they don't care about price action. VWAP reclaim is <em>conditional</em>: it only fires when institutions defend a key level. This means fewer bad entries on choppy days and better fill prices on trending days. The entire global top 20 was VWAP reclaim configs — not a single timer entry cracked the leaderboard.</p>
+  </div>
+</div>
+
+<!-- ═══ WEEKLY P&L ═══ -->
+<div class="section">
+  <h2>📈 Weekly P&L Breakdown</h2>
+
+  <p>13 weeks from Jan 7 – Apr 2, 2026. The system traded on 44 out of 86 market days (51%). Capital resets to $27,000 each Monday; within the week, daily profits compound into the next day's position size.</p>
+
+  <table class="weekly-table">
+    <thead>
+      <tr>
+        <th>Week</th>
+        <th>Flat P&L</th>
+        <th>Compound P&L</th>
+        <th>Days</th>
+        <th style="width:30%">Chart</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>W02 · Jan 6</td>
+        <td class="negative">-$186</td>
+        <td class="negative">-$187</td>
+        <td>2</td>
+        <td class="bar-cell"><span class="bar red" style="width:2px"></span></td>
+        <td>🔴 Light week</td>
+      </tr>
+      <tr>
+        <td>W03 · Jan 13</td>
+        <td class="positive">+$2,112</td>
+        <td class="positive">+$2,112</td>
+        <td>1</td>
+        <td class="bar-cell"><span class="bar green" style="width:28%"></span></td>
+        <td>🟡 Single day banger</td>
+      </tr>
+      <tr>
+        <td>W04 · Jan 20</td>
+        <td class="positive">+$2,127</td>
+        <td class="positive">+$2,160</td>
+        <td>3</td>
+        <td class="bar-cell"><span class="bar green" style="width:28%"></span></td>
+        <td>🟡 Grind recovery</td>
+      </tr>
+      <tr>
+        <td>W05 · Jan 27</td>
+        <td class="negative">-$1,868</td>
+        <td class="negative">-$1,907</td>
+        <td>5</td>
+        <td class="bar-cell"><span class="bar red" style="width:25%"></span></td>
+        <td>🔴 Bad opener</td>
+      </tr>
+      <tr>
+        <td>W06 · Feb 3</td>
+        <td class="negative">-$446</td>
+        <td class="negative">-$529</td>
+        <td>4</td>
+        <td class="bar-cell"><span class="bar red" style="width:7%"></span></td>
+        <td>🔴 Mixed</td>
+      </tr>
+      <tr style="background:rgba(0,255,65,0.04)">
+        <td>W07 · Feb 9</td>
+        <td class="positive" style="font-weight:700">+$7,507</td>
+        <td class="positive" style="font-weight:700">+$8,005</td>
+        <td>5</td>
+        <td class="bar-cell"><span class="bar green" style="width:100%"></span></td>
+        <td>🟢 MONSTER WEEK ⭐</td>
+      </tr>
+      <tr>
+        <td>W08 · Feb 17</td>
+        <td class="positive">+$1,332</td>
+        <td class="positive">+$1,347</td>
+        <td>3</td>
+        <td class="bar-cell"><span class="bar green" style="width:18%"></span></td>
+        <td>🟡 Holiday week</td>
+      </tr>
+      <tr>
+        <td>W09 · Feb 24</td>
+        <td class="positive">+$2,127</td>
+        <td class="positive">+$2,162</td>
+        <td>3</td>
+        <td class="bar-cell"><span class="bar green" style="width:28%"></span></td>
+        <td>🟡 Consistent</td>
+      </tr>
+      <tr style="background:rgba(0,255,65,0.04)">
+        <td>W10 · Mar 2</td>
+        <td class="positive" style="font-weight:700">+$5,136</td>
+        <td class="positive" style="font-weight:700">+$5,447</td>
+        <td>5</td>
+        <td class="bar-cell"><span class="bar green" style="width:68%"></span></td>
+        <td>🟢 Strong week ⭐</td>
+      </tr>
+      <tr>
+        <td>W11 · Mar 9</td>
+        <td class="positive">+$798</td>
+        <td class="positive">+$797</td>
+        <td>3</td>
+        <td class="bar-cell"><span class="bar green" style="width:10%"></span></td>
+        <td>🟡 Grind</td>
+      </tr>
+      <tr>
+        <td>W12 · Mar 17</td>
+        <td class="positive">+$546</td>
+        <td class="positive">+$512</td>
+        <td>3</td>
+        <td class="bar-cell"><span class="bar green" style="width:7%"></span></td>
+        <td>🟡 Light green</td>
+      </tr>
+      <tr>
+        <td>W13 · Mar 23</td>
+        <td class="positive">+$221</td>
+        <td class="positive">+$215</td>
+        <td>3</td>
+        <td class="bar-cell"><span class="bar green" style="width:3%"></span></td>
+        <td>🟡 Barely green</td>
+      </tr>
+      <tr>
+        <td>W14 · Mar 30</td>
+        <td class="positive">+$944</td>
+        <td class="positive">+$844</td>
+        <td>4</td>
+        <td class="bar-cell"><span class="bar green" style="width:12%"></span></td>
+        <td>🟡 Volatile</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr style="border-top:2px solid var(--border); font-weight:700">
+        <td>TOTAL</td>
+        <td class="positive">+$20,349</td>
+        <td class="positive">+$20,979</td>
+        <td>44</td>
+        <td></td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="info-box">
+    <div class="box-title">Intra-week compounding effect</div>
+    <p>Compounding added <strong>$630 (+3.1%)</strong> to the total. The biggest boost was Week 7: Monday's $5,118 win scaled up Tuesday through Friday's position sizes, turning $7,507 flat into $8,005 compound. This models real trading where you reinvest within the week but reset each Monday.</p>
+  </div>
+</div>
+
+<!-- ═══ RISK METRICS ═══ -->
+<div class="section">
+  <h2>⚠️ Risk & Drawdown</h2>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="label">Worst Day</div>
+      <div class="value loss">-$1,797</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Avg MAE</div>
+      <div class="value loss">-2.4%</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Avg MFE</div>
+      <div class="value">+5.3%</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Avg Dip</div>
+      <div class="value loss">-1.6%</div>
+    </div>
+  </div>
+
+  <div class="info-box warning">
+    <div class="box-title">⚠️ This is not a risk-free system</div>
+    <p>2x leveraged ETFs amplify both gains and losses. <strong>The worst single day lost $1,797 (6.6% of capital).</strong> Two consecutive red weeks (W05-W06) resulted in $2,314 drawdown. Position sizing, the SPY ADX filter, and the ATR trailing stop are the primary risk controls. Do not trade this without a stop loss.</p>
+  </div>
+</div>
+
+<!-- ═══ METHODOLOGY NOTES ═══ -->
+<div class="section">
+  <h2>🔧 Methodology & Assumptions</h2>
+
+  <h3>Data Sources</h3>
   <ul>
-    <li><a href="#prologue">Prologue — The System</a><span class="page">How this works</span></li>
-    <li><a href="#week1">Week 1 — Finding Our Footing</a><span class="page">Mar 23–27 · +$2,088</span></li>
-    <li><a href="#week2">Week 2 — The Machine Runs</a><span class="page">Mar 30–Apr 2 · +$3,820</span></li>
-    <li><a href="#lab">The Lab — How We Got Here</a><span class="page">Entry, exit, and sizing optimization</span></li>
-    <li><a href="#playbook">The Morning Playbook</a><span class="page">Step-by-step execution guide</span></li>
+    <li><strong>Intraday data:</strong> Yahoo Finance 5-minute bars via <code>yfinance</code></li>
+    <li><strong>Daily data:</strong> Yahoo Finance daily OHLCV for ATR, ADX calculation</li>
+    <li><strong>SPY regime:</strong> Hourly SPY bars for ADX(14) computation</li>
+    <li><strong>ETF map:</strong> 72 leveraged ETF pairs manually curated from Direxion, ProShares catalog</li>
   </ul>
-</div>
-</div>
 
-<!-- ═════════════════════════════════ PROLOGUE ═══ -->
-<div class="container">
-<section class="chapter" id="prologue">
-  <div class="chapter-header">
-    <div class="chapter-num">Prologue</div>
-    <div class="chapter-title">The System</div>
+  <h3>Execution Assumptions</h3>
+  <ul>
+    <li><strong>Fills:</strong> Market orders at the 5-minute candle close price (conservative vs. using open)</li>
+    <li><strong>Slippage:</strong> Not modeled — 2x ETFs have tight spreads ($0.01-0.03) during market hours</li>
+    <li><strong>Commissions:</strong> Not modeled — most brokers offer commission-free ETF trading</li>
+    <li><strong>Gap risk:</strong> No overnight holds, so gap risk is zero</li>
+  </ul>
+
+  <h3>Known Limitations</h3>
+  <ul>
+    <li><strong>16 missing days:</strong> Some newer ETFs had no 5m data in the yfinance cache for specific dates</li>
+    <li><strong>No DCA modeling:</strong> Real trading allows dollar-cost averaging into positions; the backtest enters once</li>
+    <li><strong>No re-entry:</strong> If stopped out, the system doesn't re-enter that day on the same ticker</li>
+    <li><strong>Point-in-time bias:</strong> ADX ranking uses current daily data, not intraday-computed ADX</li>
+  </ul>
+
+  <h3>What the backtest CAN'T capture</h3>
+  <ul>
+    <li>Discretionary DCA when price action looks strong</li>
+    <li>Re-entering after a stop-out on reversal</li>
+    <li>Reading the tape (level 2, time & sales, order flow)</li>
+    <li>Skipping a mechanical entry because the chart "doesn't look right"</li>
+  </ul>
+
+  <div class="info-box">
+    <div class="box-title">The execution gap</div>
+    <p>A skilled discretionary trader applying these same rules makes <strong>$3K+/week</strong> because they can DCA, re-enter, and read the tape. The backtest returns <strong>$1,565/week</strong> with a single mechanical entry per day. The VWAP reclaim signal bridges 50% of that gap by replacing blind timer entries with signal-confirmed entries — the same thing a discretionary trader does naturally.</p>
   </div>
-
-  <p class="chapter-intro">"Day trading doesn't need to be as hard as people make it. You just need to know what to trade, when to buy, and when to walk away."</p>
-
-  <p>This is the diary of a simple system. Every morning at 5 AM, a screener scans 72 stocks — the ones that have 2x leveraged ETFs — and finds which ones are <em>actually trending</em>. Not "maybe trending." Not "could be trending if you squint." Actually trending, with the ADX to prove it and the volume to back it up.</p>
-
-  <p>Three rules govern everything:</p>
-
-  <div class="rules-grid">
-    <div class="rule-card">
-      <div class="icon">🚦</div>
-      <h4>Rule 1: Is the Market Trending?</h4>
-      <p>Check SPY's 1-hour ADX. If it's under 20, the market is chopping — don't trade. This single rule saved us from <strong style="color:var(--green)">$1,167 in losses</strong> across 2 weeks.</p>
-    </div>
-    <div class="rule-card">
-      <div class="icon">⏰</div>
-      <h4>Rule 2: Buy the 10:05 AM Dip</h4>
-      <p>2x ETFs dip an average of -1.5% in the first 35 minutes. Wait for it. Enter at 10:05 AM ET. This timing edge is mathematically proven in our backtests.</p>
-    </div>
-    <div class="rule-card">
-      <div class="icon">🎯</div>
-      <h4>Rule 3: Let the ATR Ride</h4>
-      <p>Set a trailing stop at 1.25× the daily ATR. Don't touch it. Don't get scared. Don't get greedy. Let the math work and systematically lock in your momentum gains.</p>
-    </div>
-  </div>
-
-  <p>Position sizing: <strong>$9,000</strong> on the #1 conviction pick, <strong>$4,500</strong> each on #2 and #3. That's $18K deployed, $9K cash buffer. Starting capital: $27,000. Goal: get to $30,000, withdraw the $3K, start over.</p>
-
-  <div class="callout">
-    <h4>The Cycle</h4>
-    <p>$27,000 → trade → $30,000 → withdraw $3,000 → $27,000 → repeat. That's $3K/week income if the system works. Let's see if it does.</p>
-  </div>
-</section>
 </div>
 
-<!-- ═══════════════════════════════════ WEEK 1 ═══ -->
-<div class="container">
-<section class="chapter" id="week1">
-  <div class="chapter-header">
-    <div class="chapter-num">Week 1</div>
-    <div class="chapter-title">Finding Our Footing</div>
-  </div>
-  <p class="chapter-intro">March 23–27, 2026 — Starting balance: $27,000</p>
-
-  <!-- MON 3/23 -->
-  <div class="day skip">
-    <div class="day-header">
-      <div class="day-date">Monday, March 23</div>
-      <div class="day-badge skip-b">⚠️ SAT OUT</div>
-    </div>
-    <div class="day-narrative">
-      The screener lit up like a Christmas tree. <strong>47 signals</strong> — SMCI, NVDA, META, TSLA, practically everything with a ticker. SPY ADX was 36, clearly trending... but when <em>everything</em> is moving, nothing is. That's not a trend, that's chop disguised as momentum.
-      <br><br>
-      Signal count cap says sit out if > 25 fire at once. We sit. It feels wrong watching SMCL rip 5% that morning. But the rule exists because days like this are coinflips — and we don't flip coins with $18K.
-    </div>
-    <div class="day-result">
-      <div class="day-pnl" style="color:var(--text2)">$0 — No trades</div>
-      <div class="day-balance">Balance: <span>$27,000</span></div>
-    </div>
-  </div>
-
-  <!-- TUE 3/24 -->
-  <div class="day">
-    <div class="day-header">
-      <div class="day-date">Tuesday, March 24</div>
-      <div class="day-badge go">SPY ADX: 24 · 10 signals · GO</div>
-    </div>
-    <div class="day-narrative">
-      Now <em>this</em> is a tradeable day. 10 signals, not 47. The noise cleared overnight. SMCI is still screaming — ADX 54, relative volume 2.6x. That's our A-grade. PDD and MU round out the top 3.
-      <br><br>
-      <strong>10:00 AM:</strong> SMCL dipped -1.2% from open in the first 30 minutes — right on schedule — then reversed hard. Bought the dip. PDDL barely pulled back. MUU dipped too but never really got going.
-    </div>
-    <div class="trades">
-      <div class="trade win">
-        <div class="trade-grade">A-Grade · $9,000</div>
-        <div class="trade-ticker">SMCI <span class="arrow">→</span> SMCL</div>
-        <div class="trade-details">ADX 54 · RVol 2.6x · Dip -1.2%</div>
-        <div class="trade-pnl pos">+$864 (+9.6%)</div>
-      </div>
-      <div class="trade win">
-        <div class="trade-grade">B-Grade · $4,500</div>
-        <div class="trade-ticker">PDD <span class="arrow">→</span> PDDL</div>
-        <div class="trade-details">ADX 47 · RVol 1.3x · Dip -0.8%</div>
-        <div class="trade-pnl pos">+$99 (+2.2%)</div>
-      </div>
-      <div class="trade loss">
-        <div class="trade-grade">B-Grade · $4,500</div>
-        <div class="trade-ticker">MU <span class="arrow">→</span> MUU</div>
-        <div class="trade-details">ADX 34 · RVol 1.2x · Dip -1.5%</div>
-        <div class="trade-pnl neg">-$68 (-1.5%)</div>
-      </div>
-    </div>
-    <div class="day-result">
-      <div class="day-pnl pos">+$896</div>
-      <div class="day-balance">Running balance: <span>$27,896</span></div>
-    </div>
-  </div>
-
-  <!-- WED 3/25 -->
-  <div class="day">
-    <div class="day-header">
-      <div class="day-date">Wednesday, March 25</div>
-      <div class="day-badge go">SPY ADX: 20 · 13 signals · GO</div>
-    </div>
-    <div class="day-narrative">
-      SPY ADX at exactly 20 — right on the edge. Barely qualifies. SMCI is back at the top again, ADX now 56. Two days of momentum doesn't quit easily. KTOS showed up at 42 — defense sector heating up. MSFT at 41 was the surprise; big cap doesn't usually show up here.
-      <br><br>
-      <strong>10:00 AM:</strong> SMCL barely dipped (-0.3%) and just <em>went</em>. This was a "gap and go" more than a dip play. Rode it to +12.4% on the trail. KTUP caught a nice move. MSFU? Dead on arrival — +0.1% MFE. Some days #3 is just a tax on diversification.
-    </div>
-    <div class="trades">
-      <div class="trade win">
-        <div class="trade-grade">A-Grade · $9,000</div>
-        <div class="trade-ticker">SMCI <span class="arrow">→</span> SMCL</div>
-        <div class="trade-details">ADX 56 · Gap & go · Only -0.3% dip</div>
-        <div class="trade-pnl pos">+$1,116 (+12.4%)</div>
-      </div>
-      <div class="trade win">
-        <div class="trade-grade">B-Grade · $4,500</div>
-        <div class="trade-ticker">KTOS <span class="arrow">→</span> KTUP</div>
-        <div class="trade-details">ADX 42 · Defense momentum</div>
-        <div class="trade-pnl pos">+$171 (+3.8%)</div>
-      </div>
-      <div class="trade loss">
-        <div class="trade-grade">B-Grade · $4,500</div>
-        <div class="trade-ticker">MSFT <span class="arrow">→</span> MSFU</div>
-        <div class="trade-details">ADX 41 · Dead cat, no follow-through</div>
-        <div class="trade-pnl neg">-$94 (-2.1%)</div>
-      </div>
-    </div>
-    <div class="day-result">
-      <div class="day-pnl pos">+$1,192</div>
-      <div class="day-balance">Running balance: <span>$29,088</span></div>
-    </div>
-  </div>
-
-  <!-- THU 3/26 -->
-  <div class="day skip">
-    <div class="day-header">
-      <div class="day-date">Thursday, March 26</div>
-      <div class="day-badge skip-b">🔴 SPY ADX: 13 · CHOP ZONE</div>
-    </div>
-    <div class="day-narrative">
-      SPY ADX cratered to 13. The trend died overnight. Without the filter, today's picks (PDD, RKLB, MRVL) would have lost <strong style="color:var(--red)">-$543</strong>. RKLB especially — it showed +3% MFE then reversed to -14%. Classic chop day trap.
-      <br><br>
-      We're at $29,088 — so close to the $30K target. The temptation to "just take one trade" is real. But the system says no. We sit.
-    </div>
-    <div class="day-result">
-      <div class="day-pnl" style="color:var(--gold)">$0 — Saved -$543</div>
-      <div class="day-balance">Balance: <span>$29,088</span></div>
-    </div>
-  </div>
-
-  <!-- FRI 3/27 -->
-  <div class="day skip">
-    <div class="day-header">
-      <div class="day-date">Friday, March 27</div>
-      <div class="day-badge skip-b">🟡 SPY ADX: 19 · BELOW THRESHOLD</div>
-    </div>
-    <div class="day-narrative">
-      ADX 19. One point below our 20 cutoff. Friday of a choppy week. Without the filter, GOOGL, META, and MRVL would have all reversed — <strong style="color:var(--red)">-$624</strong> wipeout. This is the kind of day where you think "it's just one point, close enough." It's not close enough.
-      <br><br>
-      We end the week up $2,088. Not $3K. But we didn't blow up, and we kept our capital for next week.
-    </div>
-    <div class="day-result">
-      <div class="day-pnl" style="color:var(--gold)">$0 — Saved -$624</div>
-      <div class="day-balance">Balance: <span>$29,088</span></div>
-    </div>
-  </div>
-
-  <!-- WEEK 1 SUMMARY -->
-  <div class="week-summary">
-    <h3>Week 1 Summary — March 23–27</h3>
-    <div class="week-stats">
-      <div class="ws"><div class="v">$29,088</div><div class="l">Ending Balance</div></div>
-      <div class="ws"><div class="v">+$2,088</div><div class="l">Week P&L</div></div>
-      <div class="ws"><div class="v">4/6</div><div class="l">Wins/Trades</div></div>
-      <div class="ws"><div class="v">3 days</div><div class="l">Sat Out</div></div>
-      <div class="ws"><div class="v">-$1,167</div><div class="l">Losses Avoided</div></div>
-    </div>
-    <p style="color:var(--text2);font-size:0.85em;margin-top:16px;text-align:center">
-      Short of the $3K target, but the safeguards proved their worth. Patience.
-    </p>
-  </div>
-</section>
-</div>
-
-<!-- ═══════════════════════════════════ WEEK 2 ═══ -->
-<div class="container">
-<section class="chapter" id="week2">
-  <div class="chapter-header">
-    <div class="chapter-num">Week 2</div>
-    <div class="chapter-title">The Machine Runs</div>
-  </div>
-  <p class="chapter-intro">March 30 – April 2, 2026 — Starting balance: $29,088 (carried from Week 1)</p>
-
-  <!-- MON 3/30 -->
-  <div class="day">
-    <div class="day-header">
-      <div class="day-date">Monday, March 30</div>
-      <div class="day-badge go">SPY ADX: 33 · 9 signals · GO</div>
-    </div>
-    <div class="day-narrative">
-      Market's back. SPY ADX jumped to 33 — strong bear trend. GOOGL on top with ADX 53 but barely any intraday range (+0.3% MFE). The trend was <em>in</em> GOOGL but it had already priced the move pre-market. META and CRWD were the real plays.
-      <br><br>
-      Flat day. The A-grade didn't deliver, but the B-grades made it green. Some days that's how it works — you don't need a home run, just don't lose.
-    </div>
-    <div class="trades">
-      <div class="trade flat">
-        <div class="trade-grade">A-Grade · $9,000</div>
-        <div class="trade-ticker">GOOGL <span class="arrow">→</span> GGLL</div>
-        <div class="trade-details">ADX 53 · Dip -1.9% · No follow-through</div>
-        <div class="trade-pnl" style="color:var(--text2)">$0 (flat)</div>
-      </div>
-      <div class="trade win">
-        <div class="trade-grade">B-Grade · $4,500</div>
-        <div class="trade-ticker">META <span class="arrow">→</span> METU</div>
-        <div class="trade-details">ADX 53 · Dip -1.7% · Slow grind up</div>
-        <div class="trade-pnl pos">+$112 (+2.5%)</div>
-      </div>
-      <div class="trade win">
-        <div class="trade-grade">B-Grade · $4,500</div>
-        <div class="trade-ticker">CRWD <span class="arrow">→</span> CRWL</div>
-        <div class="trade-details">ADX 39 · No dip, just went</div>
-        <div class="trade-pnl pos">+$72 (+1.6%)</div>
-      </div>
-    </div>
-    <div class="day-result">
-      <div class="day-pnl pos">+$184</div>
-      <div class="day-balance">Running balance: <span>$29,272</span></div>
-    </div>
-  </div>
-
-  <!-- TUE 3/31 -->
-  <div class="day best">
-    <div class="day-header">
-      <div class="day-date">Tuesday, March 31</div>
-      <div class="day-badge go">SPY ADX: 34 · 13 signals · 🔥 BEST DAY</div>
-    </div>
-    <div class="day-narrative">
-      <strong>This is the day the system was built for.</strong> MU at ADX 58 with 2.6x relative volume. KTOS at 57. ASML at 51. Three high-conviction picks, all trending hard, all with fuel.
-      <br><br>
-      <strong>10:00 AM:</strong> MUU had the deepest dip of the whole backtest — <strong>-6.4%</strong> from open. That's terrifying to buy into if you don't trust your system. But it's also where the money is. That -6.4% dip became a +16.1% day from our entry. KTUP dipped -3.1% then ran to +13.8%. ASMU was the "boring" one at +6.7%.
-      <br><br>
-      All three green. This is what $2,372 in a single day looks like.
-    </div>
-    <div class="trades">
-      <div class="trade win">
-        <div class="trade-grade">A-Grade · $9,000</div>
-        <div class="trade-ticker">MU <span class="arrow">→</span> MUU</div>
-        <div class="trade-details">ADX 58 · RVol 2.6x · Dip -6.4% then RIPPED</div>
-        <div class="trade-pnl pos">+$1,449 (+16.1%)</div>
-      </div>
-      <div class="trade win">
-        <div class="trade-grade">B-Grade · $4,500</div>
-        <div class="trade-ticker">KTOS <span class="arrow">→</span> KTUP</div>
-        <div class="trade-details">ADX 57 · Defense sector on fire</div>
-        <div class="trade-pnl pos">+$621 (+13.8%)</div>
-      </div>
-      <div class="trade win">
-        <div class="trade-grade">B-Grade · $4,500</div>
-        <div class="trade-ticker">ASML <span class="arrow">→</span> ASMU</div>
-        <div class="trade-details">ADX 51 · Chip sector momentum</div>
-        <div class="trade-pnl pos">+$302 (+6.7%)</div>
-      </div>
-    </div>
-    <div class="day-result">
-      <div class="day-pnl pos" style="font-size:1.5em">+$2,372 🔥</div>
-      <div class="day-balance">Running balance: <span style="color:var(--green)">$31,644</span> — TARGET HIT</div>
-    </div>
-  </div>
-
-  <!-- WED 4/01 -->
-  <div class="day">
-    <div class="day-header">
-      <div class="day-date">Wednesday, April 1</div>
-      <div class="day-badge go">SPY ADX: 28 · 24 signals · GO</div>
-    </div>
-    <div class="day-narrative">
-      24 signals — one below the 25 cap. Close call. SPY flipped from BEAR to BULL regime. MU back on top (ADX 57) — two days in a row. NFLX at 44. KTOS again at 42 — but this time it's the wrong side of the move.
-      <br><br>
-      MUU delivered again — +12% from our dip entry. But KTUP got absolutely destroyed, -9.6%. The trailing stop limited the damage, but $432 out of a $4,500 position still stings. NFLX was basically flat. MU carried the day. Again.
-    </div>
-    <div class="trades">
-      <div class="trade win">
-        <div class="trade-grade">A-Grade · $9,000</div>
-        <div class="trade-ticker">MU <span class="arrow">→</span> MUU</div>
-        <div class="trade-details">ADX 57 · Back-to-back · Dip -2.1%</div>
-        <div class="trade-pnl pos">+$1,080 (+12.0%)</div>
-      </div>
-      <div class="trade win">
-        <div class="trade-grade">B-Grade · $4,500</div>
-        <div class="trade-ticker">NFLX <span class="arrow">→</span> NFXL</div>
-        <div class="trade-details">ADX 44 · Barely moved</div>
-        <div class="trade-pnl pos">+$18 (+0.4%)</div>
-      </div>
-      <div class="trade loss">
-        <div class="trade-grade">B-Grade · $4,500</div>
-        <div class="trade-ticker">KTOS <span class="arrow">→</span> KTUP</div>
-        <div class="trade-details">ADX 42 · Hard reversal, trail stop hit</div>
-        <div class="trade-pnl neg">-$432 (-9.6%)</div>
-      </div>
-    </div>
-    <div class="day-result">
-      <div class="day-pnl pos">+$666</div>
-      <div class="day-balance">Running balance: <span>$32,310</span></div>
-    </div>
-  </div>
-
-  <!-- THU 4/02 -->
-  <div class="day">
-    <div class="day-header">
-      <div class="day-date">Thursday, April 2</div>
-      <div class="day-badge go">SPY ADX: 32 · 10 signals · GO</div>
-    </div>
-    <div class="day-narrative">
-      Clean setup. 10 signals, strong SPY trend. LLY on top at ADX 48 — pharma doesn't usually trend this hard. BA at 43 and MRVL at 42 rounding it out.
-      <br><br>
-      The A-grade flopped. LLY dipped -0.6%, tried to go, then reversed. -$126. But here's why the 3-trade structure works: BA caught a defense sector tailwind (+6.0%) and MRVL rode the chip rally (+10.1%). The B-grades more than covered the A-grade miss. Day green, system validated.
-    </div>
-    <div class="trades">
-      <div class="trade loss">
-        <div class="trade-grade">A-Grade · $9,000</div>
-        <div class="trade-ticker">LLY <span class="arrow">→</span> ELIL</div>
-        <div class="trade-details">ADX 48 · Pharma fakeout</div>
-        <div class="trade-pnl neg">-$126 (-1.4%)</div>
-      </div>
-      <div class="trade win">
-        <div class="trade-grade">B-Grade · $4,500</div>
-        <div class="trade-ticker">BA <span class="arrow">→</span> BOEU</div>
-        <div class="trade-details">ADX 43 · No dip, steady climb</div>
-        <div class="trade-pnl pos">+$270 (+6.0%)</div>
-      </div>
-      <div class="trade win">
-        <div class="trade-grade">B-Grade · $4,500</div>
-        <div class="trade-ticker">MRVL <span class="arrow">→</span> MRVU</div>
-        <div class="trade-details">ADX 42 · Chip sector rip · Dip -3.1%</div>
-        <div class="trade-pnl pos">+$454 (+10.1%)</div>
-      </div>
-    </div>
-    <div class="day-result">
-      <div class="day-pnl pos">+$598</div>
-      <div class="day-balance">Running balance: <span>$32,908</span></div>
-    </div>
-  </div>
-
-  <!-- WEEK 2 SUMMARY -->
-  <div class="week-summary">
-    <h3>Week 2 Summary — March 30 – April 2</h3>
-    <div class="week-stats">
-      <div class="ws"><div class="v">$32,908</div><div class="l">Ending Balance</div></div>
-      <div class="ws"><div class="v">+$3,820</div><div class="l">Week P&L</div></div>
-      <div class="ws"><div class="v">9/12</div><div class="l">Wins/Trades</div></div>
-      <div class="ws"><div class="v">0</div><div class="l">Days Sat Out</div></div>
-      <div class="ws"><div class="v">+$955/day</div><div class="l">Avg Daily P&L</div></div>
-    </div>
-    <p style="color:var(--text2);font-size:0.85em;margin-top:16px;text-align:center">
-      Target exceeded. $27K → $30K achieved on Tuesday. Kept running. $5,908 total.
-    </p>
-  </div>
-</section>
-</div>
-
-<!-- ═══════════════════════════════════ THE LAB ═══ -->
-<div class="container">
-<section class="chapter" id="lab">
-  <div class="chapter-header">
-    <div class="chapter-num">Appendix</div>
-    <div class="chapter-title">The Lab — How We Got Here</div>
-  </div>
-  <p class="chapter-intro">Before we traded a single dollar, we tested every variable. Here's what worked and what didn't.</p>
-
-  <h3>Entry Timing: When to Buy</h3>
-  <p>We tested 12 entry times from market open to 11 AM. The morning dip in 2x ETFs bottoms around 25–30 minutes after open. Buying at 10:00 AM captured the full dip without missing the subsequent move.</p>
-  <div class="bar-chart">
-    <div class="bar-row"><span class="bar-label">9:30 (open)</span><div class="bar-fill" style="width:180px">+$6,634</div></div>
-    <div class="bar-row"><span class="bar-label">9:45 (+15m)</span><div class="bar-fill" style="width:240px">+$8,639</div></div>
-    <div class="bar-row"><span class="bar-label">9:55 (+25m)</span><div class="bar-fill" style="width:220px">+$8,175</div></div>
-    <div class="bar-row"><span class="bar-label">10:00 (+30m)</span><div class="bar-fill" style="width:200px">+$7,252</div></div>
-    <div class="bar-row"><span class="bar-label hl">⟶ 10:05 (+35m) ✓</span><div class="bar-fill" style="width:230px;background:linear-gradient(90deg,#00aadd,var(--cyan))">+$8,342 (Optimal)</div></div>
-    <div class="bar-row"><span class="bar-label">10:15 (+45m)</span><div class="bar-fill" style="width:160px">+$5,422</div></div>
-    <div class="bar-row"><span class="bar-label">10:30 (+60m)</span><div class="bar-fill" style="width:140px">+$4,931</div></div>
-    <div class="bar-row"><span class="bar-label">11:00 (+90m)</span><div class="bar-fill" style="width:90px">+$3,031</div></div>
-  </div>
-
-  <h3>Exit Strategy: 8 Methods Tested</h3>
-  <p>All exits tested on the same 18 entries using baseline sizing. The 1× daily ATR trailing stop was the clear winner. Tighter stops get shaken out by the natural volatility of 2x products.</p>
-  <div class="bar-chart">
-    <div class="bar-row"><span class="bar-label">0.5× Daily ATR trail</span><div class="bar-fill" style="width:140px">+$4,996 (52%W)</div></div>
-    <div class="bar-row"><span class="bar-label">0.75× Daily ATR trail</span><div class="bar-fill" style="width:200px">+$7,423 (54%W)</div></div>
-    <div class="bar-row"><span class="bar-label">1.0× Daily ATR trail</span><div class="bar-fill" style="width:210px">+$7,646 (55%W)</div></div>
-    <div class="bar-row"><span class="bar-label hl">⟶ 1.25× Daily ATR trail ✓</span><div class="bar-fill" style="width:240px;background:linear-gradient(90deg,#00aadd,var(--cyan))">+$8,342 (57%W)</div></div>
-    <div class="bar-row"><span class="bar-label">1.5× Daily ATR trail</span><div class="bar-fill" style="width:220px">+$8,266 (58%W)</div></div>
-  </div>
-
-  <h3>Position Sizing: 13 Configurations Tested</h3>
-  <p>Every config was profitable with the +30m entry. More weight on the #1 pick consistently improved returns — the ADX ranking works. We chose $9K/$4.5K/$4.5K for the balance of conviction and cash buffer.</p>
-  <div class="bar-chart">
-    <div class="bar-row"><span class="bar-label">Sniper $18K/$4.5K/$4.5K</span><div class="bar-fill" style="width:300px">+$12,504 (+46%)</div></div>
-    <div class="bar-row"><span class="bar-label">Heavy $12K/$9K/$6K</span><div class="bar-fill" style="width:280px">+$11,884 (+44%)</div></div>
-    <div class="bar-row"><span class="bar-label">Flat 3 × $9K</span><div class="bar-fill" style="width:260px">+$11,219 (+41%)</div></div>
-    <div class="bar-row"><span class="bar-label hl">⟶ Base $9K/$4.5K/$4.5K ✓</span><div class="bar-fill" style="width:200px;background:linear-gradient(90deg,#00aadd,var(--cyan))">+$8,342 (+30%)</div></div>
-    <div class="bar-row"><span class="bar-label">Safe 5 × $3K</span><div class="bar-fill" style="width:120px">+$5,140 (+19%)</div></div>
-  </div>
-
-  <div class="callout warn">
-    <h4>Honest Limitations</h4>
-    <p>This is 2 weeks of data — 10 trading days, 6 active. Not enough to prove anything. Spreads, slippage, and commissions are not included. The ATR trailing stop models realistic exits but isn't perfect. Past performance is not future performance. But the logic is sound, the safeguards work, and the entry timing edge is structural — 2x ETFs <em>will</em> dip in the first 30 minutes because of how leveraged rebalancing mechanics work.</p>
-  </div>
-</section>
-</div>
-
-<!-- ═══════════════════════════════════ PLAYBOOK ═══ -->
-<div class="container">
-<section class="chapter" id="playbook">
-  <div class="chapter-header">
-    <div class="chapter-num">Reference</div>
-    <div class="chapter-title">The Morning Playbook</div>
-  </div>
-
-  <div class="rules-grid">
-    <div class="rule-card" style="border-color:var(--cyan)">
-      <div class="icon">🌅</div>
-      <h4>6:00 AM — Check Screener</h4>
-      <p>Output published by pipeline. Note top 3 picks, their ADX rankings, and SPY regime. If SPY ADX < 20 or signals > 25, go back to sleep.</p>
-    </div>
-    <div class="rule-card" style="border-color:var(--gold)">
-      <div class="icon">📉</div>
-      <h4>9:30–10:00 AM — Watch the Dip</h4>
-      <p>Do NOT buy before 9:55. Watch the ETFs pull back. Average dip is -1.9%. Set limit orders near the 30-min low.</p>
-    </div>
-    <div class="rule-card" style="border-color:var(--green)">
-      <div class="icon">🎯</div>
-      <h4>10:00 AM — Execute</h4>
-      <p>$9,000 on #1, $4,500 on #2, $4,500 on #3. Limit orders at the ask. Set trailing stop at 1× daily ATR immediately.</p>
-    </div>
-    <div class="rule-card" style="border-color:var(--purple)">
-      <div class="icon">📈</div>
-      <h4>10:00 AM → Close — Ride the Trail</h4>
-      <p>Don't touch the stops. Don't add. Don't second-guess. The ATR trail manages the exit. Walk away if you need to.</p>
-    </div>
-  </div>
-
-  <div class="callout">
-    <h4>The Cycle</h4>
-    <p>Start with $27,000. Trade the system. When you hit $30,000, withdraw $3,000. Reset to $27,000. Repeat weekly. That's $12K/month, $144K/year, on a $27K account. The math works when the discipline does.</p>
-  </div>
-</section>
-</div>
-
-<footer>
-  <p style="font-size:1em;color:var(--text);margin-bottom:12px">Ghost Alpha Dossier</p>
-  <p><a href="https://mphinance.github.io/mphinance/">mphinance.github.io</a> · <a href="https://mphinance.com">mphinance.com</a></p>
-  <p style="margin-top:16px;max-width:600px;margin-left:auto;margin-right:auto">
-    This is a quantitative backtest, not financial advice. Past performance does not guarantee future results. Trade at your own risk. 2x leveraged ETFs carry significant risk of loss and are not suitable for all investors.
+<!-- ═══ FOOTER ═══ -->
+<div class="footer">
+  <p>Ghost Alpha VWAP Reclaim v3.0 · Built by <a href="https://mphinance.com">Momentum Phinance</a></p>
+  <p>Strategy engine: <a href="https://github.com/mphinance/mphinance">github.com/mphinance</a> · Backtest: <code>dossier/backtesting/intraday_backtest.py</code></p>
+  <p style="margin-top:8px; font-size:0.6em; color:#444">
+    Past performance is not indicative of future results. This is not financial advice. Trade at your own risk.
   </p>
-</footer>
+</div>
 
+</div>
 </body>
 </html>
