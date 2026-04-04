@@ -1,4 +1,4 @@
-# I Made $20K in 13 Weeks Day Trading Leveraged ETFs — Here's the Exact System
+# The 5.8% Weekly Edge: My Exact Blueprint for Day Trading Leveraged ETFs
 
 *Michael's Musings #14 · Apr 2026*
 
