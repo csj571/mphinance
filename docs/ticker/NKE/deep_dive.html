@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NKE Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for NKE.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/NKE/chart/" target="_blank">NKE</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Consumer Cyclical &#xB7; Footwear & Accessories &#xB7; 2026-04-05</div>
+  </div>
+  <div>
+    <div class="pr">$44.19</div>
+    <div class="ch neg">-0.99%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[NKE] Deep Dive: The Fallen Titan – Hunting a Bounce in the Bear's Lair</h2>
+<p><strong>Date:</strong> 2026-04-05</p>
+<p><strong>Price:</strong> ~$44.19 | <strong>Verdict:</strong> Speculative Bounce Play (Short-term)</p>
+
+<p>Nike. Just Do It. Or, more accurately, "Just Don't Do It" if you've been holding lately. NKE is trading near its 52-week lows, battered by weak growth and a market that's finally waking up to its hefty valuation. But with the stock deeply oversold, is there a contrarian opportunity lurking, or is this the start of a longer descent?</p>
+
+<h3>The Core Thesis</h3>
+<p>The market currently views NKE as a once-dominant titan losing its stride. A paltry 0.1% revenue growth rate paired with a P/E ratio of 29.07 (and a forward P/E of 22.64) is a recipe for a sell-off, especially when our internal quant valuation screams "OVERVALUED" with a target of $27.88. Retail traders have been stampeding for the exits, reflected in the extreme oversold RSI and relentless selling pressure that has pushed NKE to the brink of its 52-week low.</p>
+
+<p>However, reality, or at least short-term reality, can sometimes diverge from the grim fundamental picture. This stock is trading on fear, not just pure fundamentals. The current price of $44.19 is hovering precariously close to its 52-week low of $43.17, with an RSI of 21.98 indicating severe oversold conditions. While the long-term outlook remains challenging without a significant shift in growth strategy, the sheer magnitude of the recent sell-off suggests that a technical bounce is increasingly probable, making NKE a prime candidate for a speculative short-term trade.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<p>Let's cut to the chase. The fundamentals for NKE are screaming caution, not celebration:</p>
+<ul>
+<li><strong>Revenue Growth:</strong> A pathetic 0.1%. This isn't growth; it's stagnation. For a consumer brand of this caliber, that's a serious red flag.</li>
+<li><strong>Profit Margin:</strong> A slim 4.8%. Given the scale of Nike, this indicates competitive pressure or operational inefficiencies.</li>
+<li><strong>Valuation:</strong> P/E of 29.07 and Forward P/E of 22.64. For essentially zero growth, these multiples are exorbitant. Our quant model pegs it as OVERVALUED with a target of $27.88, representing a massive -36.9% gap from the current price.</li>
+<li><strong>Market Cap:</strong> Still a behemoth at $65.42B, meaning significant capital is required to move the needle.</li>
+<li><strong>Volatility:</strong> Beta of 1.32 means NKE moves 32% more than the broader market, amplifying both gains and losses.</li>
+<li><strong>52W Range:</strong> $43.17 - $73.82. Currently trading at $44.19, NKE is hugging the bottom of its yearly range, which also happens to be its S1 support at $43.85.</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+<p>Even in the darkest corners, a ghost can find a glimmer of hope for a trade:</p>
+
+<ol>
+<li><strong>Extreme Oversold Conditions:</strong> With an RSI(14) at 21.98, NKE is in deeply oversold territory. This is a classic contrarian signal for a potential short-term relief rally or "dead cat bounce." The stock is near its 52-week low of $43.17, making a re-test of this level, followed by a bounce, a high probability event.</li>
+<li><strong>Iconic Brand Equity:</strong> Despite current woes, Nike's brand recognition and loyalty are unparalleled. Any positive news — a new product cycle, successful marketing campaign, or a slight beat on earnings — could trigger a sharp snapback as traders look to capitalize on the oversold conditions and strong historical brand power.</li>
+<li><strong>Analyst Discrepancy:</strong> While my quant model is bearish long-term, the consensus analyst target sits at a hefty $65.46. This represents a substantial upside of over 48% from current levels. While I wouldn't bet the farm on it, this wide discrepancy creates a potential psychological floor or target for short-term sentiment shifts and short-covering rallies.</li>
+<li><strong>High Relative Volume:</strong> A Rel Vol of 2.67x indicates significantly higher trading activity than usual. While this has been driven by selling pressure, it also means there's liquidity for a potential reversal, and a shift in sentiment could trigger a rapid move higher as buyers step in on volume.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<p>No sugar-coating here; the risks are palpable:</p>
+
+<ol>
+<li><strong>Fundamental Valuation Disconnect:</strong> The biggest risk is that NKE's valuation (P/E 29.07 for 0.1% revenue growth) is simply too high, and the market is still correcting. My quant valuation of $27.88 indicates a long way down if fundamentals don't improve. This isn't just about a bad quarter; it's about a structural growth problem that current multiples simply can't justify.</li>
+<li><strong>Bearish Technical Trend:</strong> The EMA stack is "FULL BEARISH" (8-EMA at $49.34, 21-EMA at $52.94, 34-EMA at $55.18). The price of $44.19 is firmly below all key short and medium-term moving averages, with the 50-SMA at $58.67 acting as a distant resistance. The ADX at 64.64 confirms a very strong <em>downtrend</em>. Any bounce will be battling a powerful underlying bearish momentum.</li>
+<li><strong>No Clear Growth Catalyst:</strong> NKE's current growth engine is sputtering. Without a clear path to renewed revenue acceleration or margin expansion, the stock remains vulnerable to further de-rating as investors seek growth elsewhere. Macro headwinds affecting consumer discretionary spending only exacerbate this challenge.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+<p>The charts paint a picture of pain, but also opportunity for the nimble trader:</p>
+
+<ul>
+<li><strong>Price Action:</strong> NKE is in freefall, currently at $44.19, just above its 52-week low of $43.17. The current trading range is dictated by extreme bearish sentiment.</li>
+<li><strong>EMA Stack:</strong> FULL BEARISH. The 8-EMA ($49.34) is below the 21-EMA ($52.94), which is below the 34-EMA ($55.18). Price is well below all of them. This is a classic setup for continued downside unless a major catalyst hits.</li>
+<li><strong>SMA 50:</strong> $58.67. A long way up, confirming the strong bearish trend. There's no SMA 200 provided, suggesting a prolonged period below this average.</li>
+<li><strong>RSI(14):</strong> 21.98. This is the glimmer of hope. Extremely oversold, signaling that selling pressure might be exhausted in the short term, ripe for a snapback.</li>
+</ul>
+<p><em>   <strong>ADX:</strong> 64.64. A very high ADX signifies an extremely strong trend. Given the price action and EMAs, it's a powerful </em>downtrend*.</p>
+<ul>
+<li><strong>Pivots:</strong> Current price $44.19 is precariously close to S1 ($43.85) and S2 ($43.07). The Primary Pivot Point (PP) is $45.34, with R1 at $46.12 and R2 at $47.61. These will be crucial levels for any bounce.</li>
+<li><strong>ATR & Rel Vol:</strong> ATR of 1.89 suggests daily price swings of nearly $2.00, offering good volatility for trades. Relative Volume at 2.67x confirms significant recent activity, indicating strong conviction (currently bearish).</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>Given the strong downtrend, a "breakout" from current levels would likely be a short-term relief rally. Look for a strong break above the PP ($45.34) on significant volume. A confirmation above R1 ($46.12) could target R2 ($47.61). This would be a momentum play, chasing strength after an initial reversal.</p>
+<ul>
+<li><strong>Entry:</strong> Above $45.34 (PP) on increasing volume.</li>
+<li><strong>Target:</strong> $46.12 (R1), then $47.61 (R2).</li>
+<li><strong>Stop Loss:</strong> Below $44.50.</li>
+</ul>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>This is the play I'm leaning towards, capitalizing on the extreme oversold RSI and proximity to key support levels. Wait for price to consolidate around S1 ($43.85) or S2 ($43.07) and show signs of reversal (e.g., bullish engulfing candle, higher low). This is a contrarian entry, betting on a short-term bounce from an exhausted downtrend.</p>
+<ul>
+<li><strong>Entry:</strong> Aggressive entry at $43.85 (S1) or a confirmed bounce off $43.07 (S2).</li>
+<li><strong>Target:</strong> $46.12 (R1), with an ambitious stretch to $47.61 (R2).</li>
+<li><strong>Stop Loss:</strong> A break below $42.90 (below S2 and 52W low) invalidates the bounce thesis.</li>
+</ul>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>If NKE fails to hold S2 ($43.07) and decisively breaks its 52-week low of $43.17, the fundamental valuation concerns will likely take over, pushing the stock to new lows. This would invalidate any short-term bullish thesis.</p>
+<ul>
+<li><strong>Action:</strong> Consider shorting below $43.00, or adding protective put options.</li>
+<li><strong>Target:</strong> A move towards our quant valuation target of $27.88, though not in a straight line.</li>
+<li><strong>Stop Loss:</strong> A bounce back above $43.50.</li>
+</ul>
+
+<h3>🏁 Final Verdict</h3>
+<p>NKE is a fundamentally challenged stock trapped in a powerful downtrend, yet its extreme oversold state offers a compelling, albeit speculative, short-term bounce opportunity. Tread carefully. Short-term trading target: $47.61. Long-term fundamental valuation: $27.88.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">42.2%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">52.6%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">0</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BEARISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$52.91</div><div class="ma-d neg">-16.5%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$58.67</div><div class="ma-d neg">-24.7%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$60.98</div><div class="ma-d neg">-27.5%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BEARISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$49.34</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$52.94</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$55.18</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val pos">22</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">8/16</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm neg">-0.63</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">64.6</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$43.17</span><span>$44.19 (3%)</span><span>$73.82</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:3%"></div><div class="rng-dot" style="left:3%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$66.59</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$62.11</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$58.49</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$54.88</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$56.49</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$49.33</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$1.89</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">2.67x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$47.61 &#xB7; R1=$46.12 &#xB7; PP=$45.34 &#xB7; S1=$43.85 &#xB7; S2=$43.07
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">NIKE, Inc.</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$65.42B</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">77,800</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NYQ</div></div>
+      </div>
+      <div class="fd-desc">NIKE, Inc., together with its subsidiaries, designs, develops, markets, and sells athletic and casual footwear, apparel, equipment, accessories, and services for men, women, and kids in North America, Europe, the Middle East, Africa, Greater China, the Asia Pacific, and Latin America. The company offers its products under the NIKE, Jordan, Jumpman, Converse, Chuck Taylor, All Star, One Star, Star Chevron, and Jack Purcell trademarks. It also provides a line of performance equipment and accessories, including bags, socks, sport balls, eyewear, timepieces, digital devices, bats, gloves, protective equipment, and other equipment for sports activities, as well as various plastic products to other manufacturers; distributes and licenses casual sneakers, apparel, and accessories; and markets apparel with licensed college and professional team and league logos.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://www.nike.com" target="_blank" style="color:#00f3ff">https://www.nike.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-mid">47</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-lo">32</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-lo">31</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">75</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">29.07</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">22.64</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">1.41</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">4.64</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">17.74</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">N/A</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 1.47 &middot; P/FCF: 49.8</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v pos">+0.1%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v neg">-34.8%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v neg">-34.5%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$31.47</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">40.9%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v pos">6.9%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v pos">4.8%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v pos">16.0%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v pos">5.2%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">1.32</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm pos">2.14</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">79.3</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$11.18B</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$8.06B</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$1.31B</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$1.69B</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">3.71%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">$1.64</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">106.6%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">2026-03-02</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (33 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$23.00</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$58.00</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$120.00</div></div>
+        </div>
+        <div class="est-labels"><span>$23</span><span>Current $44</span><span>$120</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:22%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">BUY</span> &middot; Mean Target: $65.46</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-04-05 12:23 AM CST</div>
+</div>
+</body>
+</html>
