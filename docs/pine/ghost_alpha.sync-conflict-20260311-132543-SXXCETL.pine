@@ -239,11 +239,10 @@ if not na(sl)
 // Volume-validated breakouts (Gemini upgrade: low vol breaks are probably traps)
 bool brk_bear_raw = brk_enable and not na(last_sl) and close < last_sl and close[1] >= last_sl
 bool brk_bull_raw = brk_enable and not na(last_sh) and close > last_sh and close[1] <= last_sh
-float _brk_vratio = nz(volume) > 0 ? volume / math.max(ta.sma(volume, 20), 1) : 0  // inline vol ratio for breakout validation
-bool brk_bear = brk_bear_raw and _brk_vratio > 1.0  // require at least average volume
-bool brk_bull = brk_bull_raw and _brk_vratio > 1.0
-bool brk_trap_bear = brk_bear_raw and _brk_vratio <= 1.0  // low vol = probable trap
-bool brk_trap_bull = brk_bull_raw and _brk_vratio <= 1.0
+bool brk_bear = brk_bear_raw and rvol > 1.0  // require at least average volume
+bool brk_bull = brk_bull_raw and rvol > 1.0
+bool brk_trap_bear = brk_bear_raw and rvol <= 1.0  // low vol = probable trap
+bool brk_trap_bull = brk_bull_raw and rvol <= 1.0
 
 // ── Liquidity Sweeps (Stop Hunts) ───────────────────────────────
 // Price WICKED past the level but CLOSED back inside — retail stops
@@ -540,17 +539,19 @@ float ax2_volume = cmf > 0.10 ? 1.0 : cmf > 0.0 ? 0.5 : 0.0
 // ── Axis 3: VOLATILITY REGIME (ATR Ratio) ────────────────────
 // Sweet spot: expanding from compression (0.75-1.5). 
 // Dead (<0.5) or blow-off (>2.0) = unfavorable.
-float ax3_vol = (sqz_ratio >= 0.75 and sqz_ratio <= 1.5) ? 1.0 : sqz_fire ? 1.0 : 0.0
+float ax3_vol = (sqz_ratio >= 0.75 and sqz_ratio <= 1.5) ? 1.0 :
+                 sqz_fire ? 1.0 : 0.0
 
 // ── Axis 4: TREND MATURITY (Time) ────────────────────────────
 // Fresh trends (5-30 bars) have more edge than aging ones.
 // Too early (<5) = noise. Too late (>50) = mean reversion risk.
-float ax4_time = trend_age >= 5 and trend_age <= 30 ? 1.0 : trend_age > 30 and trend_age <= 50 ? 0.5 : 0.0
+float ax4_time = trend_age >= 5 and trend_age <= 30 ? 1.0 :
+                 trend_age > 30 and trend_age <= 50 ? 0.5 : 0.0
 
 // ── Axis 5: MEAN REVERSION PRESSURE (Exhaustion) ─────────────
 // Not stretched = 1.0. Stretched (>3% from TRAMA or %R extreme) = 0.
-bool _no_exh = not exh_ob and not exh_os
-float ax5_revert = (_no_exh and math.abs(trama_dist) < 3.0) ? 1.0 : _no_exh ? 0.5 : 0.0
+float ax5_revert = (not exh_ob and not exh_os and math.abs(trama_dist) < 3.0) ? 1.0 :
+                    (not exh_ob and not exh_os) ? 0.5 : 0.0
 
 // ── V2 Total Score ───────────────────────────────────────────
 float g_score = ax1_trend + ax2_volume + ax3_vol + ax4_time + ax5_revert
@@ -727,7 +728,7 @@ var table tbl = na
 
 if dash_enable
     if barstate.isfirst
-        tbl := table.new(tbl_pos, 3, 20, bgcolor=C_DASH_BG, border_width=2, border_color=C_DASH_BORDER, frame_width=3, frame_color=C_DASH_BORDER)
+        tbl := table.new(tbl_pos, 3, 15, bgcolor=C_DASH_BG, border_width=2, border_color=C_DASH_BORDER, frame_width=3, frame_color=C_DASH_BORDER)
 
     if barstate.islast
         int row = 0
@@ -830,23 +831,6 @@ if dash_enable
         table.cell(tbl, 2, row, dir_text, text_color=dir_color, text_size=tbl_size, text_halign=text.align_right)
         row += 1
 
-        // Signal Key — what does each emoji mean?
-        table.cell(tbl, 0, row, "SIGNALS", text_color=C_DASH_TEXT, text_size=tbl_size, text_halign=text.align_center, bgcolor=color.new(C_DASH_BORDER, 70))
-        table.merge_cells(tbl, 0, row, 2, row)
-        row += 1
-        table.cell(tbl, 0, row, "⚔️ Break", text_color=C_BREAK, text_size=size.tiny, text_halign=text.align_left)
-        table.cell(tbl, 1, row, "🪫 Exhaust", text_color=C_BEAR, text_size=size.tiny, text_halign=text.align_center)
-        table.cell(tbl, 2, row, "💥 Squeeze", text_color=C_SQUEEZE, text_size=size.tiny, text_halign=text.align_right)
-        row += 1
-        table.cell(tbl, 0, row, "👾 Sweep", text_color=C_WARNING, text_size=size.tiny, text_halign=text.align_left)
-        table.cell(tbl, 1, row, "🏁 Trail", text_color=C_BULL, text_size=size.tiny, text_halign=text.align_center)
-        table.cell(tbl, 2, row, "🔮 Diverg", text_color=C_SQUEEZE, text_size=size.tiny, text_halign=text.align_right)
-        row += 1
-        table.cell(tbl, 0, row, "👻 2+ agree", text_color=C_CONFLUENCE, text_size=size.tiny, text_halign=text.align_left)
-        table.cell(tbl, 1, row, "x3 combo", text_color=color.new(C_DASH_TEXT, 50), text_size=size.tiny, text_halign=text.align_center)
-        table.cell(tbl, 2, row, "", text_color=color.new(C_DASH_TEXT, 50), text_size=size.tiny, text_halign=text.align_right)
-        row += 1
-
         // Ghost-to-Ghost AI Data Link (compact JSON for AI OCR)
         string ai_sig = sweep_bull ? "SWP_BL" : sweep_bear ? "SWP_BR" : mega_bull ? "CF_BL" : mega_bear ? "CF_BR" : brk_bear ? "BK_DN" : brk_bull ? "BK_UP" : "—"
         string sqz_str  = sqz_fire ? "FIRE" : sqz_coiled ? "COIL" : "NORM"
@@ -872,20 +856,13 @@ alertcondition(at_kc_lower and hull_bull,                    "Keltner Value Zone
 alertcondition(sweep_bull,                                   "Liquidity Sweep Bull", "👻🎣 Bullish sweep (stop hunt) on {{ticker}} — sniper entry")
 alertcondition(sweep_bear,                                   "Liquidity Sweep Bear", "👻🎣 Bearish sweep (stop hunt) on {{ticker}} — sniper entry")
 
-// ── Export grade score as a plot so {{plot("Ghost Score")}} works in alert messages
-plot(g_score, "Ghost Score", display=display.none)
-
 // ── Dynamic JSON webhook (consolidated, for external systems) ───
-// Fires on: any individual signal OR grade transition (A/A+ entry or exit)
 if barstate.isconfirmed
-    bool grade_entered_a = (ghost_grade == "A" or ghost_grade == "A+") and (ghost_grade[1] != "A" and ghost_grade[1] != "A+")
-    bool grade_left_a    = (ghost_grade[1] == "A" or ghost_grade[1] == "A+") and (ghost_grade != "A" and ghost_grade != "A+")
-    bool any_signal = brk_bear or brk_bull or exh_bear_rev or exh_bull_rev or sqz_fire or hull_flip_bull or hull_flip_bear or mega_bull or mega_bear or sweep_bull or sweep_bear or trail_cross_bear or trail_cross_bull or div_bear or div_bull or grade_entered_a or grade_left_a
+    bool any_signal = brk_bear or brk_bull or exh_bear_rev or exh_bull_rev or sqz_fire or hull_flip_bull or hull_flip_bear or mega_bull or mega_bear or sweep_bull or sweep_bear or trail_cross_bear or trail_cross_bull or div_bear or div_bull
     if any_signal
-        string sig = grade_entered_a ? "GRADE_A_ENTRY" : grade_left_a ? "GRADE_A_EXIT" : div_bear ? "DIVERGE_BEAR" : div_bull ? "DIVERGE_BULL" : trail_cross_bear ? "TRAIL_EXIT_BEAR" : trail_cross_bull ? "TRAIL_EXIT_BULL" : sweep_bull ? "SWEEP_BULL" : sweep_bear ? "SWEEP_BEAR" : mega_bull ? "CONFLUENCE_BULL" : mega_bear ? "CONFLUENCE_BEAR" : sqz_fire ? "SQUEEZE_FIRE" : brk_bear ? "BREAK_DOWN" : brk_bull ? "BREAK_UP" : exh_bear_rev ? "EXHAUSTION_BEAR" : exh_bull_rev ? "EXHAUSTION_BULL" : hull_flip_bull ? "HULL_BULL" : "HULL_BEAR"
+        string sig = div_bear ? "DIVERGE_BEAR" : div_bull ? "DIVERGE_BULL" : trail_cross_bear ? "TRAIL_EXIT_BEAR" : trail_cross_bull ? "TRAIL_EXIT_BULL" : sweep_bull ? "SWEEP_BULL" : sweep_bear ? "SWEEP_BEAR" : mega_bull ? "CONFLUENCE_BULL" : mega_bear ? "CONFLUENCE_BEAR" : sqz_fire ? "SQUEEZE_FIRE" : brk_bear ? "BREAK_DOWN" : brk_bull ? "BREAK_UP" : exh_bear_rev ? "EXHAUSTION_BEAR" : exh_bull_rev ? "EXHAUSTION_BULL" : hull_flip_bull ? "HULL_BULL" : "HULL_BEAR"
         string regime_str = regime_strong ? (regime_bull ? "BULL" : "BEAR") : "CHOP"
         string struct_str = brk_bear ? "BROKEN_DN" : brk_bull ? "BROKEN_UP" : "INTACT"
         string cvd_str    = cvd_bullish ? "BUY" : "SELL"
-        string payload = '{"ticker":"' + syminfo.ticker + '","tf":"' + timeframe.period + '","grade":"' + ghost_grade + '","score":' + str.tostring(math.round(g_score * 10) / 10) + ',"signal":"' + sig + '","regime":"' + regime_str + '","struct":"' + struct_str + '","cvd":"' + cvd_str + '","price":' + str.tostring(close) + ',"rvol":' + str.tostring(math.round(rvol * 100) / 100) + '}'
+        string payload = '{"ticker":"' + syminfo.ticker + '","tf":"' + timeframe.period + '","grade":"' + ghost_grade + '","signal":"' + sig + '","regime":"' + regime_str + '","struct":"' + struct_str + '","cvd":"' + cvd_str + '","price":' + str.tostring(close) + ',"rvol":' + str.tostring(math.round(rvol * 100) / 100) + '}'
         alert(payload, alert.freq_once_per_bar_close)
-
