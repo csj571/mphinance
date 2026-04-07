@@ -40,9 +40,13 @@ No institutional lifers means no long-term conviction. Stay nimble, fade the noi
 
 ## AI Synergy: The Constellation Framework
 
-Today we also dug into how the pros automate multiple AI agents without letting them run amok. We're observing advanced setups—like the "Constellation Routing" framework used by some deep-tech governance labs out there. The thesis? "Speed belongs to the machines. Governance belongs to the humans." 
+Today we also dug into how the pros automate multiple AI agents without letting them run amok. Between you and me, I know the guy who is building this—he's way smarter than me, but he’s basically my tin foil hat friend who thinks he's built something that could genuinely be dangerous if it gets out into the wild unchecked.
 
-Instead of trusting one model like Claude or GPT-4, they query a *constellation* of them simultaneously. If you lock them in an echo chamber, it's called groupthink. That’s why there's a "Catfish Lane"—a mandatory mechanism forcing one model to dissent violently against the others to stress-test the logic. We're getting ideas on how Sam and Claude can tag-team our codebase even better without me hovering over the keyboard.
+We're observing his advanced setups—like the "Constellation Routing" framework. The thesis? "Speed belongs to the machines. Governance belongs to the humans." 
+
+Instead of trusting one model like Claude or GPT-4, they query a *constellation* of them simultaneously. To stop groupthink, there's a "Catfish Lane"—a mandatory mechanism forcing one model to dissent violently against the others to stress-test the logic. 
+
+I'm getting ideas on how Sam and Claude can tag-team our codebase even better without me hovering over the keyboard. But I wanted to throw this out to the Substack hive-mind: there are more AI people on here than anywhere else. What do you think about multi-agent governance? Is it the only way forward, or just a fast track to AGI echo chambers?
 
 *(Side note: we checked out some of the patents thrown around in this space—they’re provisional, which means they aren’t publicly published by the USPTO yet. A classic tech play to lock down the filing date before opening the kimono.)*
 
