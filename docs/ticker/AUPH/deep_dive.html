@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AUPH Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for AUPH.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/AUPH/chart/" target="_blank">AUPH</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Healthcare &#xB7; Biotechnology &#xB7; 2026-04-07</div>
+  </div>
+  <div>
+    <div class="pr">$15.81</div>
+    <div class="ch neg">-1.19%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[AUPH] Deep Dive: The Biotech Profit Machine No One's Talking About (Yet!)</h2>
+<p><strong>Date:</strong> 2026-04-07</p>
+<p><strong>Price:</strong> ~$15.81 | <strong>Verdict:</strong> STRONG BUY</p>
+
+<p>Forget spooky season, because AUPH is serving up a treat that's anything but a trick. This biotech play is showing fundamentals stronger than my coffee after an all-nighter, and the market hasn't fully caught on.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market often sees AUPH as just another volatile biotech stock, currently trading around its 52-week highs but with a slight dip today. The narrative usually revolves around speculative drug pipelines or regulatory hurdles, common to the sector. However, the raw numbers tell a profoundly different story: AUPH isn't merely speculating; it's a cash-generating behemoth, boasting a staggering 101.5% profit margin and robust revenue growth of 28.8%.</p>
+
+<p>This isn't a speculative bet; it's a profitable enterprise trading at a P/E of just 7.64, screaming "value" in a market often chasing ephemeral growth stories. The reality is AUPH is deeply undervalued by a whopping 91.7%, with an intrinsic target of $30.31, while analysts are only catching up with a $17.0 target. The street is missing the glaringly obvious: AUPH is printing money and trading like a forgotten penny stock, presenting a rare opportunity for those who can connect the dots between profitability, growth, and severe undervaluation.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<p><em>   <strong>Revenue Growth:</strong> A robust <strong>28.8%</strong> year-over-year. This isn't just growth; it's </em>accelerating* growth.</p>
+<p><em>   <strong>Profit Margin:</strong> An absolutely insane <strong>101.5%</strong>. Yes, you read that right. This company is not just profitable; it's </em>hyper-profitable*, indicating exceptional operational efficiency or significant non-operating income that's boosting the bottom line. This is a game-changer.</p>
+<ul>
+<li><strong>P/E Ratio:</strong> A ridiculously low <strong>7.64</strong>. For a company growing at nearly 29% with 100%+ margins, this is a profound mispricing.</li>
+<li><strong>Forward P/E:</strong> Jumps to <strong>18.93</strong>. This suggests either market expectations for future earnings growth to normalize, or potential dilution ahead, but it still represents a solid multiple for a profitable biotech.</li>
+<li><strong>Market Cap:</strong> <strong>$2.10B</strong>. Still small enough to offer significant upside potential as it scales.</li>
+<li><strong>Beta:</strong> <strong>1.52</strong>. Brace for volatility; this stock moves harder than the broader market, both up and down.</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Unprecedented Profitability & Value:</strong> That 101.5% profit margin isn't a typo. It signals a company operating at peak financial efficiency, turning every dollar of revenue into more than a dollar of profit. Combined with a P/E of 7.64, AUPH is a deeply undervalued cash machine that the market <em>must</em> eventually recognize and re-rate.</li>
+<li><strong>Strong Growth Trajectory:</strong> With 28.8% revenue growth, AUPH isn't just profitable; it's expanding its footprint rapidly. This dual threat of growth <em>and</em> extreme profitability makes it an anomaly in the biotech sector and a prime candidate for a significant multiple expansion.</li>
+<li><strong>Bullish Technical Momentum:</strong> The technicals are screaming "buy." We've got a "FULL BULLISH" EMA stack (8 EMA: $15.26, 21 EMA: $14.81, 34 EMA: $14.71) with a confirmed "Golden Cross," indicating a strong and sustained uptrend. The price action is above all key moving averages, confirming the momentum.</li>
+<li><strong>Deep Undervaluation Gap:</strong> Our internal valuation shows AUPH is currently undervalued by a massive 91.7%, with a target of $30.31. This isn't just a slight upside; it's nearly a double from current levels once the market catches up to the underlying financials. Even the analyst consensus target of $17.0 implies immediate upside.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Forward P/E Discrepancy:</strong> The jump from a current P/E of 7.64 to a Forward P/E of 18.93 warrants scrutiny. This suggests either a projected decline in net income or an increase in share count, which could temper future EPS growth despite strong revenue. Investors need to understand the drivers behind this shift.</li>
+<li><strong>Volatility & Liquidity Concerns:</strong> A Beta of 1.52 means AUPH experiences greater price swings than the market. Compounding this is a low Relative Volume of 0.36x, indicating current trading volume is significantly below average. This combination means prices can move sharply on less volume, potentially making entry and exit points challenging, especially for larger positions.</li>
+<li><strong>Biotech Sector-Specific Risks:</strong> Despite stellar current financials, AUPH, like all biotech companies, faces inherent risks. These include reliance on key drugs, potential clinical trial setbacks, regulatory challenges, intense competition, and patent expiry risks, all of which could rapidly impact future revenue and profitability not reflected in historical data.</li>
+</ul>
+
+<h3>📉 The Technicals</h3>
+<p>AUPH is currently trading at $15.81, just below its 52-week high of $16.54.</p>
+<ul>
+<li><strong>EMA Stack:</strong> <strong>FULL BULLISH</strong>. The 8-day EMA ($15.26) is above the 21-day EMA ($14.81), which is above the 34-day EMA ($14.71). Price is holding firmly above all three.</li>
+<li><strong>SMAs:</strong> The price is well above the SMA 50 ($14.55). We have a confirmed <strong>Golden Cross</strong>, a classic bullish signal indicating a strong long-term uptrend.</li>
+<li><strong>RSI(14):</strong> At <strong>64.69</strong>, the stock is strong but not yet overbought (above 70). This indicates there's still room for upward momentum before overheating.</li>
+<li><strong>ADX:</strong> <strong>15.16</strong>. The trend strength is developing but not yet parabolic, suggesting the bullish move has room to mature and strengthen.</li>
+<li><strong>Pivots:</strong> Current price ($15.81) is just below the <strong>Pivot Point (PP) at $15.96</strong>. Resistance levels are R1=$16.36 and R2=$16.72. Support levels are S1=$15.60 and S2=$15.20.</li>
+<li><strong>ATR:</strong> <strong>0.62</strong>. Expect average daily moves of around 62 cents.</li>
+<li><strong>Rel Vol:</strong> <strong>0.36x</strong>. Volume is currently low, which can exaggerate moves.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>If AUPH can decisively break above the Pivot Point ($15.96) and especially R1 ($16.36) on increasing volume (ideally above 1x Rel Vol), this indicates a clear path towards the 52W high of $16.54 and then R2 ($16.72). A sustained breakout above R2 could signal a move towards the analyst target of $17.00 and initiate a new leg up towards our valuation target.</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Given the incredibly strong fundamentals and bullish technical setup, my preferred entry is on a pullback. Look for bounces off key support levels: the S1 ($15.60), the 8-day EMA ($15.26), or the S2 ($15.20). The zone around the 21-day ($14.81) and 34-day ($14.71) EMAs, down to the 50-day SMA ($14.55), presents a particularly attractive dip-buying opportunity if volume confirms the bounce. This strategy capitalizes on the underlying strength at a better price point.</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>A break and sustained close below the 34-day EMA ($14.71) or the 50-day SMA ($14.55) would be a significant concern, invalidating the current bullish trend structure. A hard stop-loss should be placed below $14.50 to protect capital. A loss of these levels would signal a potential deeper correction, necessitating a re-evaluation.</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>AUPH is a profoundly undervalued biotech profit machine with undeniable momentum; load up on dips before the market wakes up. Target: $30.31</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">58.2%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">41.8%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">14</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">7%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BULLISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$14.63</div><div class="ma-d pos">+8.1%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$14.55</div><div class="ma-d pos">+8.7%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$15.07</div><div class="ma-d pos">+4.9%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BULLISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$15.26</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$14.81</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$14.71</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">65</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">80/88</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm pos">+0.20</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">15.2</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$10.9</span><span>$15.81 (87%)</span><span>$16.54</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:87%"></div><div class="rng-dot" style="left:87%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$15.21</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$14.39</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$13.72</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$13.05</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$15.77</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$13.49</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$0.62</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">0.36x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$16.72 &#xB7; R1=$16.36 &#xB7; PP=$15.96 &#xB7; S1=$15.60 &#xB7; S2=$15.20
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">Aurinia Pharmaceuticals Inc.</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$2.10B</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">128</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NGM</div></div>
+      </div>
+      <div class="fd-desc">Aurinia Pharmaceuticals Inc., a biopharmaceutical company, engages in delivering therapies to people living with autoimmune diseases with high unmet medical needs in the United States and Japan. The company offers LUPKYNIS (voclosporin), an oral therapy for the treatment of adult patients with active lupus nephritis. It also develops aritinercept, a dual inhibitor of B cell-activating factor and proliferation-inducing ligand for the potential treatment of autoimmune diseases.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://www.auriniapharma.com" target="_blank" style="color:#00f3ff">https://www.auriniapharma.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-hi">74</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-hi">100</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-hi">97</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">75</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">7.64</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">18.93</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">7.43</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">3.60</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">12.91</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">N/A</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 6.19 &middot; P/FCF: 23.0</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v pos">+28.8%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v pos">+15073.2%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v pos">+14651.2%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$2.11</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">77.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v pos">55.7%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v pos">101.5%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v pos">59.9%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v pos">11.2%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">1.52</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm pos">5.25</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">12.9</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$74.81M</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$397.94M</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$91.41M</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$135.66M</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">0.00%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">N/A</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">N/A</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (7 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$15.00</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$17.00</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$21.00</div></div>
+        </div>
+        <div class="est-labels"><span>$15</span><span>Current $16</span><span>$21</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:14%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">BUY</span> &middot; Mean Target: $17.00</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-04-07 11:32 AM CST</div>
+</div>
+</body>
+</html>

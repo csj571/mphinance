@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKAM Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for AKAM.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/AKAM/chart/" target="_blank">AKAM</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Technology &#xB7; Software - Infrastructure &#xB7; 2026-04-07</div>
+  </div>
+  <div>
+    <div class="pr">$113.52</div>
+    <div class="ch neg">-0.94%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[AKAM] Deep Dive: Securing the Internet, But Is Its Stock Securely Priced?</h2>
+<p><strong>Date:</strong> 2026-04-07</p>
+<p><strong>Price:</strong> ~$113.52 | <strong>Verdict:</strong> NEUTRAL / HOLD</p>
+
+<p>Akamai Technologies – the silent guardian of the internet's edge – is riding a wave of technical bullishness, but don't let the charts blind you to the lurking fundamental shadows.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market sees Akamai as a bedrock player in the crucial and growing domains of edge computing, content delivery, and cybersecurity. In an increasingly distributed digital world, Akamai's infrastructure is perceived as indispensable, offering both performance and protection against the ever-present threats of the internet. This narrative paints a picture of resilient, predictable growth, justifying a premium for its mission-critical services and low Beta (0.59) stability in uncertain markets.</p>
+
+<p>The reality, however, is a bit more nuanced than the hype. While Akamai's fundamentals are solid – a respectable 7.4% revenue growth and 10.7% profit margin – the current valuation appears to be pricing in aggressive future growth that may not fully materialize or is already well-baked into the cake. The significant disparity between the current price and multiple valuation targets suggests that while the business is sound, the stock might be floating in speculative territory, detached from its underlying intrinsic value.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<p>Let's cut to the chase with the digits:</p>
+<ul>
+<li><strong>Market Cap:</strong> $16.71B – A substantial player, but not a leviathan.</li>
+<li><strong>Revenue Growth:</strong> A decent 7.4%. Solid, but not explosive hyper-growth.</li>
+<li><strong>Profit Margin:</strong> 10.7% – Healthy, demonstrating efficiency.</li>
+<li><strong>P/E (TTM):</strong> 36.98 – On the higher side, signaling market optimism.</li>
+<li><strong>Forward P/E:</strong> 14.94 – A dramatic drop, implying analysts expect significant earnings growth ahead. This is the bullish fundamental anchor.</li>
+</ul>
+<p><em>   <strong>Analyst Target:</strong> $110.2 – Interestingly, this is </em>below* our current price of $113.52. Not a ringing endorsement.</p>
+<ul>
+<li><strong>Valuation Target:</strong> $60.55 (Gap: -46.7%) – Ouch. This discounted cash flow (DCF) valuation screams "overpriced" and warrants serious attention, even if it's overly conservative for a growth-oriented stock.</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Edge & Security Tailwinds:</strong> Akamai operates at the forefront of cybersecurity and edge computing – two secular growth trends. As more data moves to the "edge" and cyber threats escalate, Akamai's solutions become increasingly critical. Its 7.4% revenue growth reflects this consistent demand.</li>
+<li><strong>Anticipated Earnings Growth:</strong> The stark contrast between the TTM P/E of 36.98 and the Forward P/E of 14.94 suggests a massive leap in expected earnings. If management can deliver on these heightened expectations, the current price could find fundamental support down the line.</li>
+<li><strong>Technical Momentum:</strong> The charts are screaming "BUY!" with a <strong>FULL BULLISH EMA Stack</strong> (8: $114.46, 21: $111.33, 34: $108.31) and a confirmed <strong>Golden Cross</strong>. The RSI (61.13) has room to run, and a monster ADX of 48.1 confirms a very strong, established trend.</li>
+<li><strong>Defensive Resilience:</strong> With a Beta of 0.59, AKAM exhibits lower volatility than the broader market. In a choppy macro environment, this stability makes it an attractive defensive play for risk-averse investors seeking growth.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Stretched Valuation:</strong> This is the elephant in the room. Our current price of ~$113.52 is trading significantly above both the consensus analyst target of $110.2 and a staggering 46.7% above the fundamental valuation target of $60.55. The market is clearly paying a premium for future growth, leaving little margin for error.</li>
+<li><strong>Intense Competition:</strong> The CDN and cloud security landscape is a shark tank. Akamai faces fierce competition from tech giants like AWS, Microsoft, and Google, alongside aggressive specialized players like Cloudflare (NET). Maintaining market share and pricing power requires continuous innovation and execution.</li>
+<li><strong>Execution Risk on Earnings:</strong> While the Forward P/E implies strong earnings growth, the company <em>must</em> deliver. Any stumble or miss could lead to a swift re-rating of the stock, especially given its current elevated valuation multiples.</li>
+</ul>
+
+<h3>📉 The Technicals</h3>
+<p>AKAM is technically <em>strong</em> right now, despite today's slight dip:</p>
+<ul>
+<li><strong>EMA Stack:</strong> FULL BULLISH. While the price at $113.52 is currently sitting just below the 8-EMA ($114.46), it's firmly above the 21-EMA ($111.33) and 34-EMA ($108.31), indicating upward momentum on all critical short-term timeframes.</li>
+<li><strong>Trend:</strong> Undeniably Bullish. We've got a <strong>Golden Cross</strong>, with the price well above the SMA 50 ($104.47).</li>
+<li><strong>RSI(14):</strong> 61.13. Healthy, not yet overbought. Room to run further before cooling off.</li>
+<li><strong>ADX:</strong> A robust 48.1. This signals a very strong trend in place, giving conviction to the current upward movement.</li>
+<li><strong>Pivots:</strong> Current price is below the daily Pivot Point (PP=$115.23), suggesting short-term weakness, but strong support lies below.</li>
+<li><strong>Resistance:</strong> R1=$117.55, R2=$120.49. The 52W high is $121.12, putting R2 very close to a major breakout level.</li>
+<li><strong>Support:</strong> S1=$112.29, S2=$109.97. These levels will be key to hold if the current dip continues.</li>
+<li><strong>ATR:</strong> 5.15. Decent volatility for day traders.</li>
+<li><strong>52W Range:</strong> $70.82 - $121.12. We are trading near the very top of its 52-week range, hinting at either a breakout or a reversal.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>If AKAM can regain the 8-EMA ($114.46) and clear the daily Pivot Point ($115.23) on conviction volume, it's a strong signal for continuation. Look for a push towards R1 ($117.55) and then a potential test of R2 ($120.49) and the 52-week high ($121.12). A sustained break above $121.12 would be a powerful technical signal for further upside, potentially squeezing shorts.</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Given the valuation concerns, a dip buy offers a better risk/reward. Wait for AKAM to test immediate support levels. A retest of S1 ($112.29) or, even better, S2 ($109.97) would present an opportunity. These levels coincide with the 21-EMA and 34-EMA respectively, offering strong confluence. For the truly patient and value-conscious, a move towards the SMA 50 ($104.47) would be an even more attractive entry, offering better downside protection. This aligns with the analyst target of $110.2 as a potential "fair value" consolidation point.</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>A clear break and close below S2 ($109.97) on significant volume would be a bearish signal, potentially invalidating the strong short-term bullish trend. In this scenario, expect a move towards the SMA 50 ($104.47). A breach of the SMA 50 ($104.47) would be a definitive trend reversal, putting the valuation target of $60.55 (which is far, but relevant for long-term holders) and the lower end of its 52W range back into play as the market recalibrates. Consider cutting losses or hedging long positions if these key supports fail.</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>Technically strong but fundamentally stretched. Await a healthier pullback for a compelling entry; resistance is futile against gravity in the long run.</p>
+<p><strong>Price Target:</strong> $110.2 (Analyst consensus for consolidation)</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">50.1%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">34.6%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">1</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BULLISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$111.58</div><div class="ma-d pos">+1.7%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$104.47</div><div class="ma-d pos">+8.7%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$96.50</div><div class="ma-d pos">+17.6%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BULLISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$114.46</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$111.33</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$108.31</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">61</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">52/66</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm neg">-0.20</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">48.1</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$70.82</span><span>$113.52 (85%)</span><span>$121.12</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:85%"></div><div class="rng-dot" style="left:85%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$109.25</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$101.91</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$95.97</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$90.03</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$121.38</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$101.78</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$5.15</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">0.31x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$120.49 &#xB7; R1=$117.55 &#xB7; PP=$115.23 &#xB7; S1=$112.29 &#xB7; S2=$109.97
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">Akamai Technologies, Inc.</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$16.71B</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">11,000</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NMS</div></div>
+      </div>
+      <div class="fd-desc">Akamai Technologies, Inc. engages in the provision of security, delivery, and cloud computing solutions in the United States and internationally. It offers security solutions that include web application and application programming interfaces (API) protection solutions, which protect web, API, and mobile app traffic from attacks; Bot & Abuse portfolio, which provides solutions to help customers protect against threats; full account lifecycle protections including the ability to defend against account takeover and opening abuse, adversarial bot protection, protection against credential stuffing, inventory scalping, and hoarding; and solutions designed to stop persistent scrapers from stealing content; API security, which discovers, audits, and monitors API; and microservice and application component protection that analyzes and protects application traffic that moves between application components.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://www.akamai.com" target="_blank" style="color:#00f3ff">https://www.akamai.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-mid">46</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-lo">38</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-lo">38</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">75</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">36.98</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">14.94</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">3.97</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">3.30</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">18.28</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">N/A</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 5.13 &middot; P/FCF: 28.9</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v pos">+7.4%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v neg">-37.4%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v neg">-39.2%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$28.94</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">58.9%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v pos">13.8%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v pos">10.7%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v pos">9.2%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v pos">3.6%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">0.59</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm pos">2.36</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">114.0</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$5.68B</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$1.19B</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$578.66M</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$1.52B</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">0.00%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">N/A</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">N/A</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (23 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$72.00</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$114.00</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$134.00</div></div>
+        </div>
+        <div class="est-labels"><span>$72</span><span>Current $114</span><span>$134</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:67%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">BUY</span> &middot; Mean Target: $110.20</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-04-07 11:32 AM CST</div>
+</div>
+</body>
+</html>

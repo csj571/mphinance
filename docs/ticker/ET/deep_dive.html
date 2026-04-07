@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ET Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for ET.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/ET/chart/" target="_blank">ET</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Energy &#xB7; Oil & Gas Midstream &#xB7; 2026-04-07</div>
+  </div>
+  <div>
+    <div class="pr">$19.28</div>
+    <div class="ch pos">+1.71%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[ET] Deep Dive: The Undervalued Midstream Powerhouse Primed for a Breakout</h2>
+<p><strong>Date:</strong> 2026-04-07</p>
+<p><strong>Price:</strong> ~$19.28 | <strong>Verdict:</strong> Bullish Accumulate</p>
+
+<p>Forget the noise about energy volatility. We're diving into Energy Transfer (ET), a midstream behemoth that's quietly building momentum and flashing signals of deep undervaluation.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market often dismisses ET as just another commodity-tied energy play, overlooking its critical role as a pipeline and infrastructure operator. While crude and gas prices grab headlines, ET's business model thrives on the <em>movement</em> of these resources, securing stable, fee-based revenues largely insulated from short-term price swings. This provides a fortress of cash flow, often overlooked by those fixated on upstream exploration.</p>
+
+<p>The reality? ET is a strategically positioned, low-beta (0.62) energy backbone that’s currently trading well below its intrinsic value. Its robust infrastructure ensures consistent demand for its services, and the recent strong revenue growth (29.6%) points to successful expansion and optimization, not just market tailwinds. We see a significant disconnect between its fundamentals and its current market price, indicating a prime opportunity for savvy traders.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<p>ET isn't just about pipelines; it's about predictable, growing cash flow. We’re looking at a <strong>Market Cap of $66.35B</strong>, indicating a substantial player. Top-line growth is roaring with <strong>Revenue Growth at 29.6%</strong>, proving this isn't a sleepy infrastructure play. While the <strong>Profit Margin of 5.2%</strong> may seem modest, it’s typical for asset-heavy midstream operations where cash flow (not just net income) is king.</p>
+
+<p>Critically, the valuation screams opportunity: a <strong>P/E of 15.94</strong> drops to a much more attractive <strong>Forward P/E of 12.19</strong>, suggesting either anticipated earnings growth or a re-rating is underway. Our quant models indicate ET is <strong>UNDERVALUED with a 27.1% gap</strong> to its target, implying a fair value of <strong>$24.52</strong>. Even consensus analyst targets peg it higher at <strong>$22.07</strong>. This isn't just a hunch; the numbers are shouting.</p>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Deep Undervaluation:</strong> The most compelling catalyst. With a quantitative valuation target of <strong>$24.52</strong>—a hefty <strong>27.1% upside</strong> from current prices—and a more conservative analyst target of <strong>$22.07</strong>, ET is simply too cheap given its asset base and cash flow. This isn't just a valuation call; it's a gap that needs to close.</li>
+<li><strong>Strategic Midstream Dominance:</strong> ET operates essential infrastructure across North America, connecting key production basins to demand centers and export hubs. This sticky, high-barrier-to-entry business model ensures consistent throughput volumes and relatively stable, fee-based revenues. Its <strong>Beta of 0.62</strong> confirms this stability, offering a defensive play in a volatile market.</li>
+<li><strong>Growth Trajectory & Forward P/E:</strong> The impressive <strong>29.6% Revenue Growth</strong> isn't accidental; it reflects strategic investments and effective asset utilization. The significant drop in P/E from 15.94 to a <strong>Forward P/E of 12.19</strong> signals expected earnings expansion or increased confidence in future profitability, which could drive multiple expansion.</li>
+<li><strong>Increasing Global Energy Demand:</strong> With global energy demand, especially for natural gas (LNG exports), on an upward trend, ET’s pipelines and processing facilities are perfectly positioned to benefit. This provides a long-term demand floor for its services, ensuring sustained utilization and potential for further expansion.</li>
+</ol>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Regulatory Headwinds:</strong> New pipeline projects face increasing environmental scrutiny and permitting challenges, which can lead to delays, cost overruns, or even project cancellations. This directly impacts ET’s ability to expand its network and revenue base.</li>
+<li><strong>Interest Rate Sensitivity:</strong> As an asset-heavy business, ET carries significant debt. Rising interest rates could increase borrowing costs, impacting profitability and potentially straining cash flow available for growth or distributions.</li>
+<li><strong>Commodity Price (Indirect) Impact:</strong> While midstream operations are less exposed to direct commodity price swings, a sustained, severe downturn in oil and natural gas prices could eventually reduce producer activity, impacting throughput volumes and renegotiated contract rates for ET.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+<p>The charts are flashing green. ET is in a <strong>FULL BULLISH EMA Stack</strong>, with the 8-period EMA at <strong>$19.16</strong>, 21-period at <strong>$19.03</strong>, and 34-period at <strong>$18.82</strong> – all perfectly ordered and rising above the <strong>SMA 50 at $18.65</strong>. This confirms strong short-to-medium term upward momentum. The <strong>Bullish Trend</strong> indicated by a "Golden Cross" (even without the 200 SMA visible) adds conviction.</p>
+
+<p>Current price <strong>$19.28</strong> is sitting right at <strong>R2 ($19.28)</strong>. A decisive break above this level is key. The <strong>RSI(14) at 60.42</strong> is healthy, indicating momentum without being overbought, leaving ample room for upward movement. The <strong>ADX at 21.47</strong> shows a developing trend, suggesting further momentum could build. Key resistance lies ahead at the 52-week high of <strong>$19.86</strong>. Support levels are clear: <strong>R1 at $19.12</strong>, <strong>PP at $19.01</strong>, and strong supports at <strong>S1 ($18.85)</strong> and <strong>S2 ($18.74)</strong>.</p>
+
+<h3>📝 Trading Playbook</h3>
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>Monitor for a clear, high-volume break and hold above R2 at <strong>$19.28</strong>. A sustained move past this could target the 52-week high of <strong>$19.86</strong>. If that breaks, the path opens towards our valuation targets of <strong>$22.07</strong> and eventually <strong>$24.52</strong>. Initial stop-loss could be placed just below <strong>R1 ($19.12)</strong> to manage risk.</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>This is where smart money gets in. Look for pullbacks to the clustered EMAs and pivot points. A retest of the 8-EMA at <strong>$19.16</strong>, the 21-EMA at <strong>$19.03</strong>, or ideally the Pivot Point (PP) at <strong>$19.01</strong> would offer excellent entry points. A more aggressive dip buy could target <strong>S1 at $18.85</strong>, which aligns near the bullish SMA 50 at <strong>$18.65</strong>. Set your stop below <strong>S2 ($18.74)</strong> to protect against trend failure.</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>If ET fails to hold above the <strong>SMA 50 ($18.65)</strong> and breaks convincingly below <strong>S2 ($18.74)</strong>, the bullish thesis might be temporarily invalidated. This would suggest a deeper correction. In this scenario, consider exiting positions or initiating a short hedge. The next key support to watch would be closer to the 52-week low of <strong>$15.62</strong>.</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>ET is an undervalued midstream powerhouse with strong technicals and a clear path to <strong>$24.52</strong>. Accumulate on dips.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">26.0%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">16.9%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">0</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BULLISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$19.01</div><div class="ma-d pos">+1.4%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$18.65</div><div class="ma-d pos">+3.4%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$17.55</div><div class="ma-d pos">+9.9%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BULLISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$19.16</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$19.03</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$18.82</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">60</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">52/33</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm neg">-0.04</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">21.5</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$15.62</span><span>$19.28 (86%)</span><span>$19.86</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:86%"></div><div class="rng-dot" style="left:86%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$18.86</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$18.24</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$17.74</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$17.24</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$19.77</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$18.25</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$0.39</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">0.75x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$19.28 &#xB7; R1=$19.12 &#xB7; PP=$19.01 &#xB7; S1=$18.85 &#xB7; S2=$18.74
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">Energy Transfer LP</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$66.35B</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">22,311</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NYQ</div></div>
+      </div>
+      <div class="fd-desc">Energy Transfer LP, together with its subsidiaries, provides energy-related services in the United States. It operates through Intrastate Transportation and Storage; Interstate Transportation and Storage; Midstream; Natural Gas Liquid (NGL) and Refined Products Transportation and Services; Crude Oil Transportation and Services; Investment in Sunoco LP; Investment in USA Compression Partners, LP (USAC); and All Other segments. The company owns and operates natural gas transportation pipelines and storage facilities; and approximately 12,200 miles of intrastate natural gas transportation pipelines and 20,090 miles of interstate natural gas pipelines.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://energytransfer.com" target="_blank" style="color:#00f3ff">https://energytransfer.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-hi">73</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-hi">67</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-lo">21</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">75</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">15.94</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">12.19</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">0.78</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">2.14</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">10.15</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">N/A</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 1.78 &middot; P/FCF: 30.0</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v pos">+29.6%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v neg">-15.2%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v neg">-13.8%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$24.92</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">19.2%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v pos">9.3%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v pos">5.2%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v pos">11.9%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v pos">4.4%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">0.62</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm pos">1.22</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">142.3</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$70.09B</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$1.27B</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$2.21B</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$10.15B</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">6.90%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">$1.33</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">108.7%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">2026-02-06</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (21 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$18.50</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$22.00</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$25.00</div></div>
+        </div>
+        <div class="est-labels"><span>$18</span><span>Current $19</span><span>$25</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:12%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">BUY</span> &middot; Mean Target: $22.07</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-04-07 11:32 AM CST</div>
+</div>
+</body>
+</html>
