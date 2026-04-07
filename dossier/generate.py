@@ -90,87 +90,61 @@ from dossier.data_sources.tickertrace import _is_junk
 
 def _run_mphinance_strategies() -> list[dict]:
     """
-    Run mphinance's existing scanning strategies and normalize results
+    Run mphinance's Ghost Alpha V2 scanner and normalise results
     into a list of scanner signal dicts for the dossier.
     """
-    print("  Running mphinance strategies...")
+    print("  Running Ghost Alpha whole-market scanner...")
 
     try:
-        from strategies import get_strategy, get_strategy_names
-    except (ImportError, ModuleNotFoundError):
-        print("  [SKIP] strategies module not available — using watchlist fallback only")
+        from dossier.ghost_alpha_screener import _tv_fetch_all_stocks, funnel_filter, deep_scan_ticker
+    except Exception as e:
+        print(f"  [ERR] Could not load ghost alpha screener: {e}")
         return []
-    available = get_strategy_names()
 
     all_signals = []
-    seen_tickers = set()
-
-    for strategy_name in SCANNER_STRATEGIES:
-        if strategy_name not in available:
-            print(f"    [SKIP] Strategy not found: {strategy_name}")
-            continue
-
-        try:
-            strategy = get_strategy(strategy_name)
-            params = strategy.get_default_params()
-            query = strategy.build_query(params)
-            count, df = query.get_scanner_data()
-
-            if count > 0 and not df.empty:
-                df = strategy.post_process(df, params)
-                print(f"    ✓ {strategy_name}: {len(df)} results")
-
-                for _, row in df.head(15).iterrows():
-                    symbol = str(row.get("name", ""))
-                    if not symbol or symbol in seen_tickers:
-                        continue
-                    seen_tickers.add(symbol)
-
-                    # Normalize into scanner signal format
-                    close = row.get("close", 0)
-                    rsi = row.get("RSI", row.get("RSI14", 50))
-                    adx = row.get("ADX", row.get("ADX14", 0))
-
-                    # Determine direction from strategy context
-                    if strategy_name == "Bearish EMA Cross (Down)":
-                        direction = "BEARISH"
-                    elif strategy_name in ("Momentum with Pullback", "EMA Cross Momentum"):
-                        direction = "BULLISH"
-                    else:
-                        # Neutral default, scored by technicals
-                        direction = "BULLISH" if rsi and float(rsi) < 70 else "NEUTRAL"
-
-                    # Score: simple heuristic from RSI + trend
-                    score = 0.5
-                    if direction == "BULLISH":
-                        score = 0.65
-                        if rsi and float(rsi) < 50:
-                            score += 0.1  # Oversold bonus
-                        if adx and float(adx) > 25:
-                            score += 0.05  # Trending
-                    elif direction == "BEARISH":
-                        score = 0.3
-
-                    # Rationale
-                    rationale = [strategy_name.split()[0]]
-                    if rsi:
-                        rationale.append(f"RSI {int(float(rsi))}")
-                    if adx and float(adx) > 20:
-                        rationale.append(f"ADX {int(float(adx))}")
-
-                    all_signals.append({
-                        "symbol": symbol,
-                        "direction": direction,
-                        "score": min(1.0, round(score, 2)),
-                        "rationale": rationale,
-                        "strategy": strategy_name,
-                        "price": round(float(close), 2) if close else 0,
-                    })
-            else:
-                print(f"    ○ {strategy_name}: 0 results")
-        except Exception as e:
-            print(f"    [ERR] {strategy_name}: {e}")
-            continue
+    try:
+        print("    ⚡ Stage 1: TradingView bulk API...")
+        raw_stocks = _tv_fetch_all_stocks()
+        
+        print("    🔍 Stage 2: Progressive elimination funnel...")
+        survivors = funnel_filter(raw_stocks, verbose=False)
+        
+        # Sort survivors by market cap to prioritize deep scanning bigger/more liquid names if we cap
+        survivors.sort(key=lambda s: s.get("market_cap") or 0, reverse=True)
+        # Cap to 200 to prevent excessive YF api calls in cron
+        survivors = survivors[:200]
+        
+        print(f"    🧪 Stage 3: Deep scanning {len(survivors)} survivors...")
+        for i, s in enumerate(survivors):
+            ticker = s["ticker"]
+            res = deep_scan_ticker(ticker, s)
+            if not res: continue
+            
+            d = res.get("daily", {})
+            w = res.get("weekly", {})
+            d_score = d.get("score", 0) / 5.0
+            
+            # Require at least B grade (3.0/5.0) on daily to consider it a signal
+            if d.get("score", 0) < 3.0: 
+                continue
+                
+            direction = "BULLISH" if d.get("hull_bull") else "BEARISH"
+            rationale = []
+            if d.get("sqz_fire"): rationale.append("SQZ FIRE")
+            elif d.get("sqz_coiled"): rationale.append("SQZ COIL")
+            rationale.append(f"Regime {d.get('regime', '?')}")
+            
+            all_signals.append({
+                "symbol": ticker,
+                "direction": direction,
+                "score": min(1.0, d_score),
+                "rationale": rationale,
+                "strategy": "Ghost Alpha V2",
+                "price": round(float(d.get("price", 0)), 2) if d.get("price") else 0,
+            })
+            
+    except Exception as e:
+        print(f"  [ERR] Scanner failed: {e}")
 
     # Sort by score descending
     all_signals.sort(key=lambda x: x["score"], reverse=True)

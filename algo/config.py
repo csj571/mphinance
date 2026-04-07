@@ -8,7 +8,7 @@ Capital is dynamic: 50% of actual Tradier account balance.
 """
 
 # ── Strategy Parameters ──────────────────────────────────────────
-CAPITAL_FRACTION = 0.50          # Use 50% of actual Tradier balance
+CAPITAL_FRACTION = 1.0           # Use full balance (split across MAX_POSITIONS)
 MAX_POSITIONS = 2                # Max concurrent positions
 ATR_MULT = 1.25                  # Trailing stop: 1.25x daily ATR
 SPY_ADX_THRESHOLD = 20.0         # No trade if SPY ADX < 20
