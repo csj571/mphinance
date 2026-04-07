@@ -40,7 +40,9 @@ No institutional lifers means no long-term conviction. Stay nimble, fade the noi
 
 ## AI Synergy: The Constellation Framework
 
-In 2014, the Silk Road and Bitcoin forced me into tech. If you wanted to survive in that ecosystem, you had to learn the dark web, crypto, Python, and Linux from scratch. It was the Wild West, and it was dangerous. Today, I’m seeing the exact same patterns emerging in AI automation. If we don’t build proper governance structures right now, AI is going to go the way of the dark web rather than following the structured, accessible evolution of the World Wide Web.
+In 2014, my entry into tech wasn't a standard computer science degree. It started with Bitcoin, the Silk Road, and stringing together Raspberry Pi's to automate any tedious task I could find just to work smarter. If you wanted to navigate that early crypto ecosystem, you had to learn the dark web, Python, Linux, and cryptography from scratch. It was the absolute Wild West—full of immense danger, incredible potential, and a belief that decentralized tech was going to change the world. 
+
+Today, I’m seeing the exact same patterns emerging in AI automation. If we don’t build proper governance structures right now, AI is going to go the way of the dark web rather than following the structured, accessible evolution of the World Wide Web.
 
 Today we dug into how the pros automate multiple AI agents without letting them run amok. Between you and me, I know the guy who is building this—he's way smarter than me, but he’s basically my tin foil hat friend who thinks he's built something that could genuinely be dangerous if it gets out into the wild unchecked.
 
