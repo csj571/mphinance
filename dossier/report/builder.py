@@ -30,6 +30,7 @@ def build_report(
     momentum_picks: dict = None,
     market_regime: dict = None,
     leveraged_top_pick: dict = None,
+    gamma_warnings: list = None,
 ) -> str:
     """Render the daily Alpha Dossier report as HTML. Returns path to HTML file."""
     env = Environment(
@@ -66,6 +67,7 @@ def build_report(
         momentum_picks=momentum_picks or {},
         market_regime=market_regime or {},
         leveraged_top_pick=leveraged_top_pick,
+        gamma_warnings=gamma_warnings or [],
         disclaimer=DISCLAIMER,
         pdf_filename=pdf_filename,
         md_filename=md_filename,

@@ -29,13 +29,43 @@ import os
 import argparse
 import subprocess
 import time
+import random
 from datetime import datetime, timezone
 from pathlib import Path
 from contextlib import contextmanager
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from functools import wraps
 
 # Ensure project root (mphinance/) is on path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+
+
+def retry(exceptions, tries=3, delay=1, backoff=2, jitter=(0.1, 0.5)):
+    """Retry decorator with exponential backoff and jitter."""
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            _tries, _delay = tries, delay
+            while _tries > 1:
+                try:
+                    return f(*args, **kwargs)
+                except exceptions as e:
+                    time.sleep(_delay + random.uniform(*jitter))
+                    _tries -= 1
+                    _delay *= backoff
+            return f(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+@retry(Exception, tries=3, delay=2)
+def _safe_enrich_ticker(ticker: str):
+    """Parallel-safe enrichment with jitter."""
+    from dossier.data_sources.ticker_enrichment import enrich_ticker
+    # Random jitter to desynchronize threads
+    time.sleep(random.uniform(0.1, 0.8))
+    return enrich_ticker(ticker)
 
 
 # ── Pipeline Instrumentation ──
@@ -676,9 +706,32 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     institutional = fetch_institutional_data()
 
     # ── Stage 4: Market Regime ──
-    print("\n[4/16] MARKET REGIME")
-    from dossier.data_sources.market_regime import fetch_market_regime
-    market = fetch_market_regime()
+    print("\n[4/16] MARKET REGIME DETECTION")
+    market = {}
+    market_regime = {}
+    with timer.stage("Market Regime"):
+        from dossier.market_regime import detect_regime
+        market_regime = detect_regime()
+        market = market_regime # Compatibility
+        regime = market_regime.get("regime", "UNKNOWN")
+        vix_data = market_regime.get("vix", {})
+        vix_level = vix_data.get("vix_level", 0)
+        print(f"  Regime: {regime} (VIX {vix_level:.1f})")
+        print(f"  {market_regime.get('market_context', '')}")
+
+    # ── Stage 4b: ROIC Fortress Filter ──
+    print("\n[4b/16] ROIC FORTRESS QUALITY FILTER")
+    fortress_results = {}
+    with timer.stage("Fortress Filter"):
+        from dossier.roic_fortress_screener import deep_scan_fundamentals
+        # Scan top 40 strategy survivors for quality
+        fortress_candidates = scanned_tickers[:40]
+        print(f"  Deep scanning {len(fortress_candidates)} candidates for quality...")
+        for ticker in fortress_candidates:
+            res = deep_scan_fundamentals(ticker)
+            if res:
+                fortress_results[ticker] = res
+        print(f"  ✓ {len([t for t, r in fortress_results.items() if r['fortress_score'] >= 65])} Castles/Fortresses found")
 
     # ── Stage 5: Persistence ──
     print("\n[5/16] SIGNAL PERSISTENCE")
@@ -711,36 +764,38 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
 
     # ── Stage 8: Ticker Enrichment ──
     print(f"\n[8/16] TICKER ENRICHMENT (top {MAX_DOSSIER_TICKERS})")
-    from dossier.data_sources.ticker_enrichment import enrich_ticker
-
-    # Prioritize strategy-found tickers + institutional buying
+    
+    # Prioritize: Fortress-grade survivors > Strategy survivors > Institutional buying
+    fortress_picks = [t for t, r in fortress_results.items() if r["fortress_score"] >= 60]
     strategy_tickers = [s["symbol"] for s in scanner_signals if s["strategy"] != "Core Watchlist"][:5]
     inst_tickers = [s["ticker"] for s in institutional.get("top_buying", [])[:3]]
+    
     enrichment_order = [t for t in dict.fromkeys(
-        strategy_tickers + inst_tickers + scanned_tickers[:MAX_DOSSIER_TICKERS]
-    ) if not _is_junk(t)]
+        fortress_picks + strategy_tickers + inst_tickers + scanned_tickers[:MAX_DOSSIER_TICKERS]
+    ) if not _is_junk(t)][:MAX_DOSSIER_TICKERS]
 
     dossiers = []
-    for ticker in enrichment_order[:MAX_DOSSIER_TICKERS]:
-        data = enrich_ticker(ticker)
-        if data:
-            dossiers.append(data)
+    with timer.stage("Ticker Enrichment"):
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            future_to_ticker = {executor.submit(_safe_enrich_ticker, t): t for t in enrichment_order}
+            for future in as_completed(future_to_ticker):
+                ticker = future_to_ticker[future]
+                try:
+                    data = future.result()
+                    if data:
+                        # Inject fortress data if we have it
+                        if ticker in fortress_results:
+                            f = fortress_results[ticker]
+                            data["fortress_score"] = f["fortress_score"]
+                            data["fortress_tier"] = f["tier"]
+                            data["fortress_emoji"] = f["tier_emoji"]
+                        dossiers.append(data)
+                except Exception as e:
+                    print(f"    [ERR] {ticker} enrichment failed: {e}")
+    
+    # Sort dossiers back into enrichment_order
+    dossiers.sort(key=lambda x: enrichment_order.index(x["ticker"]) if x["ticker"] in enrichment_order else 999)
     print(f"  {len(dossiers)} dossiers enriched")
-
-    # ── Stage 8a: Market Regime Detection ──
-    print("\n[9/16] MARKET REGIME DETECTION")
-    market_regime = {}
-    try:
-        from dossier.market_regime import detect_regime
-        market_regime = detect_regime()
-        regime = market_regime.get("regime", "UNKNOWN")
-        vix = market_regime.get("vix", 0)
-        print(f"  Regime: {regime} (VIX {vix:.1f})")
-        print(f"  {market_regime.get('market_context', '')}")
-        for s in market_regime.get("hedge_suggestions", []):
-            print(f"  → {s}")
-    except Exception as e:
-        print(f"  [WARN] Market regime detection failed: {e}")
 
     # ── Stage 8b: Momentum Picks ──
     print("\n[10/16] DAILY MOMENTUM PICKS")
@@ -839,7 +894,29 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     # ── Stage 9: AI Narrative ──
     print("\n[13/16] AI NARRATIVE")
     from dossier.report.ai_narrative import generate_narrative
-    ai_narrative = generate_narrative(market, institutional, scanner_signals, persistence, dossiers)
+    ai_narrative = generate_narrative(market, institutional, scanner_signals, persistence, dossiers, leveraged_top_pick=leveraged_top_pick)
+
+    # ── Stage 9a: Gamma Pin Gravity Watch ──
+    # Check if OpEx week (approximate: date between 15th and 21st)
+    day = int(date.split("-")[-1])
+    is_opex_week = 14 <= day <= 22
+    gamma_warnings = []
+    if is_opex_week:
+        print("\n[13a/16] GAMMA PIN GRAVITY WATCH (OpEx Week)")
+        try:
+            from dossier.gamma_pin_screener import scan_ticker
+            # Scan top 5 momentum picks
+            watch_tickers = [d["ticker"] for d in dossiers[:5]]
+            # Next monthly opex (approximate target)
+            target_expiry = "2026-04-17" if date < "2026-04-17" else "2026-05-15"
+            for ticker in watch_tickers:
+                d_data = next((d for d in dossiers if d["ticker"] == ticker), {})
+                res = scan_ticker(ticker, d_data.get("price", 0), target_expiry)
+                if res and res["snap_score"] > 40:
+                    gamma_warnings.append(res)
+                    print(f"  ⚠️ {ticker}: SNAP SCORE {res['snap_score']} (OE {res['overext_pct']}% {res['overext_dir']})")
+        except Exception as e:
+            print(f"  [WARN] Gamma watch failed: {e}")
 
     # ── Stage 9b: Ghost Dev Log ──
     print("\n[13b/16] GHOST DEV LOG")
@@ -883,6 +960,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         momentum_picks=momentum_picks,
         market_regime=market_regime,
         leveraged_top_pick=leveraged_top_pick,
+        gamma_warnings=gamma_warnings,
     )
 
     pdf_path = None
@@ -965,7 +1043,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     # Generate Dossier Summary API (the atomic content unit)
     try:
         from dossier.report.summary_api import generate_summary_api
-        generate_summary_api(
+        summary = generate_summary_api(
             date=date,
             market_pulse=market_pulse,
             scanner_signals=scanner_signals,

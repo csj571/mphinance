@@ -1,118 +1,118 @@
 # ALPHA.DOSSIER // 2026-04-09
-*Sam the Quant Ghost | 2026-04-09 06:51 AM CST*
+*Sam the Quant Ghost | 2026-04-09 08:33 PM CST*
 
 ## 🧠 AI Synthesis
 
-VIX is screaming "Storm" at 21.53, so don't get caught flat-footed. The market's a choppy mess, and institutions are sitting on their hands—no notable buying or selling, which tells you all you need to know about conviction levels right now. Despite Tech (XLK), Industrials (XLI), and Real Estate (XLRE) seeing some relative strength over 5 days, it feels like a house built on sand. No 'lifers' emerging means no deep pockets are planting flags for the long haul.
+The VIX sits at a vanilla 19.49 – no fear, but no conviction either. The Street's sleeping; institutional flows are flat, and we're seeing zero sector leadership. This isn't a market screaming "buy the dip" or "short the rip," it's just... there. Expect more chop until big money decides to show its hand.
 
-Our scanner did flag some names, but proceed with caution. MRK and TRGP both lit up our bullish signals with solid tech scores (85 and 100 respectively) but are deeply overvalued (-39.3% and -36.0%). Verdict on those is a firm "WAIT." The only actionable intel comes from SATS: Tech 100/100, fair value (5.5% upside), with a clear "ACCUMULATE on dips" call. Don't chase pumps; let them come to you.
+Despite the broader lull, our scanner picked up some signals. The real heat is in AXUP, a Grade A "Nuclear Option" play with an ADX of 37.5 – that's a trending beast for the momentum crowd, but keep a tight leash. For a more prudent accumulation, SCHW is the standout. With a pristine Tech 100/100 and Fund 80/100, it's a clear "ACCUMULATE on dips" call, sitting at fair value (-12.2%). Contrast that with WFC (Grade C, WAIT) and MRK (Grade B, overvalued by 39.0%, WAIT) – they're on watch, but no green light yet. Focus on quality, even in a dull market.
 
 — Ghost out. 👻
 
 ## Market Pulse
 
-- 🟢 **S&P 500**: $676.01 (+2.55%)
-- 🟢 **Nasdaq 100**: $606.09 (+2.97%)
-- 🟢 **Russell 2000**: $260.47 (+2.99%)
-- 🟢 **Dow 30**: $479.16 (+2.85%)
-- 🟢 **Bitcoin**: $71169.34 (+0.06%)
-- 🔴 **Ethereum**: $2181.12 (-0.42%)
-- 🟢 **Gold**: $434.53 (+0.63%)
-- 🟢 **20Y Treasuries**: $86.92 (+0.32%)
+- 🟢 **S&P 500**: $679.91 (+0.58%)
+- 🟢 **Nasdaq 100**: $610.19 (+0.68%)
+- 🟢 **Russell 2000**: $261.96 (+0.57%)
+- 🟢 **Dow 30**: $481.9 (+0.57%)
+- 🟢 **Bitcoin**: $71842.37 (+1.01%)
+- 🔴 **Ethereum**: $2185.62 (-0.22%)
+- 🟢 **Gold**: $437.91 (+0.78%)
+- 🔴 **20Y Treasuries**: $86.7 (-0.25%)
 
-## VIX Regime: 21.53 ⚡ Storm
+## VIX Regime: 19.49 NORMAL
 
-Elevated vol — mean reversion setups
+VIX normal at 19.5 (-5.1 this week). SPY +2.9% vs 200 SMA.
 
 ## Institutional Signals (TickerTrace)
 
 ## Scanner Signals
 
-- 🟢 [MRK](https://www.tradingview.com/symbols/MRK/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.9
-- 🟢 [TRGP](https://www.tradingview.com/symbols/TRGP/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.9
-- 🟢 [SATS](https://www.tradingview.com/symbols/SATS/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.9
-- 🟢 [JBL](https://www.tradingview.com/symbols/JBL/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.9
+- 🟢 [WFC](https://www.tradingview.com/symbols/WFC/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.9
+- 🟢 [ED](https://www.tradingview.com/symbols/ED/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.9
+- 🟢 [MRK](https://www.tradingview.com/symbols/MRK/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.8
 - 🟢 [SCHW](https://www.tradingview.com/symbols/SCHW/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.8
 - 🟢 [BK](https://www.tradingview.com/symbols/BK/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.8
 - 🟢 [SLB](https://www.tradingview.com/symbols/SLB/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.8
-- 🟢 [ET](https://www.tradingview.com/symbols/ET/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.8
-- 🟢 [OKE](https://www.tradingview.com/symbols/OKE/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.8
+- 🟢 [SU](https://www.tradingview.com/symbols/SU/chart/) — Ghost Alpha V2 | Regime MODERATE | Score: 0.8
+- 🟢 [MFC](https://www.tradingview.com/symbols/MFC/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.8
 - 🟢 [KGC](https://www.tradingview.com/symbols/KGC/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.8
-- 🟢 [STT](https://www.tradingview.com/symbols/STT/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.8
+- 🟢 [SATS](https://www.tradingview.com/symbols/SATS/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.8
 - 🟢 [INSM](https://www.tradingview.com/symbols/INSM/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.8
+- 🟢 [ADM](https://www.tradingview.com/symbols/ADM/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.8
+- 🟢 [HPE](https://www.tradingview.com/symbols/HPE/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.8
 - 🟢 [HAL](https://www.tradingview.com/symbols/HAL/chart/) — Ghost Alpha V2 | Regime MODERATE | Score: 0.8
-- 🟢 [XOM](https://www.tradingview.com/symbols/XOM/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.7
-- 🔴 [MU](https://www.tradingview.com/symbols/MU/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.7
+- 🟢 [DVN](https://www.tradingview.com/symbols/DVN/chart/) — Ghost Alpha V2 | Regime CHOP | Score: 0.8
 
 ## Technical Setups (Tao of Trading)
 
-- [ET](https://www.tradingview.com/symbols/ET/chart/) — SAILING | EMA Stack: 
-- [TRGP](https://www.tradingview.com/symbols/TRGP/chart/) — SAILING | EMA Stack: 
+- [SU](https://www.tradingview.com/symbols/SU/chart/) — SAILING | EMA Stack: 
+- [ED](https://www.tradingview.com/symbols/ED/chart/) — SAILING | EMA Stack: 
 - [MRK](https://www.tradingview.com/symbols/MRK/chart/) — SAILING | EMA Stack: 
-- [SATS](https://www.tradingview.com/symbols/SATS/chart/) — SAILING | EMA Stack: 
-- [JBL](https://www.tradingview.com/symbols/JBL/chart/) — SAILING | EMA Stack: 
 - [BK](https://www.tradingview.com/symbols/BK/chart/) — SAILING | EMA Stack: 
+- [SLB](https://www.tradingview.com/symbols/SLB/chart/) — SAILING | EMA Stack: 
+- [SCHW](https://www.tradingview.com/symbols/SCHW/chart/) — SAILING | EMA Stack: 
 
 ## Top Dossier Breakdowns
 
+### [WFC](https://www.tradingview.com/symbols/WFC/chart/) — Wells Fargo & Company
+**$86.02** | Grade: C | WAIT for validation
+- Trend: Bearish | EMA Stack: TANGLED
+- RSI: 78.75 | ADX: 23.66 | ATR: 2.08
+- Pivot: $84.88 | S1: $84.03 | R1: $85.51
+- Valuation: FAIR VALUE (-16.2%)
+
 ### [MRK](https://www.tradingview.com/symbols/MRK/chart/) — Merck & Co., Inc.
-**$123.18** | Grade: B | WAIT for validation
+**$122.68** | Grade: B | WAIT for validation
 - Trend: Bullish | EMA Stack: FULL BULLISH
-- RSI: 76.4 | ADX: 23.01 | ATR: 2.88
-- Pivot: $118.45 | S1: $117.33 | R1: $120.39
-- Valuation: OVERVALUED (-39.3%)
-
-### [TRGP](https://www.tradingview.com/symbols/TRGP/chart/) — Targa Resources Corp.
-**$244.0** | Grade: A | WAIT for validation
-- Trend: Bullish | EMA Stack: FULL BULLISH
-- RSI: 60.66 | ADX: 19.24 | ATR: 7.45
-- Pivot: $250.24 | S1: $246.61 | R1: $254.61
-- Valuation: OVERVALUED (-36.0%)
-
-### [SATS](https://www.tradingview.com/symbols/SATS/chart/) — EchoStar Corporation
-**$122.82** | Grade: B | ACCUMULATE on dips
-- Trend: Bullish | EMA Stack: FULL BULLISH
-- RSI: 65.44 | ADX: 23.36 | ATR: 7.52
-- Pivot: $124.46 | S1: $122.45 | R1: $126.78
-- Valuation: FAIR VALUE (+5.5%)
-
-### [JBL](https://www.tradingview.com/symbols/JBL/chart/) — Jabil Inc.
-**$287.14** | Grade: A | WAIT for validation
-- Trend: Bullish | EMA Stack: FULL BULLISH
-- RSI: 60.76 | ADX: 18.52 | ATR: 14.46
-- Pivot: $270.93 | S1: $267.87 | R1: $275.92
-- Valuation: OVERVALUED (-40.8%)
+- RSI: 75.48 | ADX: 21.54 | ATR: 2.93
+- Pivot: $121.58 | S1: $119.54 | R1: $125.23
+- Valuation: OVERVALUED (-39.0%)
 
 ### [SCHW](https://www.tradingview.com/symbols/SCHW/chart/) — The Charles Schwab Corporation
-**$96.7** | Grade: A | ACCUMULATE on dips
-- Trend: Bullish | EMA Stack: FULL BEARISH
-- RSI: 61.51 | ADX: 10.74 | ATR: 2.38
-- Pivot: $92.79 | S1: $91.85 | R1: $94.28
-- Valuation: FAIR VALUE (-11.4%)
+**$97.27** | Grade: A | ACCUMULATE on dips
+- Trend: Bullish | EMA Stack: TANGLED
+- RSI: 61.14 | ADX: 10.04 | ATR: 2.43
+- Pivot: $95.99 | S1: $95.21 | R1: $97.49
+- Valuation: FAIR VALUE (-12.2%)
 
 ### [BK](https://www.tradingview.com/symbols/BK/chart/) — The Bank of New York Mellon Corporation
-**$127.94** | Grade: A | WAIT for validation
+**$128.58** | Grade: A | WAIT for validation
 - Trend: Bullish | EMA Stack: FULL BULLISH
-- RSI: 83.3 | ADX: 28.53 | ATR: 2.72
-- Pivot: $124.28 | S1: $123.31 | R1: $125.59
-- Valuation: OVERVALUED (-24.8%)
+- RSI: 83.63 | ADX: 28.63 | ATR: 2.65
+- Pivot: $127.5 | S1: $126.62 | R1: $128.83
+- Valuation: OVERVALUED (-25.1%)
 
-### [SLB](https://www.tradingview.com/symbols/SLB/chart/) — SLB N.V.
-**$51.88** | Grade: B | WAIT for validation
+### [SU](https://www.tradingview.com/symbols/SU/chart/) — Suncor Energy Inc.
+**$63.39** | Grade: B | ACCUMULATE on dips
 - Trend: Bullish | EMA Stack: FULL BULLISH
-- RSI: 69.23 | ADX: 41.66 | ATR: 2.14
-- Pivot: $50.0 | S1: $49.55 | R1: $50.79
-- Valuation: OVERVALUED (-37.2%)
+- RSI: 50.3 | ADX: 53.1 | ATR: 2.26
+- Pivot: $63.86 | S1: $62.82 | R1: $65.57
+- Valuation: FAIR VALUE (-15.6%)
 
-### [ET](https://www.tradingview.com/symbols/ET/chart/) — Energy Transfer LP
-**$19.08** | Grade: A | ACCUMULATE on dips
+### [MFC](https://www.tradingview.com/symbols/MFC/chart/) — Manulife Financial Corporation
+**$36.59** | Grade: B | ACCUMULATE on dips
+- Trend: Bullish | EMA Stack: TANGLED
+- RSI: 77.92 | ADX: 12.47 | ATR: 0.71
+- Pivot: $36.34 | S1: $36.15 | R1: $36.71
+- Valuation: FAIR VALUE (-9.1%)
+
+### [KGC](https://www.tradingview.com/symbols/KGC/chart/) — Kinross Gold Corporation
+**$32.84** | Grade: A | ACCUMULATE on dips
+- Trend: Bullish | EMA Stack: TANGLED
+- RSI: 73.48 | ADX: 37.14 | ATR: 1.5
+- Pivot: $33.21 | S1: $32.47 | R1: $33.84
+- Valuation: UNDERVALUED (+43.8%)
+
+### [HAL](https://www.tradingview.com/symbols/HAL/chart/) — Halliburton Company
+**$37.69** | Grade: B | WAIT for validation
 - Trend: Bullish | EMA Stack: FULL BULLISH
-- RSI: 59.91 | ADX: 20.9 | ATR: 0.41
-- Pivot: $19.17 | S1: $18.97 | R1: $19.32
-- Valuation: UNDERVALUED (+28.5%)
+- RSI: 54.15 | ADX: 52.57 | ATR: 1.44
+- Pivot: $37.31 | S1: $36.54 | R1: $38.56
+- Valuation: OVERVALUED (-47.4%)
 
 ---
 
 *This report is for informational and educational purposes only. Not financial advice. Trade at your own risk. Past performance does not guarantee future results.*
 
-*Generated by Ghost Alpha Dossier Pipeline // 2026-04-09 // 2026-04-09 06:51 AM CST*
+*Generated by Ghost Alpha Dossier Pipeline // 2026-04-09 // 2026-04-09 08:33 PM CST*

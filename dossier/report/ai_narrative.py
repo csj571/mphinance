@@ -13,17 +13,18 @@ def generate_narrative(
     scanner_signals: list,
     persistence: dict,
     dossiers: list,
+    leveraged_top_pick: dict = None,
 ) -> str:
     """Generate an AI narrative from the day's data using Gemini."""
     if not GEMINI_API_KEY:
-        return _fallback_narrative(market, institutional, scanner_signals, persistence, dossiers)
+        return _fallback_narrative(market, institutional, scanner_signals, persistence, dossiers, leveraged_top_pick)
 
     try:
         from google import genai
         client = genai.Client(api_key=GEMINI_API_KEY)
     except Exception as e:
         print(f"  [WARN] Gemini init failed: {e}")
-        return _fallback_narrative(market, institutional, scanner_signals, persistence, dossiers)
+        return _fallback_narrative(market, institutional, scanner_signals, persistence, dossiers, leveraged_top_pick)
 
     top_buying = [s["ticker"] for s in institutional.get("top_buying", [])[:5]]
     top_selling = [s["ticker"] for s in institutional.get("top_selling", [])[:5]]
@@ -31,12 +32,19 @@ def generate_narrative(
     lifers = [l["ticker"] for l in persistence.get("lifers", [])]
     vix = market.get("vix", {})
     sectors = market.get("sector_rotation", [])[:3]
+    
+    # Nuclear Option / Leveraged Alpha
+    nuclear_str = "None"
+    if leveraged_top_pick:
+        nuclear_str = f"{leveraged_top_pick['underlying']} → {leveraged_top_pick['etf']} (ADX {leveraged_top_pick['adx']}, Grade {leveraged_top_pick['grade']})"
+
     dossier_summaries = []
     for d in dossiers[:3]:
         dossier_summaries.append(
             f"{d['ticker']}: Grade {d['scores']['grade']}, "
             f"Tech {d['scores']['technical']}/100, "
             f"Fund {d['scores']['fundamental']}/100, "
+            f"{d.get('fortress_tier', 'N/A')} tier, "
             f"{d['valuation']['status']} ({d['valuation']['gap_pct']}%), "
             f"Verdict: {d['verdict']}"
         )
@@ -53,6 +61,7 @@ TODAY'S DATA:
 - Institutions SELLING: {', '.join(top_selling) or 'Nothing notable'}
 - Scanner BULLISH: {', '.join(bullish) or 'None'}
 - Lifers (20+ day persistence): {', '.join(lifers) or 'None'}
+- Nuclear Option (Leveraged 2x): {nuclear_str}
 - Top dossiers: {'; '.join(dossier_summaries) or 'N/A'}
 
 Write the synthesis now. Keep it under 200 words. Use markdown formatting.
@@ -69,7 +78,7 @@ Sign off as "— Ghost out. 👻"
         return _fallback_narrative(market, institutional, scanner_signals, persistence, dossiers)
 
 
-def _fallback_narrative(market, institutional, scanner_signals, persistence, dossiers) -> str:
+def _fallback_narrative(market, institutional, scanner_signals, persistence, dossiers, leveraged_top_pick=None) -> str:
     """Data-driven narrative when AI is unavailable."""
     vix = market.get("vix", {})
     regime = vix.get("regime_name", "Unknown")
@@ -82,6 +91,10 @@ def _fallback_narrative(market, institutional, scanner_signals, persistence, dos
     lifer_count = persistence.get("summary", {}).get("lifers", 0)
 
     top_buyer = institutional.get("top_buying", [{}])[0].get("ticker", "N/A") if institutional.get("top_buying") else "N/A"
+    
+    nuclear = ""
+    if leveraged_top_pick:
+        nuclear = f"\n\n**Nuclear Option:** {leveraged_top_pick['underlying']} ({leveraged_top_pick['etf']}) shows a Grade {leveraged_top_pick['grade']} setup with ADX {leveraged_top_pick['adx']}."
 
     return (
         f"**Regime check:** VIX at {vix_level} puts us in {regime} mode. "
@@ -89,6 +102,6 @@ def _fallback_narrative(market, institutional, scanner_signals, persistence, dos
         f"Top institutional conviction: **{top_buyer}**.\n\n"
         f"Scanner picked up {bullish_count}/{total_signals} bullish setups today. "
         f"{'Persistence tells the real story — ' + str(lifer_count) + ' lifers in the 21-day window.' if lifer_count else 'No lifers yet — signals are fresh.'} "
-        f"Stay sharp, execute the playbook.\n\n"
+        f"Stay sharp, execute the playbook.{nuclear}\n\n"
         f"— Ghost out. 👻"
     )

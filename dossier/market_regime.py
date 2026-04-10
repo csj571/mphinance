@@ -78,12 +78,17 @@ def detect_regime():
 
     return {
         "regime": regime,
-        "vix": round(vix_current, 2),
+        "vix": {
+            "vix_level": round(vix_current, 2),
+            "regime_name": regime,
+            "regime_desc": context,
+        },
         "vix_change_5d": round(vix_change_5d, 2),
         "vix_vix3m_ratio": round(vix_vix3m_ratio, 2),
         "spy_vs_sma200": round(spy_vs_sma200, 2),
         "hedge_suggestions": suggestions,
-        "market_context": context
+        "market_context": context,
+        "sector_rotation": [], # Placeholder for compatibility
     }
 
 def suggest_hedges(regime, picks):

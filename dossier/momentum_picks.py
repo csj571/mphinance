@@ -161,6 +161,12 @@ def score_momentum(payload: dict) -> dict:
     direction = (sig.get("direction") or "").upper()
     breakdown["institutional"] = 5 if "BUY" in direction else 0
 
+    # ── 10. Fortress Quality Bonus (10 pts) ──
+    # Quality-first: give an edge to companies that are fundamentally sound
+    f_tier = payload.get("fortress_tier", "UNKNOWN")
+    f_pts = {"FORTRESS": 10, "CASTLE": 6, "HOUSE": 3, "SHACK": 0, "RUBBLE": -10, "UNKNOWN": 0}
+    breakdown["fortress"] = f_pts.get(f_tier, 0)
+
     raw_total = sum(breakdown.values())
 
     # ── Quality Multiplier ──
@@ -343,16 +349,18 @@ def _save_picks(result: dict, date: str):
             "total_scored": len(result.get("all_ranked", [])),
             "all_ranked": all_ranked,
             "scoring_weights": {
-                "ema_stack": {"max": 20, "desc": "EMA 8>21>34>55>89 alignment"},
+                "ema_stack": {"max": 10, "desc": "EMA 8>21>34>55>89 alignment"},
                 "pullback": {"max": 15, "desc": "Bounce 2.0: EMA aligned + ADX>25 + Stoch<40 + near EMA21"},
-                "adx": {"max": 15, "desc": "ADX trend strength (>25 trending, >40 strong)"},
-                "rsi": {"max": 10, "desc": "RSI sweet spot (40-65 optimal)"},
-                "trend": {"max": 10, "desc": "Overall trend direction (Bullish/Bearish)"},
-                "rel_vol": {"max": 10, "desc": "Relative volume vs 20-day avg"},
-                "price_vs_ema": {"max": 10, "desc": "Price proximity to EMA 21"},
+                "adx": {"max": 18, "desc": "ADX trend strength (>25 trending, >40 strong)"},
+                "rsi": {"max": 15, "desc": "RSI sweet spot (40-65 optimal)"},
+                "trend": {"max": 5, "desc": "Overall trend direction (Bullish/Bearish)"},
+                "rel_vol": {"max": 15, "desc": "Relative volume vs 20-day avg"},
+                "price_vs_ema": {"max": 12, "desc": "Price proximity to EMA 21"},
                 "macd": {"max": 5, "desc": "MACD histogram momentum"},
                 "institutional": {"max": 5, "desc": "TickerTrace institutional buying signal"},
+                "fortress": {"max": 10, "desc": "ROIC Fortress Quality Bonus (Fortress/Castle tier)"},
             },
+
             "quality_gate": "final_score = raw_score × (quality_score / 100)",
             "history": history[-7:],  # Last 7 days of picks
         }
@@ -391,7 +399,8 @@ def format_picks_text(picks_data: dict) -> str:
         lines.append(f"  ├─ Rel Vol:      {bd.get('rel_vol', '?'):>3}/10  ({p['rel_vol']}x)")
         lines.append(f"  ├─ Price/EMA21:  {bd.get('price_vs_ema', '?'):>3}/10")
         lines.append(f"  ├─ MACD:         {bd.get('macd', '?'):>3}/5")
-        lines.append(f"  └─ Institutional:{bd.get('institutional', '?'):>3}/5")
+        lines.append(f"  ├─ Institutional:{bd.get('institutional', '?'):>3}/5")
+        lines.append(f"  └─ Fortress:     {bd.get('fortress', '?'):>3}/10  ({p.get('fortress_tier', 'N/A')})")
         if p.get("quality_reasons"):
             for r in p["quality_reasons"]:
                 lines.append(f"     ⚠️ {r}")

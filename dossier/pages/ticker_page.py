@@ -318,10 +318,14 @@ def generate_ticker_page(ticker: str, enriched_data: dict, date: str,
 
     # ── AI Analysis ──
     verdict = enriched_data.get("verdict", "WAIT for validation") if enriched_data else "WAIT for validation"
+    
+    tech_posture_color = "text-neon-green" if scores["technical"] > 60 else "text-neon-red"
+    tech_posture_label = "STRONG" if scores["technical"] > 60 else "WEAK"
+    
     ai_text = (
         f"<span class='text-neon-blue font-bold'>AI.SYNTHESIS // </span><br>"
         f"Asset demonstrates a "
-        f"{'<span class=\"text-neon-green\">STRONG</span>' if scores['technical'] > 60 else '<span class=\"text-neon-red\">WEAK</span>'}"
+        f"<span class='{tech_posture_color}'>{tech_posture_label}</span>"
         f" technical posture (Score: {scores['technical']}/100) within a wider {trend} trend. "
     )
     if valuation.get("status") == "UNDERVALUED":

@@ -253,9 +253,12 @@ def _calc_roic(info: dict, bs: dict, income: dict) -> float | None:
     """
     Calculate ROIC = NOPAT / Invested Capital
     
-    NOPAT = Operating Income * (1 - Tax Rate)
-    Invested Capital = Total Equity + Total Debt - Cash
+    For Financial Services/Banks:
+    Returns ROA (Return on Assets) as a proxy, as ROIC is not standard for banks.
     """
+    if info.get("sector") == "Financial Services":
+        return _safe_get(info, "returnOnAssets", 0) * 100
+
     op_income = _safe_get(info, "operatingMargins", 0) * _safe_get(info, "totalRevenue", 0)
     
     # Try direct operating income from income statement
@@ -454,24 +457,41 @@ def deep_scan_fundamentals(ticker: str, tv_data: dict | None = None) -> dict | N
         scores = {}
         
         # Axis 1: ROIC Efficiency (25%)
+        is_bank = info.get("sector") == "Financial Services"
         if roic is not None:
-            if roic >= 25:
-                scores["roic"] = 100
-            elif roic >= 20:
-                scores["roic"] = 90
-            elif roic >= 15:
-                scores["roic"] = 75
-            elif roic >= 10:
-                scores["roic"] = 55
-            elif roic >= 5:
-                scores["roic"] = 30
+            if is_bank:
+                # For Banks, ROA is the proxy. 2%+ is elite, 1%+ is good.
+                if roic >= 2.0: scores["roic"] = 100
+                elif roic >= 1.5: scores["roic"] = 90
+                elif roic >= 1.0: scores["roic"] = 75
+                elif roic >= 0.5: scores["roic"] = 50
+                else: scores["roic"] = 20
             else:
-                scores["roic"] = 10
+                if roic >= 25:
+                    scores["roic"] = 100
+                elif roic >= 20:
+                    scores["roic"] = 90
+                elif roic >= 15:
+                    scores["roic"] = 75
+                elif roic >= 10:
+                    scores["roic"] = 55
+                elif roic >= 5:
+                    scores["roic"] = 30
+                else:
+                    scores["roic"] = 10
         else:
             scores["roic"] = 0
         
         # Axis 2: FCF Yield (20%)
-        if fcf_yield is not None:
+        # For banks, FCF is messy, so we use a blended ROE/Yield score if bank
+        if is_bank:
+            roe_val = roe or 0
+            if roe_val >= 20: scores["fcf"] = 100
+            elif roe_val >= 15: scores["fcf"] = 85
+            elif roe_val >= 10: scores["fcf"] = 70
+            elif roe_val >= 5: scores["fcf"] = 40
+            else: scores["fcf"] = 10
+        elif fcf_yield is not None:
             if fcf_yield >= 8:
                 scores["fcf"] = 100
             elif fcf_yield >= 6:
@@ -490,7 +510,17 @@ def deep_scan_fundamentals(ticker: str, tv_data: dict | None = None) -> dict | N
         # Axis 3: Balance Sheet (15%)
         bs_score = 50  # Start neutral
         
-        if debt_ebitda is not None:
+        if is_bank:
+            # Banks: Price to Book is the primary health/valuation metric
+            pb_val = pb or 2.0
+            if pb_val < 1.0: bs_score += 40      # Undervalued assets
+            elif pb_val < 1.5: bs_score += 25
+            elif pb_val < 2.5: bs_score += 10
+            elif pb_val > 4.0: bs_score -= 20    # Overextended
+            
+            # Tier 1 Capital proxy: use Interest Coverage if available
+            if interest_cov and interest_cov > 10: bs_score += 10
+        elif debt_ebitda is not None:
             if debt_ebitda <= 0:       # Net cash
                 bs_score += 40
             elif debt_ebitda <= 1.0:
