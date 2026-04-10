@@ -31,13 +31,16 @@ When CPI drops tomorrow, I am not trying to guess the inflation rate. I am looki
 Here is what the pipeline just spit out as the highest conviction Fortress/Momentum synergy plays:
 
 📈 **SU (Suncor Energy)**
-A perfect pullback setup. It is printing cash with incredible capital efficiency. Suncor doesn't care if a carton of eggs costs six dollars tomorrow. They are pumping oil and returning shareholder value.
+**Fortress Metric:** 13.2% Return on Equity
+A perfect pullback setup. Suncor is printing cash with incredible capital efficiency. They don't care if a carton of eggs costs six dollars tomorrow because they are pumping out over 13% ROE while trading near support. They are literally funding their own dividends from hardcore operations.
 
 📈 **HAL (Halliburton)**
-Sitting right on major structural support with deep institutional buying. The technicals are aligned, and the fundamental fortress score is top tier.
+**Fortress Metric:** 12.2% Return on Equity
+Sitting right on major structural support with deep institutional buying. The technicals are perfectly aligned with a top-tier fundamental fortress score. When your capital efficiency is cruising at over 12% in a capital-intensive industry like oil services, you are essentially bulletproof to rate hikes.
 
 📈 **BK (Bank of NY Mellon)**
-Sam explicitly rebuilt our banking logic to measure Return on Assets (ROA) instead of standard ROIC just for financial heavyweights like BK. It is flashing an A-Grade breakout mathematically. 
+**Fortress Metric:** 1.25% Return on Assets (ROA)
+Standard ROIC does not work for banks. So Sam explicitly rebuilt our pipeline logic to measure Return on Assets (ROA) for financial heavyweights. An ROA over 1% for a massive custodian bank is absolutely elite. BK sits at 1.25% and is flashing an A-Grade breakout mathematically.
 
 ***
 
