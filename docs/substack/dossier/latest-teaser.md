@@ -71,3 +71,79 @@ Drink water. Set your stops. Call your sponsor.
 In that order.
 
 — **Michael**
+
+***
+
+# 🔒 THE PAYWALL 🔒
+
+As always, to my paid absolute legends: here is the exact Python logic we use internally to run the Fortress ROIC screen. You can point this at any basket of stocks you want to separate the fortresses from the rubble.
+
+### The ROIC Fortress Script
+
+You'll need `yfinance` and `pandas` installed (`pip install yfinance pandas`). The script calculates true NOPAT and Invested Capital directly from the most recent financial statements.
+
+```python
+"""
+🏰 ROIC Fortress Screener (Subscriber Edition)
+"""
+import yfinance as yf
+import pandas as pd
+
+def scan_fortress(tickers):
+    results = []
+    print(f"Scanning {len(tickers)} tickers for fortress metrics...")
+    
+    for ticker in tickers:
+        try:
+            stock = yf.Ticker(ticker)
+            info = stock.info
+            
+            # Fallbacks for financial statements
+            bs = stock.balance_sheet.iloc[:, 0] if not stock.balance_sheet.empty else pd.Series()
+            inc = stock.income_stmt.iloc[:, 0] if not stock.income_stmt.empty else pd.Series()
+            cf = stock.cashflow.iloc[:, 0] if not stock.cashflow.empty else pd.Series()
+            
+            # Gross Margin
+            gross_margin = info.get("grossMargins", 0) * 100
+            
+            # --- NOPAT (Net Operating Profit After Tax) ---
+            op_income = info.get("operatingMargins", 0) * info.get("totalRevenue", 0)
+            if op_income == 0: 
+                op_income = inc.get("Operating Income", 0)
+            
+            pretax = inc.get("Pretax Income", 1)
+            tax_rate = min(inc.get("Tax Provision", 0) / pretax, 0.40) if pretax > 0 else 0.21
+            nopat = op_income * (1 - tax_rate)
+            
+            # --- Invested Capital ---
+            equity = bs.get("Stockholders Equity", 0) or bs.get("Total Stockholders Equity", 0)
+            debt = bs.get("Total Debt", 0) or (bs.get("Long Term Debt", 0) + bs.get("Current Debt", 0))
+            cash = bs.get("Cash And Cash Equivalents", 0)
+            invested_cap = equity + debt - cash
+            
+            # ROIC calculation
+            roic = (nopat / invested_cap) * 100 if invested_cap > 0 else info.get("returnOnEquity", 0) * 100
+            
+            # --- FCF Yield ---
+            fcf = info.get("freeCashflow", 0) or cf.get("Free Cash Flow", 0)
+            market_cap = info.get("marketCap", 0)
+            fcf_yield = (fcf / market_cap) * 100 if market_cap > 0 else 0
+
+            results.append({
+                "Ticker": ticker,
+                "ROIC (%)": round(roic, 1),
+                "Gross Margin (%)": round(gross_margin, 1),
+                "FCF Yield (%)": round(fcf_yield, 1)
+            })
+        except Exception:
+            print(f"Skipping {ticker} - insufficient data")
+
+    print("\n🏰 THE FORTRESS SCREEN 🏰")
+    print(pd.DataFrame(results).sort_values("ROIC (%)", ascending=False).to_string(index=False))
+
+if __name__ == "__main__":
+    # Test it out on some of our favorites
+    scan_fortress(["AAPL", "ASML", "NVDA", "LLY", "MA", "PLTR", "CRWD"])
+```
+
+Run this locally, stay frosty, and let the math dictate the sizing.
