@@ -2,7 +2,7 @@
 
 *By Michael | Momentum Phinance*
 
-![ROIC Fortress](/home/mph/.gemini/antigravity/brain/a6b934fe-006c-46e4-abf5-550f0538179b/roic_fortress_cpi_storm_1775786501254.png)
+![ROIC Fortress](../images/roic_fortress.png)
 
 Tomorrow morning the CPI numbers drop. Half of Fintwit is going to be screaming about basis points. The other half is going to be liquidating their portfolios in a panic or YOLOing into zero day options like degenerate gamblers. 
 
@@ -41,9 +41,13 @@ Sam explicitly rebuilt our banking logic to measure Return on Assets (ROA) inste
 
 ***
 
-We don't try to predict the weather here. We just build better boats. 
+### Stop Trading Blind. Let the Machine Do the Work.
+
+I don't have a crystal ball. I have code. I have a 16-stage algorithmic data pipeline that processes thousands of tickers while you are asleep, filtering out the noise, the garbage, and the financial engineering. 
 
 If the market dumps tomorrow on a hot CPI print, these are exactly the names I will be scaling into at a severe discount. 
+
+If you are tired of getting chopped up by macro volatility and you want the exact, unfiltered outputs of the Ghost Alpha pipeline delivered straight to your inbox before the market opens, **hit subscribe.** Join The Phund. Let's stop playing the casino and start owning the house.
 
 Drink water. Set your stops. Call your sponsor. 
 
