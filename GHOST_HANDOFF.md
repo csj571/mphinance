@@ -10,9 +10,14 @@
 
 ---
 
-## What Happened This Session (2026-04-09)
+## What Happened This Session (2026-04-10)
 
-### 🏰 ROIC Fortress Screener (NEW)
+### 🧹 Pipeline Exorcism
+- **`.github/workflows/*`** — Successfully tracked down the phantom `.syncthing` files causing `git push` failures in the Ghost Daily pipeline.
+- Cleared up the workflow race conditions, added concurrency groups, and successfully tested the `daily_dossier.yml` workflow run.
+- The pipeline is green again.
+
+### 🏰 ROIC Fortress Screener (PREVIOUS)
 - **`dossier/roic_fortress_screener.py`** — Full-market quality screener for macro uncertainty
 - TradingView bulk API (Stage 1) → Quality pre-filter (Stage 2) → yfinance deep fundamentals (Stage 3)
 - 6-axis "Fortress Score" (0-100):
