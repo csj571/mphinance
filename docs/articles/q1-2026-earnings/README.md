@@ -150,9 +150,11 @@ We're not there yet. But the well is getting deeper every month.
 
 In recovery, they tell you to do the right thing consistently and the results will follow. I've been doing 50/30/20 every single month. The allocation doesn't care about my feelings. It doesn't care that BITF went sideways. It just keeps depositing. That's the discipline. That's the whole game.
 
----
+<!--paywall-->
 
 ## Live Portfolio Update (April 11, 2026)
+
+*What follows is for the people who actually put money behind this. You funded the brokerage account. You earned the live look.*
 
 Q1 numbers are the rearview mirror. Here's what the account looks like RIGHT NOW, pulled live from the Tastytrade API as I write this.
 
@@ -211,6 +213,22 @@ Zero employees. Zero VC funding. Zero excuses.
 - Monthly churn. Better onboarding and yearly conversion flows needed.
 - Single-operator dependency. If I get hit by a bus, the pipeline still runs at 5AM. But nobody's writing new features.
 - Market conditions. VIX above 40. Tariff uncertainty. Could drive subscribers (people want guidance) or kill them (people stop trading). Net effect unclear.
+
+---
+
+## The R&D Reserve: You Decide
+
+Remember that 6% gap in the 50/30/20 math? That's the R&D reserve. It sits in checking, growing by ~$6 per $100 in net revenue. Right now it's at $252.55. It's earmarked for one thing: replacing the infrastructure costs I'm currently paying out of pocket so the business becomes fully self-sustaining.
+
+Here's my shortlist. **Hit reply and tell me where to aim it first. You're the limited partners. This is your vote.**
+
+1. **Vultr server upgrade.** Currently on a $12/mo VPS. The pipeline runs fine, but multi-ticker backtesting maxes out the CPU. A $24/mo box doubles the horsepower and lets me run screener sweeps faster.
+2. **Premium data feeds.** Real-time options flow data (like Unusual Whales or similar). Right now the VoPR engine uses delayed EOD data. Live flow would be a game-changer for the daily dossier.
+3. **More brokerage capital.** Funnel it straight into Tastytrade. Every dollar in the account means more premium selling capacity. The wheel scales with capital.
+4. **AI/ML compute.** Dedicated GPU time for backtesting the grade model against historical data. Right now Sam runs on Gemini API credits. A local inference setup would cut costs and increase speed.
+5. **Something I haven't thought of.** You tell me. You're paying for this. What do you want built?
+
+The reserve is small right now. But it grows with every subscription. By end of Q2, it could cover Vultr AND a data feed. By Q4, all of the above. The question isn't if. It's what order.
 
 ---
 
