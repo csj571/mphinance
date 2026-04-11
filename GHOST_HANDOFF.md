@@ -78,10 +78,10 @@ ssh newvultr "systemctl restart ghost-vwap-algo"           # Restart
 ## What's Next
 
 - [ ] Publish the Q1 Accounting article to Substack
-- [ ] Fix the CSP scanner (remove `strategies` dependency)
-- [ ] Fix `ticker_page.py` line 326 f-string backslash error
-- [ ] Fix auto-backtest path from `/home/sam/` to `/home/mph/`
-- [ ] Integrate Fortress Screener into the daily dossier pipeline
-- [ ] Add Fortress scan results to the landing page / widget system
+- [x] Fix the CSP scanner — graceful `ModuleNotFoundError` skip, no more Stage 7 crash
+- [x] Fix `ticker_page.py` line 326 f-string backslash error (was already clean)
+- [x] Fix auto-backtest/sync-venus/social-formatter paths from `/home/sam/` to dynamic `Path(__file__)`
+- [x] Integrate Fortress Screener into the daily dossier pipeline (generate.py lines 724-791)
+- [ ] Add Fortress scan results to the landing page / widget system (API exists, no widget yet)
 - [ ] Sector-adjusted ROIC scoring for financials (leverage skews ROIC high)
-- [ ] Fund the Tradier account beyond $71
+- [x] Fund the Tradier account — Michael said it's done ✅ go get 'em
