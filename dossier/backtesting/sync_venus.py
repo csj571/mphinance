@@ -2,8 +2,10 @@ import subprocess
 import os
 import glob
 import pandas as pd
+from pathlib import Path
 
-PROJECT_ROOT = "/home/sam/Antigravity/empty/mphinance"
+# Paths — dynamic so this works on any machine
+PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 HISTORY_DIR = os.path.join(PROJECT_ROOT, "data/screens_history")
 VENUS_SOURCE = "venus:/home/mnt/Download2/docs/Momentum/anti/scheduling/scans/*_History.csv"
 

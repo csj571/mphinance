@@ -18,6 +18,14 @@ def fetch_csp_setups(max_results: int = 8) -> list[dict]:
     """
     print("  Running CSP scanner...")
 
+    # Guard: strategies/ module is not bundled in this repo.
+    # When it's added, remove this block.
+    try:
+        import strategies  # noqa: F401
+    except ModuleNotFoundError:
+        print("    [SKIP] CSP scanner: 'strategies' module not found — skipping stage 7")
+        return []
+
     try:
         from strategies import get_strategy
         strategy = get_strategy("Cash Secured Puts")

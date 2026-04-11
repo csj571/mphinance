@@ -3,10 +3,11 @@ import os
 import pandas as pd
 import yfinance as yf
 import time
+from pathlib import Path
 from datetime import datetime, timedelta
 
-# Paths
-PROJECT_ROOT = "/home/sam/Antigravity/empty/mphinance"
+# Paths — dynamic so this works on any machine
+PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 DAILY_PICKS_PATH = os.path.join(PROJECT_ROOT, "docs/api/daily-picks.json")
 TRACK_RECORD_PATH = os.path.join(PROJECT_ROOT, "docs/backtesting/track_record.json")
 
