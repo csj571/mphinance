@@ -12,6 +12,8 @@ If you're reading this, you're either a subscriber (thank you, you beautiful deg
 
 Most newsletters sell you opinions. You're backing The Phund. Big difference.
 
+**Important note:** All financial data below is as of March 31, 2026 (Q1 close) unless otherwise noted. Things are already better. April has been kind. But this is a Q1 report, and we're going to be honest about the numbers when they weren't pretty.
+
 Here are your receipts.
 
 ---
@@ -32,31 +34,15 @@ It does.
 
 ![Q1 2026 Income Statement](income_statement.png)
 
-**We did $845.40 in gross revenue. After the bills, we kept $662.02. That's a 78% cut.** A Fortune 500 CFO would kill someone for those margins. Of course, their revenue has a few more zeros. But they also have a ping-pong table and 50 employees who hate Mondays, so who's really winning?
+**We did $845.40 in gross revenue. Stripe took their 13.5%. We kept $730.02. That's an 86.4% net margin.** A Fortune 500 CFO would cry tears of joy. Of course, their revenue has a few more zeros. But they also have a ping-pong table and 50 employees who hate Mondays, so who's really winning?
+
+A note on operating expenses: right now, there are none on the books. Infrastructure costs (Vultr hosting, domain registrations, Gemini API) are currently coming out of my pocket, not the business. That's not sustainable and it's not good accounting. Q2 priority: formalize those costs, run them through the business properly, and adjust the paycheck allocation accordingly. Transparency means admitting when the books need cleaning up.
 
 January was strong because yearly subs that signed up at launch started renewing. February held. March was quiet: one legacy yearly renewal and two legacy monthly renewals. Three charges total. Not glamorous, but it's recurring. The machine keeps humming even when I'm not in the room selling.
 
-For context: Q4 2025 (Nov-Dec, our launch period) did $2,111.26 gross. Q1 is down 60% from that, but comparing a launch quarter to a steady-state quarter is like comparing your wedding night to a Tuesday. The real question is whether March's $115 is a floor or a trend. April's already answering that.
+For context: Q4 2025 (Nov-Dec, our launch period) did $2,111.26 gross. Q1 is down 60% from that, but comparing a launch quarter to a steady-state quarter is like comparing your wedding night to a Tuesday. The real question is whether March's $115 is a floor or a trend. April's already answering that. (Spoiler: 6 new subs in 11 days.)
 
 All-time since launch: **$2,956.66 gross, $2,456.71 net.** Stripe and Substack skimmed 13.5% off the top. Cost of doing business in someone else's casino. One refund in five months ($89). I'll take that return rate over Amazon's any day.
-
----
-
-## Statement of Subscriber Position
-
-Revenue follows retention. Retention follows value. These are the numbers I actually watch every morning.
-
-![Subscriber Metrics Dashboard](subscriber_metrics.png)
-
-**32 active subscribers. $345 MRR. $4,140 ARR.**
-
-At Q1 close (March 31), we had 26 active subs running $255 MRR. In the first 11 days of April, we added 6 subscribers and repriced the product from $89/yr to $144/yr (and $13/mo to $21/mo). All existing subscribers stay grandfathered at their original price. MRR jumped 35%. That's not seasonality. That's product-market fit starting to bite.
-
-Churn context: 14 total cancels out of 49 lifetime subs. 28.6% lifetime churn sounds rough until you peel it back. Half were trial tourists who bounced in the first 30 days. The other half were monthly subs who didn't convert to yearly. Once someone locks in an annual? They stop looking for the exit. **That's the goal, and it's working.**
-
-Revenue mix: 82% of ARR comes from yearly subscriptions. That's the kind of predictability that lets me sleep. The monthly subs are the funnel. Convert them or lose them. That's the game.
-
-I'll show you the factory floor in a minute. First, let me show you where your money actually sits.
 
 ---
 
@@ -64,7 +50,7 @@ I'll show you the factory floor in a minute. First, let me show you where your m
 
 This is the part that makes this different from every other Substack. Every dollar that comes in gets split, and the biggest slice goes right back into the trading account you're watching me trade.
 
-Where is the money? Not where did it go. Where is it *right now* (as of Q1 close, March 31)?
+Where is the money as of March 31?
 
 ![Balance Sheet as of March 31, 2026](balance_sheet.png)
 
@@ -90,13 +76,29 @@ This is not optional. It's the promise.
 
 - **20% to Paychecks (Michael).** $638.18 paid out all-time. That's my total compensation from this business since launch. Comes out to about $127/month. I'm not getting rich yet. That's the point.
 
+Quick math honesty: 50+30+20 = 100% of net revenue, applied to gross allocations. In practice, the order of operations matters. If I pay myself first (20%), then take 30% of what's left for taxes, $100 becomes $20 paycheck + $24 tax + $50 brokerage = $94 allocated, $6 floating in checking. That gap is real, it accumulates, and it's why the checking account has a small operating float. Q2 improvement: tighten the allocation formula and formalize infrastructure costs. The system works. The math needs a tune-up.
+
 **Every transfer is on record.** Verified against Relay bank statements, line by line. When I say radical transparency, I mean I'll show you the ACH timestamps.
 
 ---
 
-**🔒 Everything below this line is for paid subscribers of The Phund.**
+## Statement of Subscriber Position
 
-If you're reading this on the free tier, the Q1 Legacy Club prices are gone. They aren't coming back. [Get in now](https://mphinance.substack.com) before Q2's progress makes today look like a bargain.
+Revenue follows retention. Retention follows value. These are the numbers I actually watch every morning.
+
+![Subscriber Metrics Dashboard](subscriber_metrics.png)
+
+**As of Q1 close: 26 active subscribers. $255 MRR. $3,060 ARR.**
+
+*(Update as of April 11: we're at 32 subs, $345 MRR, $4,140 ARR. But this is the Q1 report, so let's talk about where we were at the end of March.)*
+
+In the first 11 days of April, we added 6 subscribers and repriced the product from $89/yr to $144/yr (and $13/mo to $21/mo). All existing subscribers stay grandfathered at their original price. MRR jumped 35%. That's not seasonality. That's product-market fit starting to bite.
+
+Churn context: 14 total cancels out of 49 lifetime subs. 28.6% lifetime churn sounds rough until you peel it back. Half were trial tourists who bounced in the first 30 days. The other half were monthly subs who didn't convert to yearly. Once someone locks in an annual? They stop looking for the exit. **That's the goal, and it's working.**
+
+Revenue mix: 82% of ARR comes from yearly subscriptions. That's the kind of predictability that lets me sleep. The monthly subs are the funnel. Convert them or lose them. That's the game.
+
+I'll show you the factory floor in a minute. First, let me show you where your money actually goes when I trade it.
 
 ---
 
@@ -106,7 +108,7 @@ This is the section that matters most. This is YOUR money. Half of every subscri
 
 ![Tastytrade Portfolio Snapshot](brokerage_performance.png)
 
-**Net Liquidating Value: $945.27 on $1,156.01 deposited. Down 18.2% on stock positions.**
+**Net Liquidating Value (Q1 close): $945.27 on $1,156.01 deposited. Down 18.2% on stock positions.**
 
 Here's the thing: that headline number doesn't tell the whole story. Two of three wheel positions are *green* when you count the premiums.
 
@@ -121,6 +123,30 @@ Here's the thing: that headline number doesn't tell the whole story. Two of thre
 **Adjusted P/L: -$66.74.** Premium income has offset 68% of the stock losses. Over time, this converges. That's the whole thesis of the wheel.
 
 Is it perfect? No. BITF was a bad call and I ate the loss in front of everyone. But that's the point. You don't learn from someone who only shows you their winners. You learn from someone who shows you the BITF trade, explains why the momentum broke down, and then shows you the DDD and RR wheels printing premium to cover it. That's what your subscription pays for. Not perfection. Transparency.
+
+---
+
+## The Crossover: A Life Lesson in Contributions vs. Returns
+
+Here's something they don't teach you in trading courses.
+
+![The Crossover: Contributions vs. Returns](contributions_vs_returns.png)
+
+Right now, my keyboard makes more money than my trades. Cumulative content revenue: $2,957. Portfolio value: $945. The green line (writing) is demolishing the gold line (trading).
+
+And that's exactly how it should be.
+
+In the early phase of any business, your TIME is worth more than your CAPITAL. I don't have enough capital for compound returns to matter yet. A 12.5% premium yield on a $945 account is $118/year. But one good Substack piece that converts three subscribers at $144/yr is $432. Writing four articles beats a full year of premium income.
+
+So why trade at all? Because the crossover is coming.
+
+Writing scales linearly. More hours, more content, more subscribers. But there's a ceiling. I only have so many hours. Compounding scales exponentially. There is no ceiling. Once the portfolio hits critical mass, the premium income starts dwarfing the keyboard income. That's the shift.
+
+My grandfather used to tell me: dig the well before you're thirsty. The Tastytrade account is the well. It looks like a waste of water right now. But one day, the compounding kicks in, the premium engine is throwing off more than the newsletter earns, and the writing becomes the marketing for the portfolio instead of the other way around.
+
+We're not there yet. But the well is getting deeper every month.
+
+In recovery, they tell you to do the right thing consistently and the results will follow. I've been doing 50/30/20 every single month. The allocation doesn't care about my feelings. It doesn't care that BITF went sideways. It just keeps depositing. That's the discipline. That's the whole game.
 
 ---
 
@@ -174,7 +200,8 @@ Zero employees. Zero VC funding. Zero excuses.
 
 **Capital priorities:**
 - Tastytrade account funded and running the wheel strategy
-- Continue 50/30/20 allocation on all new revenue
+- Continue 50/30/20 allocation on all new revenue (with tightened formula)
+- Formalize infrastructure costs (Vultr, domains, APIs) as business expenses
 - Build tax reserve to $1,000 by end of Q2
 
 **Risks I'm watching:**
@@ -204,7 +231,7 @@ The fact that this exists at all is the alpha.
 
 ![Q1 Pick Scorecard](pick_scorecard_teaser.png)
 
-Every ticker Sam called in Q1. TER, AVGO, RR, DDD, BITF, the whole watchlist. Graded against reality. How did the Ghost do? That's next Friday for paid subscribers.
+Every ticker Sam called in Q1. TER, AVGO, RR, DDD, BITF, the whole watchlist. Graded against reality. How did the Ghost do? That's next Friday.
 
 ---
 
