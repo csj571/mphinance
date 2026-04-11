@@ -1,87 +1,47 @@
-# 👻 GHOST_HANDOFF.md — ROIC Fortress Screener + CI Fix
+# Ghost Handoff — Last Updated 2026-04-11
 
-## ⚠️ CURRENT STATE
+## What Just Shipped
 
-**Dossier pipeline is working.** Ghost Alpha V2 screener integrated. ROIC Fortress Screener added.
+### Q1 2026 Earnings Report (The Phund)
+- **Article**: `docs/articles/q1-2026-earnings/README.md` — ready to copy-paste to Substack
+- **10 infographics** in same directory (hero, income statement, balance sheet, capital allocation, subscriber metrics, brokerage performance, trading recommendations, Q2 guidance, pick scorecard teaser, contributions vs returns)
+- **Paywall** placed after "The Crossover" section. Free readers get full financials. Paid subs get live portfolio, R&D output, Q2 guidance, and the R&D Reserve vote.
+- **New section**: "The R&D Reserve: You Decide" — 5 options for paid subs to vote on infrastructure spend
 
-**Algo bot is still LIVE on newvultr.** See below.
+### Financial Reconciliation (Bank-Verified)
+- Ran full reconciliation against all Relay bank CSVs (Dec 2025 through Apr 2026)
+- **Fixed `revenue_stats.json`**: Tax savings was overstated by $154 (planned correction never executed). Corrected from $751.88 to $597.82 (actual bank balance)
+- Tax target corrected to $589.61 (30% of post-payroll, not 30% of gross)
+- Actually **$8.21 AHEAD** of target, not $81 behind
+- All allocations reconcile: Brokerage ✅ ahead, Paychecks ✅ on target, Tax ✅ ahead
 
-**GitHub Actions race conditions are FIXED.** Concurrency groups + rebase before push.
+### Dashboard Update (mphinance.com)
+- 4th allocation bucket renamed from "Unallocated" (grey) to "R&D Reserve" (cyan)
+- Label: "~6% of net" / "infrastructure fund"
+- JS updated to read `rd_reserve` with fallback to `unallocated`
+- **Deployed to Vultr** — live at mphinance.com
 
----
+### Key Financial Numbers (as of Q1 close, Mar 31)
+- Checking #6604: $252.55 (R&D reserve float)
+- Savings #6605: $597.82 (tax reserve, ahead of target)
+- Tastytrade NLV: $945.27 ($1,284 deposited, -18.2% stock, $144 premium collected)
+- All-time net revenue: $2,456.71
+- The 6% R&D gap is INTENTIONAL — infrastructure budget to replace out-of-pocket costs
 
-## What Happened This Session (2026-04-10)
-
-### 🧹 Pipeline Exorcism
-- **`.github/workflows/*`** — Successfully tracked down the phantom `.syncthing` files causing `git push` failures in the Ghost Daily pipeline.
-- Cleared up the workflow race conditions, added concurrency groups, and successfully tested the `daily_dossier.yml` workflow run.
-- The pipeline is green again.
-
-### 🏰 ROIC Fortress Screener (PREVIOUS)
-- **`dossier/roic_fortress_screener.py`** — Full-market quality screener for macro uncertainty
-- TradingView bulk API (Stage 1) → Quality pre-filter (Stage 2) → yfinance deep fundamentals (Stage 3)
-- 6-axis "Fortress Score" (0-100):
-  - ROIC Efficiency (25%) — How well management deploys capital
-  - FCF Yield (20%) — Real cash generation vs price
-  - Balance Sheet (15%) — Debt/EBITDA + interest coverage
-  - Margin Quality (15%) — Operating margin level + gross margin bonus
-  - Growth Durability (15%) — Revenue growth + earnings trajectory
-  - Shareholder Return (10%) — Dividends + buybacks
-- Tiers: 🏰 FORTRESS (80+) → 🛡️ CASTLE (65-79) → 🏠 HOUSE (50-64) → 🏚️ SHACK (30-49) → 💀 RUBBLE (<30)
-- CPI-readiness flag: ROIC≥12%, OpMargin≥15%, Debt/EBITDA≤3x, IntCov≥5x
-- First full scan ($5B+ cap): **79 Fortress, 219 Castle, 208 CPI-ready** out of 771 stocks
-- Top 5: ORLA (97.8), KNSL (96.2), KGC (95.0), IBKR (94.8), CF (93.5)
-- CLI: `python3 -m dossier.roic_fortress_screener [--tickers X,Y] [--sector Tech] [--min-cap 10B] [--top 30] [--json] [--csv file.csv] [--cpi-only]`
-
-### 🔧 GitHub Actions Race Condition Fix
-- **`.github/workflows/ghost_daily.yml`** — Added `concurrency: ghost-daily` group + `cancel-in-progress: true`
-- **`.github/workflows/daily_dossier.yml`** — Added `concurrency: daily-dossier` group + `cancel-in-progress: false`
-- Both workflows now do `git pull --rebase origin main || true` before push
-- Fixes the recurring "Commit & Push: failure" step that was failing ~1x/day
-
----
-
-## Key Files Changed
-
-| File | Status |
-|------|--------|
-| `dossier/roic_fortress_screener.py` | ✅ NEW — Full ROIC quality screener |
-| `dossier/data/fortress_scan.csv` | ✅ First scan results (771 stocks) |
-| `.github/workflows/ghost_daily.yml` | ✅ Race condition fix |
-| `.github/workflows/daily_dossier.yml` | ✅ Race condition fix |
-
----
-
-## Known Issues
-
-- **CSP scanner** still fails: `No module named 'strategies'` (stage 7 of pipeline)
-- **Momentum picks** fail: f-string backslash error in `ticker_page.py` line 326
-- **TickerTrace** is DNS-unreachable from this machine
-- **Substack API** (`substack-api` npm package) is blocked by Cloudflare; use Playwright instead
-- **Auto-backtest** references wrong path (`/home/sam/` instead of `/home/mph/`)
-- **ROIC Screener bank scoring** — Financial sector ROIC can be inflated due to leverage structure; may need sector-specific adjustments
-- **tmp/substack_social/** has node_modules that almost got committed — added to .gitignore
-
----
-
-## Algo Bot (Still Live from 2026-04-04)
-
-### Quick Commands
-```bash
-ssh newvultr "journalctl -u ghost-vwap-algo -f"           # Watch live logs
-ssh newvultr "systemctl status ghost-vwap-algo"            # Check status
-ssh newvultr "systemctl restart ghost-vwap-algo"           # Restart
-```
-
----
+### The 50/30/20 Formula (Sequential)
+- 50% brokerage off the top
+- 20% paycheck off the top
+- 30% of remainder (post-paycheck) to tax
+- ~6% gap = R&D reserve
+- On $100: $50 + $20 + $24 + $6 = $100
 
 ## What's Next
+- **Pick Scorecard article** — next Friday, reviewing every Q1 ticker call
+- **TraderDaddy.pro integration** — TickerTrace signals getting wired in this weekend
+- **`fetch_revenue.py` needs refactoring** — currently only calculates 50% brokerage. Should compute full 50/30/20 allocation with the correct sequential formula and update JSON without overwriting manual fields
+- **Blog entry** still needs to be written for this session
 
-- [ ] Publish the Q1 Accounting article to Substack
-- [x] Fix the CSP scanner — graceful `ModuleNotFoundError` skip, no more Stage 7 crash
-- [x] Fix `ticker_page.py` line 326 f-string backslash error (was already clean)
-- [x] Fix auto-backtest/sync-venus/social-formatter paths from `/home/sam/` to dynamic `Path(__file__)`
-- [x] Integrate Fortress Screener into the daily dossier pipeline (generate.py lines 724-791)
-- [ ] Add Fortress scan results to the landing page / widget system (API exists, no widget yet)
-- [ ] Sector-adjusted ROIC scoring for financials (leverage skews ROIC high)
-- [x] Fund the Tradier account — Michael said it's done ✅ go get 'em
+## Don't Break
+- `docs/ticker/*/deep_dive.*` files — NEVER delete
+- The Relay bank CSVs in `financials/` — source of truth for reconciliation
+- The sequential 50/30/20 formula — brokerage and paycheck off gross, tax is 30% of post-payroll remainder
