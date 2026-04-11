@@ -76,7 +76,9 @@ This is not optional. It's the promise.
 
 - **20% to Paychecks (Michael).** $638.18 paid out all-time. That's my total compensation from this business since launch. Comes out to about $127/month. I'm not getting rich yet. That's the point.
 
-Quick math honesty: 50+30+20 = 100% of net revenue, applied to gross allocations. In practice, the order of operations matters. If I pay myself first (20%), then take 30% of what's left for taxes, $100 becomes $20 paycheck + $24 tax + $50 brokerage = $94 allocated, $6 floating in checking. That gap is real, it accumulates, and it's why the checking account has a small operating float. Q2 improvement: tighten the allocation formula and formalize infrastructure costs. The system works. The math needs a tune-up.
+Quick math honesty: 50+30+20 looks like it equals 100%, but the order of operations matters. Brokerage gets 50% off the top. I take my 20% paycheck. Then taxes get 30% of what's left *after* the paycheck. Run the numbers on $100: $50 brokerage + $20 paycheck + $24 taxes ($80 × 0.30) = $94. There's a $6 gap. That's not a bug. That's the R&D reserve.
+
+That 6% is where infrastructure costs come from: Vultr hosting, domain registrations, Gemini API, the tools that keep the pipeline running at 5AM every morning. Right now I'm paying those out of pocket. As the R&D reserve grows, the business absorbs those costs and I stop subsidizing the operation from my personal account. The gap is the plan.
 
 **Every transfer is on record.** Verified against Relay bank statements, line by line. When I say radical transparency, I mean I'll show you the ACH timestamps.
 
@@ -200,8 +202,8 @@ Zero employees. Zero VC funding. Zero excuses.
 
 **Capital priorities:**
 - Tastytrade account funded and running the wheel strategy
-- Continue 50/30/20 allocation on all new revenue (with tightened formula)
-- Formalize infrastructure costs (Vultr, domains, APIs) as business expenses
+- Continue 50/30/20 allocation on all new revenue
+- R&D reserve absorbs infrastructure costs (Vultr, domains, APIs) as it grows
 - Build tax reserve to $1,000 by end of Q2
 
 **Risks I'm watching:**
