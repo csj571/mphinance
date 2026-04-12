@@ -32,6 +32,24 @@ That's not a healthy rally. That's a narrow rally wearing a healthy rally's clot
 
 ---
 
+## Why I Haven't Been Throwing Picks Around
+
+Some of you have noticed I've been quieter on stock picks lately. There's a reason for that and it's not laziness. It's self-preservation.
+
+This week was a perfect example. Monday through Wednesday the market ripped higher on what felt like pure vibes and tariff-pause hopium. Then Iran happened. The ceasefire talks paused Thursday, markets started leaking, Friday bled more. And as I write this Saturday morning, the Iran situation is escalating again, which means Monday is going to be... something.
+
+**High volatility breeds bad picks.** Full stop.
+
+When the geopolitical backdrop changes direction every 48 hours, any directional stock call I make on Monday is obsolete by Wednesday. The tariff saga, the Iran escalation cycle, the constant headline risk. None of that is tradeable with conviction. You can't build a thesis around "will the President tweet something at 2 AM that reverses yesterday's rally?" That's not trading. That's gambling with a Bloomberg terminal open.
+
+The scanner is proving the point in real time. **82% of the LETF universe scored a D today.** Zero A-grades. The machine is saying what I'm saying: this is not an environment where you swing at everything. The setups that exist are narrow, specific, and driven by individual stock catalysts (earnings misses, extreme oversold readings), not by macro tailwinds.
+
+I would rather publish zero picks than publish ten bad ones. When the VIX is elevated and the headlines change twice a day, the edge isn't in finding trades. The edge is in *not* trading. The scanner's job isn't to find you entries. It's to keep you out of traps. And right now, 82% of the market IS the trap.
+
+When the regime settles, the picks will flow. Until then, I'm going to keep showing you exactly what the data says, even when what it says is "sit on your hands."
+
+---
+
 ## The Scanner Got an Upgrade (And It Found Things)
 
 OK, the R&D section. This is the part where I tell you what we built this week and why it matters for your trading.
