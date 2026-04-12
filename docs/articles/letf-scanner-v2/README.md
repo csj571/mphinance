@@ -18,11 +18,13 @@ Trust me, I know a thing or two about denial. It's a one-way ticket to broke, in
 
 ## What Happened This Week
 
-The tariff saga continued doing what it does best: making everything feel unstable while the indices somehow grind higher. It's like watching a drunk walk a tightrope. You know it's gonna end badly, but you can't look away from the sheer audacity.
+Let's actually count the grenades that rolled across the floor this week. Section 232 metals tariffs kicked in April 6, slapping 50% on steel, aluminum, and copper products. A 100% pharma tariff was announced April 2 (takes effect later). The Iran ceasefire from April 8 collapsed by Friday when the Islamabad talks fell apart with no deal. And as of Saturday morning, CENTCOM has announced a full blockade of Iranian Gulf ports starting Monday at 1400 GMT.
 
-The market spent Monday through Wednesday pretending the macro environment doesn't exist, ripped to new highs, then started leaking on Thursday and Friday.
+It's like watching a drunk walk a tightrope while someone throws knives at him. You know it's gonna end badly, but you can't look away from the sheer audacity.
 
-That $679 SPY close looks strong until you check the damn volume. It's been declining on the rally. Price going up on decreasing volume is a textbook divergence. It's the market equivalent of a party where the music's loud but half the guests have already snuck out the back door. Someone's gonna be left holding the damn bill.
+And yet? SPY still finished the week up 3.6%. The market spent Monday through Wednesday pretending none of this exists, ripped higher, then started leaking Thursday and Friday as reality crept back in.
+
+That $679 close looks strong until you check the damn volume. It's been declining on the rally. Price going up on decreasing volume is a textbook divergence. It's the market equivalent of a party where the music's loud but half the guests have already snuck out the back door. Someone's gonna be left holding the damn bill.
 
 **SPY ADX: 37.5.** Strong trend. The scanner says it's a trade day. But look underneath the hood.
 
@@ -38,7 +40,7 @@ That's not a healthy rally. That's a narrow rally wearing a healthy rally's clot
 
 Some of you have noticed I've been quieter on stock picks lately. There's a reason for that and it's not laziness. It's self-preservation.
 
-This week was a perfect example. Monday through Wednesday the market ripped higher on what felt like pure vibes and tariff-pause hopium. Then Iran happened. The ceasefire talks paused Thursday, markets started leaking, Friday bled more. And as I write this Saturday morning, the Iran situation is escalating again, which means Monday is going to be... something.
+This week was a perfect example. Monday through Wednesday the market ripped higher while metals tariffs kicked in and nobody blinked. Then the Iran ceasefire talks collapsed Friday in Islamabad, no deal, no progress, and CENTCOM announced they're blockading Iranian ports starting Monday. Monday is going to be... something.
 
 **High volatility breeds bad picks.** Full stop.
 
@@ -140,9 +142,9 @@ The scanner doesn't cover gold miners yet. That's about to change. But if it did
 
 ### Monday Preview
 
-Iran is escalating. The ceasefire is off. If you're holding naked longs into Monday open without stops, you're the person sitting in the bar at 3 AM telling yourself "one more drink won't hurt." It always hurts.
+CENTCOM is blockading Iranian Gulf ports starting Monday at 1400 GMT. That's not a rumor. That's a press release. If you're holding naked longs into Monday open without stops, you're the person sitting in the bar at 3 AM telling yourself "one more drink won't hurt." It always hurts.
 
-My plan: watch the pre-market reaction, let the first 30 minutes of chaos play out, and look for the scanner to update with fresh signals. The covered calls are already working for me. The gold thesis is on my radar. And the four B-grades from Friday (NOW, AXON, SNOW, SMR) get a second look only if they hold their oversold levels on Monday's volume.
+My plan: watch the pre-market reaction to the blockade news, let the first 30 minutes of chaos play out, and look for the scanner to update with fresh signals. The covered calls are already working for me. The gold thesis is on my radar. And the four B-grades from Friday (NOW, AXON, SNOW, SMR) get a second look only if they hold their oversold levels on Monday's volume.
 
 Am I calling a top? No. I'm saying the data looks the way it looks. Breadth is narrowing. The scanner can't find A-grade setups anywhere in tech. But the A-grades might be hiding in a place most tech bros don't look: the gold mines of Ontario and Nevada.
 
