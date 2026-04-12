@@ -139,7 +139,7 @@ def get_options_chain(symbol: str, expiration: str) -> list[dict]:
     try:
         resp = requests.get(
             f"{TRADIER_BASE}/markets/options/chains",
-            params={"symbol": symbol, "expiration": expiration, "greeks": "false"},
+            params={"symbol": symbol, "expiration": expiration, "greeks": "true"},
             headers=_tradier_headers(), timeout=10)
         if resp.status_code != 200:
             return []
@@ -320,6 +320,76 @@ def analyze_oi_sandwich(chain: list[dict], current_price: float) -> dict | None:
 
     pcr = total_put_oi / total_call_oi if total_call_oi > 0 else 0
 
+    # ── IV Skew: OI-weighted average IV per side (NTM only) ──
+    # Uses mid_iv from ORATS greeks if available (greeks=true), else raw impliedVolatility
+    put_iv_centroid  = None
+    call_iv_centroid = None
+    iv_skew          = None
+    iv_skew_signal   = "N/A"
+
+    try:
+        import sys
+        vo_pr_path = "/home/mph/Antigravity/VoPR"
+        if vo_pr_path not in sys.path:
+            sys.path.append(vo_pr_path)
+        from scanner.iv_smoother import smooth_iv_curve
+        
+        strikes = []
+        ivs = []
+        volumes = []
+        ois = []
+        option_types = []
+        
+        for opt in chain:
+            if opt is None:
+                continue
+            strike   = opt.get("strike")
+            oi       = opt.get("open_interest", 0) or 0
+            opt_type = opt.get("option_type", "").lower()
+            vol      = opt.get("volume", 0) or 0
+
+            # Prefer ORATS mid_iv, fall back to raw impliedVolatility
+            greeks   = opt.get("greeks") or {}
+            iv_raw   = (
+                greeks.get("mid_iv") or
+                greeks.get("smv_vol") or
+                opt.get("implied_volatility") or
+                0
+            )
+            try:
+                iv_val = float(iv_raw)
+            except (TypeError, ValueError):
+                iv_val = 0
+
+            if strike is None or oi <= 0 or iv_val <= 0:
+                continue
+
+            strikes.append(strike)
+            ivs.append(iv_val)
+            volumes.append(vol)
+            ois.append(oi)
+            option_types.append(opt_type.capitalize())
+
+        smooth_result = smooth_iv_curve(
+            strikes=strikes,
+            ivs=ivs,
+            volumes=volumes,
+            ois=ois,
+            spot=current_price,
+            option_types=option_types
+        )
+        
+        if smooth_result:
+            put_iv_centroid = smooth_result.get("put_iv_centroid")
+            call_iv_centroid = smooth_result.get("call_iv_centroid")
+            iv_skew = smooth_result.get("iv_skew")
+            iv_skew_signal = smooth_result.get("iv_skew_signal", "N/A")
+
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).debug(f"IV skew calculation failed: {e}")
+        pass  # IV skew is optional enrichment; never break the core sandwich
+
     return {
         # Sandwich zone
         "sandwich_floor": round(sandwich_floor, 2),
@@ -348,6 +418,11 @@ def analyze_oi_sandwich(chain: list[dict], current_price: float) -> dict | None:
         "total_put_oi": total_put_oi,
         "total_oi": total_oi,
         "put_call_ratio": round(pcr, 2),
+        # IV Skew (new)
+        "put_iv_centroid":  put_iv_centroid,
+        "call_iv_centroid": call_iv_centroid,
+        "iv_skew":          iv_skew,
+        "iv_skew_signal":   iv_skew_signal,
     }
 
 
