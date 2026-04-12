@@ -10,7 +10,7 @@
 
 Pull up the weekly chart. Look at it. Really look at it. Now pull up the monthly. That's not a rally. That's a rocket ship with no landing gear. SPY has gone nearly vertical on the monthly timeframe, the kind of parabolic move you see right before someone gets hurt.
 
-The last two times the monthly chart looked like this were December 2021 and January 2018. Both preceded drawdowns of 15% or more. I'm not saying we're there. I'm saying the setup is familiar, and pretending it isn't is the kind of denial that costs people money.
+The last time the monthly chart looked like this was late 2021. SPY peaked at $479 in early January 2022 and dropped 25% to $349 by October. Before that, January 2018 went parabolic and gave back 10% in two weeks during Volmageddon, then recovered, then dropped another 20% into the Christmas Eve crash later that year. I'm not calling a top. I'm saying parabolic monthly charts have a shelf life, and pretending they don't is the kind of denial that costs people money.
 
 Here's what tipped me off. I sent Sam a screenshot of three SPY charts this morning: weekly, monthly, and the TradingView overview. She said: "Michael, that's either the greatest bull trap in history or the start of another leg up. Either way, you should probably write about it." So here we are.
 
@@ -29,38 +29,6 @@ That $679 SPY close looks strong until you notice the volume. Volume has been de
 I ran the scanner across 71 leveraged ETF underlyings today. **82% scored a D.** Four out of 71 earned a B. Zero A-grades. When the index is screaming higher but 82% of individual stocks can't produce a setup, who is actually pushing this thing up? A handful of mega-caps dragging the index while everything else treads water.
 
 That's not a healthy rally. That's a narrow rally wearing a healthy rally's clothes.
-
----
-
-## The Pick Scorecard: Receipts
-
-I talk a lot. Sam talks even more. But neither of us means anything without the receipts. Here are the picks from Q1, graded against what actually happened.
-
-![Ghost Alpha Pick Scorecard](pick_scorecard.png)
-
-**AVGO: Called at $330 on March 6. Currently $371. Up 12.4%.** ✓
-
-This is the one I'm proudest of. When we published the AVGO deep dive, the EMA stack was *fully bearish*. Every short-term average was below every long-term average. RSI was flat at 54. Most scanners would have ignored it or flagged it as "neutral." But the fundamentals were screaming: 188% earnings growth. Forward P/E of 19.2 on a company growing revenue 16.4%. All 44 analysts had it as a Strong Buy with a median target of $472. The EMA stack was bearish because the stock had just corrected from $414. We caught the bottom.
-
-**TER: Called at $306 on March 3.** The semiconductor equipment monster.
-
-This was a full bullish EMA stack with an ADX of 64. Sixty-four. The highest ADX reading in my entire dossier database at the time. Revenue growth at 44%. This wasn't a speculative play. It was a freight train. The ADX told you the trend was so strong that stepping in front of it was financial suicide.
-
-**HOOD: Called at $76 on March 4. Currently $69. Down 9.0%.** 🔍
-
-Not going to lie, this one stings a little. But the scanner currently has HOOD at C-grade with an ADX of 30 and a coiling ATR squeeze ratio of 0.79. It's compressing. The thesis isn't dead, it's digesting. Sometimes the best trades require patience. Sometimes they require admitting you were early. I'm watching it, not mourning it.
-
-**DDD (The Wheel): Stock down $43. Premium collected: $51. Net: +$8.32.** ✓
-
-This is where the strategy proves itself. The stock is underwater. On paper, you're losing. But the options premium from selling covered calls has more than covered the drawdown. The wheel turns. Time plus premium plus patience equals green. This is what your subscription dollars fund in the Tastytrade account.
-
-**BITF: Cut at $1.91. Loss: $109.** ✗
-
-BITF was a relapse. I saw the momentum breaking and I stayed in the bar too long. In recovery, they tell you the relapse teaches you more than the streak ever could. BITF taught me that when your thesis breaks, you walk out the door. You don't finish the drink. The $109 loss was tuition.
-
-**RR (The Wheel): Stock down $59. Premium collected: $93. Net: +$33.66.** ✓
-
-Same story as DDD. Stock is underwater. Premiums are printing. Net positive. The wheel doesn't care about your feelings. It cares about time decay. And time decay is undefeated.
 
 ---
 
@@ -114,19 +82,17 @@ This is the kind of upgrade nobody sees but everybody benefits from. The plumbin
 
 Here's how I'm thinking about it.
 
-SPY at $679 on declining volume with a parabolic monthly chart and 82% of individual stocks failing the scanner. That's not a "back up the truck" setup. That's a "be selective and keep your stops tight" setup.
+SPY at $679 with a parabolic monthly chart and 82% of individual stocks failing the scanner. That's not a "back up the truck" setup. That's a "be selective and keep your stops tight" setup.
 
 The four B-grade picks are interesting because they're all showing the same pattern: strong trend acceleration (ADX delta positive) combined with oversold RSI and elevated volume. That's institutional money repositioning, not retail panic. When the big money is getting aggressive on specific names while the broad market thins out, those specific names are where the setups live.
 
-The Q1 pick scorecard is mostly green. AVGO (+12.4%) proved that the dossier engine catches bottoms when the fundamentals diverge from the technicals. The wheel strategy on DDD and RR is printing premium. BITF was a $109 lesson in cutting losses. HOOD is coiling.
-
-Am I calling a top? No. I'm saying the data looks the way it looks. Volume is thinning. Breadth is narrowing. The scanner can't find A-grade setups anywhere. Either the model is too conservative or the market is genuinely not offering clean entries. I'd rather have a scanner that says "nothing looks great" on 82% of the universe than one that lights up 20 buy signals that crater by Wednesday.
+Am I calling a top? No. I'm saying the data looks the way it looks. Breadth is narrowing. The scanner can't find A-grade setups anywhere. Either the model is too conservative or the market is genuinely not offering clean entries. I'd rather have a scanner that says "nothing looks great" on 82% of the universe than one that lights up 20 buy signals that crater by Wednesday.
 
 **When most of the universe flunks, the ones that pass deserve your attention.**
 
 ---
 
-*This is what the subscription gets you. The actual tools, the actual data, the actual pick follow-ups. Not hypotheticals. Not paper trades. AVGO at $330, DDD wheeling premium, BITF eaten in public. Every receipt on the table.*
+*This is what the subscription gets you. The actual tools, the actual data, and the scanner that tells you when NOT to trade. Not hypotheticals. Not paper trades. Real signals on real tickers, updated daily at 5AM.*
 
 *[Subscribe to Momentum Phinance](https://mphinance.substack.com)*
 
