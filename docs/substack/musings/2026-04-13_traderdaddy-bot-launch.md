@@ -1,6 +1,6 @@
 # I Built a Trading Terminal That Posts Itself
 
-**TLDR:** I just launched [@TraderDaddyBot](https://x.com/TraderDaddyBot) on X. Automated market intelligence, 3x daily, powered by the TraderDaddy Pro signal stack. No opinions. No personality. Just numbers. Go follow her and come back when you're done.
+**TLDR:** I just launched [@TraderDaddyBot](https://x.com/TraderDaddyBot) on X. Automated market intelligence, up to 5x daily, powered by the TraderDaddy Pro signal stack. No opinions. No personality. Just numbers. Go follow her and come back when you're done.
 
 ---
 

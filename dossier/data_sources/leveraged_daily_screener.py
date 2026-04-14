@@ -1,17 +1,25 @@
 #!/usr/bin/env python3
 """
-Leveraged ETF Daily Screener
+Leveraged ETF Daily Screener — V2 (Point-Based Scoring)
 
 Generates a daily graded list of 2x leveraged ETF opportunities.
 Runs as part of the 5AM dossier pipeline. Outputs:
   - docs/leveraged-screener/daily.html  (self-contained page)
   - docs/leveraged-screener/daily.json  (API/widget consumption)
 
+Scoring (max 17 pts):
+  ADX Strength:     0-4 pts  (15+ to 30+)
+  ADX Delta:        0-3 pts  (trend acceleration, 5-bar lookback)
+  ATR Squeeze:      0-3 pts  (coiled volatility / squeeze fire)
+  Relative Volume:  0-3 pts  (1.0x to 2.0x+)
+  RSI Oversold:     0-3 pts  (< 40 to < 30)
+  Below VWAP:       0-1 pt   (dip entry)
+
 Grading:
-  A = ADX >= 30 + below VWAP + rel_vol >= 1.5  (strongest trend + dip setup)
-  B = ADX >= 25 + rel_vol >= 1.0               (solid trend)
-  C = ADX >= 20                                 (moderate trend)
-  D = Below thresholds                          (weak/avoid)
+  A = 14+ pts (82%)   — strong conviction setup
+  B = 10+ pts (59%)   — solid setup
+  C =  6+ pts (35%)   — moderate / emerging
+  D = below 6         — weak / avoid
 
 Usage:
     python -m dossier.data_sources.leveraged_daily_screener
@@ -28,19 +36,22 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 
-def _compute_adx(highs, lows, closes, period=14):
-    """Compute ADX from arrays of high, low, close prices."""
-    if len(highs) < period * 2:
-        return 0.0
+def _compute_adx(highs, lows, closes, period=14, delta_lookback=5):
+    """Compute ADX with trend acceleration data.
 
-    def _ema_val(data, p):
-        if not data:
-            return 0
-        val = data[0]
-        mult = 2.0 / (p + 1)
-        for d in data[1:]:
-            val = d * mult + val * (1 - mult)
-        return val
+    Returns dict with:
+      adx        - current ADX value
+      adx_prev   - ADX value `delta_lookback` bars ago (for delta calc)
+      adx_delta  - adx - adx_prev (positive = strengthening trend)
+      plus_di    - current +DI
+      minus_di   - current -DI
+      tr_list    - raw True Range list (for ATR squeeze calc downstream)
+    """
+    empty = {"adx": 0.0, "adx_prev": 0.0, "adx_delta": 0.0,
+             "plus_di": 0.0, "minus_di": 0.0, "tr_list": []}
+
+    if len(highs) < period * 2:
+        return empty
 
     plus_dm = []
     minus_dm = []
@@ -58,7 +69,7 @@ def _compute_adx(highs, lows, closes, period=14):
         ))
 
     if len(tr_list) < period:
-        return 0.0
+        return {**empty, "tr_list": tr_list}
 
     # Smoothed TR, +DM, -DM (Wilder's smoothing)
     atr = sum(tr_list[:period])
@@ -66,6 +77,10 @@ def _compute_adx(highs, lows, closes, period=14):
     minus = sum(minus_dm[:period])
 
     dx_list = []
+    adx_history = []  # Track ADX at each bar for delta calculation
+    last_plus_di = 0.0
+    last_minus_di = 0.0
+
     for i in range(period, len(tr_list)):
         atr = atr - atr / period + tr_list[i]
         plus = plus - plus / period + plus_dm[i]
@@ -73,22 +88,38 @@ def _compute_adx(highs, lows, closes, period=14):
 
         if atr == 0:
             continue
-        plus_di = 100 * plus / atr
-        minus_di = 100 * minus / atr
-        if plus_di + minus_di == 0:
+        last_plus_di = 100 * plus / atr
+        last_minus_di = 100 * minus / atr
+        if last_plus_di + last_minus_di == 0:
             continue
-        dx = 100 * abs(plus_di - minus_di) / (plus_di + minus_di)
+        dx = 100 * abs(last_plus_di - last_minus_di) / (last_plus_di + last_minus_di)
         dx_list.append(dx)
 
     if not dx_list:
-        return 0.0
+        return {**empty, "tr_list": tr_list}
 
-    # ADX = EMA of DX
+    # ADX = smoothed average of DX, tracking history for delta
     adx = sum(dx_list[:period]) / period if len(dx_list) >= period else sum(dx_list) / len(dx_list)
+    adx_history.append(adx)
     for i in range(period, len(dx_list)):
         adx = (adx * (period - 1) + dx_list[i]) / period
+        adx_history.append(adx)
 
-    return round(adx, 1)
+    # ADX delta: current vs N bars ago
+    adx_current = round(adx, 1)
+    if len(adx_history) > delta_lookback:
+        adx_prev = round(adx_history[-(delta_lookback + 1)], 1)
+    else:
+        adx_prev = round(adx_history[0], 1)
+
+    return {
+        "adx": adx_current,
+        "adx_prev": adx_prev,
+        "adx_delta": round(adx_current - adx_prev, 1),
+        "plus_di": round(last_plus_di, 1),
+        "minus_di": round(last_minus_di, 1),
+        "tr_list": tr_list,
+    }
 
 
 def _compute_rsi(closes, period=14):
@@ -112,13 +143,123 @@ def _compute_rsi(closes, period=14):
     return round(100 - (100 / (1 + rs)), 1)
 
 
-def _grade(adx, rsi, rel_vol, below_vwap):
-    """Assign A/B/C/D grade based on technicals."""
-    if adx >= 30 and below_vwap and rel_vol >= 1.5:
+def _compute_atr_squeeze(tr_list, atr_period=14, baseline_period=50):
+    """Compute ATR squeeze ratio and fire signal from True Range list.
+
+    Returns dict with:
+      sqz_ratio  - current ATR / ATR baseline (< 0.75 = coiled)
+      sqz_fire   - True if squeeze just fired (crossed 0.75 from below)
+      atr        - current ATR(14) value
+      atr_base   - ATR baseline (50-period avg)
+    """
+    if len(tr_list) < baseline_period + atr_period:
+        return {"sqz_ratio": 1.0, "sqz_fire": False, "atr": 0.0, "atr_base": 0.0}
+
+    # Compute rolling ATR values
+    atr_values = []
+    for i in range(atr_period, len(tr_list) + 1):
+        window = tr_list[i - atr_period:i]
+        atr_values.append(sum(window) / atr_period)
+
+    if len(atr_values) < 2:
+        return {"sqz_ratio": 1.0, "sqz_fire": False, "atr": 0.0, "atr_base": 0.0}
+
+    current_atr = atr_values[-1]
+
+    # Baseline = 50-period average of ATR values
+    baseline_window = atr_values[-baseline_period:] if len(atr_values) >= baseline_period else atr_values
+    atr_baseline = sum(baseline_window) / len(baseline_window)
+
+    sqz_ratio = current_atr / atr_baseline if atr_baseline > 0 else 1.0
+
+    # Fire detection: did sqz_ratio cross 0.75 from below in the last bar?
+    sqz_fire = False
+    if len(atr_values) >= 2:
+        prev_atr = atr_values[-2]
+        prev_ratio = prev_atr / atr_baseline if atr_baseline > 0 else 1.0
+        sqz_fire = prev_ratio < 0.75 and sqz_ratio >= 0.75
+
+    return {
+        "sqz_ratio": round(sqz_ratio, 3),
+        "sqz_fire": sqz_fire,
+        "atr": round(current_atr, 4),
+        "atr_base": round(atr_baseline, 4),
+    }
+
+
+def _calculate_score(adx, adx_delta, sqz_ratio, sqz_fire, rsi, rel_vol, below_vwap):
+    """Point-based scoring system for LETF setups.
+
+    Max score: 17 points across 6 categories.
+    Designed to catch consolidation breakouts (high adx_delta, low ADX)
+    as well as established trends (high ADX).
+    """
+    score = 0
+    reasons = []
+
+    # Category 1: ADX Strength (0-4 pts)
+    if adx >= 30:
+        score += 4; reasons.append(f"ADX {adx} (strong trend)")
+    elif adx >= 25:
+        score += 3; reasons.append(f"ADX {adx} (solid trend)")
+    elif adx >= 20:
+        score += 2; reasons.append(f"ADX {adx} (moderate trend)")
+    elif adx >= 15:
+        score += 1; reasons.append(f"ADX {adx} (emerging trend)")
+
+    # Category 2: ADX Delta / Trend Acceleration (0-3 pts)
+    if adx_delta >= 7:
+        score += 3; reasons.append(f"ADX Δ+{adx_delta} (rapid acceleration)")
+    elif adx_delta >= 5:
+        score += 2; reasons.append(f"ADX Δ+{adx_delta} (accelerating)")
+    elif adx_delta >= 3:
+        score += 1; reasons.append(f"ADX Δ+{adx_delta} (building)")
+
+    # Category 3: ATR Squeeze (0-3 pts)
+    if sqz_fire:
+        score += 3; reasons.append(f"SQUEEZE FIRE 🔥 (ratio {sqz_ratio:.2f})")
+    elif sqz_ratio < 0.70:
+        score += 2; reasons.append(f"Tightly coiled ({sqz_ratio:.2f})")
+    elif sqz_ratio < 0.80:
+        score += 1; reasons.append(f"Coiling ({sqz_ratio:.2f})")
+
+    # Category 4: Relative Volume (0-3 pts)
+    if rel_vol >= 2.0:
+        score += 3; reasons.append(f"Vol {rel_vol}x (surge)")
+    elif rel_vol >= 1.5:
+        score += 2; reasons.append(f"Vol {rel_vol}x (elevated)")
+    elif rel_vol >= 1.0:
+        score += 1; reasons.append(f"Vol {rel_vol}x (normal)")
+
+    # Category 5: RSI Oversold (0-3 pts)
+    if rsi < 30:
+        score += 3; reasons.append(f"RSI {rsi} (deeply oversold)")
+    elif rsi < 35:
+        score += 2; reasons.append(f"RSI {rsi} (oversold)")
+    elif rsi < 40:
+        score += 1; reasons.append(f"RSI {rsi} (approaching oversold)")
+
+    # Category 6: Below VWAP (0-1 pt)
+    if below_vwap:
+        score += 1; reasons.append("Below VWAP (dip entry)")
+
+    return score, reasons
+
+
+def _assign_grade(score):
+    """Map point score to letter grade.
+
+    Thresholds scaled to max of 17:
+      A = 14+ (82%) — strong conviction
+      B = 10+ (59%) — solid setup
+      C =  6+ (35%) — moderate/emerging
+      D = below 6   — weak/avoid
+    """
+    if score >= 14:
         return "A"
-    if adx >= 25 and rel_vol >= 1.0:
+    if score >= 10:
         return "B"
-    if adx >= 20:
+    if score >= 6:
         return "C"
     return "D"
 
@@ -143,7 +284,7 @@ def generate_daily_screener(date_str: str = None, dry_run: bool = False):
             spy_h = spy_hist["High"].tolist()[-60:]
             spy_l = spy_hist["Low"].tolist()[-60:]
             spy_c = spy_hist["Close"].tolist()[-60:]
-            spy_adx = _compute_adx(spy_h, spy_l, spy_c)
+            spy_adx = _compute_adx(spy_h, spy_l, spy_c)["adx"]
         else:
             spy_adx = 25.0  # Default if data unavailable
     except Exception:
@@ -163,7 +304,7 @@ def generate_daily_screener(date_str: str = None, dry_run: bool = False):
     try:
         import warnings
         warnings.filterwarnings("ignore")
-        data = yf.download(underlyings, period="3mo", group_by="ticker", progress=False, threads=True)
+        data = yf.download(underlyings, period="6mo", group_by="ticker", progress=False, threads=True)
     except Exception as e:
         print(f"    [ERR] Batch download failed: {e}")
         data = None
@@ -173,7 +314,7 @@ def generate_daily_screener(date_str: str = None, dry_run: bool = False):
             if data is not None and ticker in data.columns.get_level_values(0):
                 df = data[ticker].dropna()
             else:
-                df = yf.Ticker(ticker).history(period="3mo")
+                df = yf.Ticker(ticker).history(period="6mo")
 
             if df.empty or len(df) < 20:
                 continue
@@ -183,9 +324,16 @@ def generate_daily_screener(date_str: str = None, dry_run: bool = False):
             lows = df["Low"].tolist()
             volumes = df["Volume"].tolist()
 
-            # Compute signals
-            adx = _compute_adx(highs, lows, closes)
+            # Compute signals — V2: enriched ADX + ATR squeeze
+            adx_data = _compute_adx(highs, lows, closes)
+            adx = adx_data["adx"]
+            adx_delta = adx_data["adx_delta"]
             rsi = _compute_rsi(closes)
+
+            # ATR Squeeze detection
+            sqz_data = _compute_atr_squeeze(adx_data["tr_list"])
+            sqz_ratio = sqz_data["sqz_ratio"]
+            sqz_fire = sqz_data["sqz_fire"]
 
             # Relative volume (today vs 20d avg)
             avg_vol_20 = sum(volumes[-20:]) / 20 if len(volumes) >= 20 else sum(volumes) / len(volumes)
@@ -202,8 +350,11 @@ def generate_daily_screener(date_str: str = None, dry_run: bool = False):
             prev_close = closes[-2] if len(closes) >= 2 else price
             change_pct = round(((price - prev_close) / prev_close) * 100, 2)
 
-            # Grade
-            grade = _grade(adx, rsi, rel_vol, below_vwap)
+            # V2: Point-based scoring
+            score, reasons = _calculate_score(
+                adx, adx_delta, sqz_ratio, sqz_fire, rsi, rel_vol, below_vwap
+            )
+            grade = _assign_grade(score)
 
             # Get best 2x ETF
             best_etf = get_best_2x_etf(ticker, direction="bull", use_cache=True)
@@ -216,18 +367,23 @@ def generate_daily_screener(date_str: str = None, dry_run: bool = False):
                 "price": round(price, 2),
                 "change_pct": change_pct,
                 "adx": adx,
+                "adx_delta": adx_delta,
                 "rsi": rsi,
                 "rel_vol": rel_vol,
                 "below_vwap": below_vwap,
+                "sqz_ratio": sqz_ratio,
+                "sqz_fire": sqz_fire,
+                "score": score,
                 "grade": grade,
+                "reasons": reasons,
                 "etf_avg_volume": etf_vol,
             })
         except Exception as e:
             continue
 
-    # Sort: A first, then B, C, D. Within grade, sort by ADX descending
+    # Sort: A first, then B, C, D. Within grade, sort by score descending
     grade_order = {"A": 0, "B": 1, "C": 2, "D": 3}
-    picks.sort(key=lambda x: (grade_order.get(x["grade"], 9), -x["adx"]))
+    picks.sort(key=lambda x: (grade_order.get(x["grade"], 9), -x["score"]))
 
     top_picks = [p for p in picks if p["grade"] in ("A", "B")][:5]
 
@@ -304,12 +460,12 @@ def _render_daily_html(data: dict) -> str:
           <div class="pick-ticker">{p["underlying"]}</div>
           <div class="pick-etf">→ {p["etf"]}</div>
           <div class="pick-meta">
-            <span>ADX {p["adx"]}</span>
+            <span>ADX {p["adx"]} (Δ{("+" if p.get("adx_delta",0) >= 0 else "")}{p.get("adx_delta",0)})</span>
             <span>RSI {p["rsi"]}</span>
             <span class="{chg_class}">{chg_sign}{p["change_pct"]}%</span>
           </div>
           <div class="pick-grade" style="color:{gc}">{p["grade"]}</div>
-          <div class="pick-vwap">{vwap_str}</div>
+          <div class="pick-score">Score: {p.get("score", 0)}/17{" 🔥" if p.get("sqz_fire") else ""}</div>
         </div>'''
         top_html = f'''
     <div class="top-picks">
@@ -333,6 +489,13 @@ def _render_daily_html(data: dict) -> str:
         chg_sign = "+" if p["change_pct"] >= 0 else ""
         vwap_icon = "🔽" if p["below_vwap"] else "🔼"
         vol_class = "positive" if p["rel_vol"] >= 1.5 else "neutral" if p["rel_vol"] >= 1.0 else ""
+        adx_d = p.get("adx_delta", 0)
+        delta_class = "positive" if adx_d >= 5 else "neutral" if adx_d >= 3 else ""
+        delta_sign = "+" if adx_d >= 0 else ""
+        sqz_r = p.get("sqz_ratio", 1.0)
+        sqz_class = "positive" if p.get("sqz_fire") else "neutral" if sqz_r < 0.80 else ""
+        sqz_icon = "🔥" if p.get("sqz_fire") else f"{sqz_r:.2f}"
+        score_val = p.get("score", 0)
 
         rows += f'''
       <tr>
@@ -342,9 +505,12 @@ def _render_daily_html(data: dict) -> str:
         <td>${p["price"]:,.2f}</td>
         <td class="{chg_class}">{chg_sign}{p["change_pct"]}%</td>
         <td style="font-weight:600">{p["adx"]}</td>
+        <td class="{delta_class}">{delta_sign}{adx_d}</td>
         <td>{p["rsi"]}</td>
         <td class="{vol_class}">{p["rel_vol"]}x</td>
+        <td class="{sqz_class}">{sqz_icon}</td>
         <td>{vwap_icon}</td>
+        <td style="font-weight:600">{score_val}</td>
       </tr>'''
 
     return f'''<!DOCTYPE html>
@@ -403,6 +569,7 @@ body {{ font-family: 'Inter', sans-serif; background: var(--bg); color: var(--te
 .pick-meta {{ display: flex; gap: 8px; font-size: 0.7em; color: var(--text2); }}
 .pick-grade {{ position: absolute; top: 12px; right: 14px; font-family: 'JetBrains Mono', monospace; font-size: 1.6em; font-weight: 700; }}
 .pick-vwap {{ font-size: 0.65em; color: var(--green); margin-top: 4px; }}
+.pick-score {{ font-family: 'JetBrains Mono', monospace; font-size: 0.65em; color: var(--cyan); margin-top: 4px; }}
 
 .no-trade-box {{
   background: rgba(255,68,68,0.05); border: 1px solid rgba(255,68,68,0.3);
@@ -466,10 +633,12 @@ tr:hover {{ background: rgba(0,212,255,0.03); }}
   </div>
 
   <div class="legend">
-    <div class="legend-item"><span class="grade-badge" style="background:#00ff41">A</span> ADX≥30 + Below VWAP + Vol≥1.5x</div>
-    <div class="legend-item"><span class="grade-badge" style="background:#00d4ff">B</span> ADX≥25 + Vol≥1.0x</div>
-    <div class="legend-item"><span class="grade-badge" style="background:#f0b400">C</span> ADX≥20</div>
-    <div class="legend-item"><span class="grade-badge" style="background:#555">D</span> Below thresholds</div>
+    <div class="legend-item"><span class="grade-badge" style="background:#00ff41">A</span> 14+/17 pts (strong conviction)</div>
+    <div class="legend-item"><span class="grade-badge" style="background:#00d4ff">B</span> 10+/17 pts (solid setup)</div>
+    <div class="legend-item"><span class="grade-badge" style="background:#f0b400">C</span> 6+/17 pts (emerging)</div>
+    <div class="legend-item"><span class="grade-badge" style="background:#555">D</span> Below 6 pts (weak)</div>
+    <div class="legend-item">🔥 = ATR Squeeze Fire</div>
+    <div class="legend-item">Δ+ = ADX Accelerating</div>
   </div>
 
   {top_html}
@@ -485,9 +654,12 @@ tr:hover {{ background: rgba(0,212,255,0.03); }}
         <th>Price</th>
         <th>Change</th>
         <th>ADX(14)</th>
+        <th>ADX Δ</th>
         <th>RSI(14)</th>
         <th>Rel Vol</th>
+        <th>Squeeze</th>
         <th>VWAP</th>
+        <th>Score</th>
       </tr>
     </thead>
     <tbody>{rows}

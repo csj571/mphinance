@@ -250,10 +250,11 @@ def generate_deep_dive(ticker: str) -> str:
             nearest_exp = opts[0]
             chain_data = stock.option_chain(nearest_exp)
             calls = chain_data.calls
-            # ATM IV: closest strike to current price
+            # ATM IV: Use weighted average of nearest 5 strikes instead of just the closest
             if not calls.empty and "impliedVolatility" in calls.columns:
-                atm_idx = (calls["strike"] - price).abs().idxmin()
-                iv_current = round(float(calls.loc[atm_idx, "impliedVolatility"]) * 100, 2)
+                atm_band = calls.iloc[(calls["strike"] - price).abs().argsort()[:5]]
+                weights = 1.0 / (1.0 + (atm_band["strike"] - price).abs() / price)
+                iv_current = round(float((atm_band["impliedVolatility"] * weights).sum() / weights.sum()) * 100, 2)
 
             # IV Rank/Percentile: compare to range of IVs across all strikes
             all_ivs = pd.concat([calls.get("impliedVolatility", pd.Series()), chain_data.puts.get("impliedVolatility", pd.Series())]).dropna()
