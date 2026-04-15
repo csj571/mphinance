@@ -16,7 +16,7 @@ That's the goal. Let's go.
 
 Everyone tells you to keep 3-6 months of expenses in a savings account. They're not wrong. Having cash when life punches you in the mouth is the difference between a bad week and a financial crisis.
 
-But here's what @TerrifiedOfAI and the growth crowd never address: your emergency fund sitting in a savings account earning 0.5% is quietly losing purchasing power every single day. Inflation is running 3%+. Your $10,000 "safe" money loses roughly $250 in real value every year just sitting there.
+But here's what the growth crowd never addresses: your emergency fund sitting in a savings account earning 0.5% is quietly losing purchasing power every single day. Inflation is running 3%+. Your $10,000 "safe" money loses roughly $250 in real value every year just sitting there.
 
 A high-yield savings account at 4.5% gets you $37.50/month. Better. But a HYSA is still just a parking lot for your cash. It does one thing.
 
@@ -47,7 +47,7 @@ $6.92 a month isn't exciting. But it's also not going anywhere. SGOV is the bedr
 
 Tax note: SGOV interest is exempt from state taxes in most states. It's federal interest income, not ordinary dividends. That distinction matters in a taxable account.
 
-(@TerrifiedOfAI is already rolling his eyes. "You put 25% in T-bills? That's barely beating inflation." Yeah. That's the point. It's the floor, not the ceiling. Keep reading.)
+(I can hear the groans already. "You put 25% in T-bills? That's barely beating inflation." Yeah. That's the point. It's the floor, not the ceiling. Keep reading.)
 
 ### QQQI: The Tax-Efficient Yield Engine
 
@@ -60,7 +60,7 @@ Most recent distribution: $0.6089/share in March 2026. At 44.7 shares, that's $2
 
 $27/month from a single $2,375 position. In a taxable account. With favorable tax treatment. This is the engine.
 
-(OK @TerrifiedOfAI, before you say "just buy QQQ for growth"... QQQI *holds* QQQ stocks. You're getting the equity exposure AND the income. The tradeoff is capped upside in exchange for consistent monthly cash. For an emergency fund, that trade makes sense.)
+(Before the growth junkies say "just buy QQQ"... QQQI *holds* QQQ stocks. You're getting the equity exposure AND the income. The tradeoff is capped upside in exchange for consistent monthly cash. For an emergency fund, that trade makes sense.)
 
 ### IWMI: The Small Cap Income Cousin
 
@@ -121,7 +121,7 @@ So we budget for it. $250. One slot. Weekly income. You rotate it once a month b
 
 There are two families I like for this slot:
 
-**REX Growth & Income ETFs:** These give you 105-150% leveraged exposure to a single stock PLUS weekly income from a synthetic covered call overlay. The key difference between these and YieldMax (which I don't trust, for the record) is that REX only covers about *half* the position with options. The other half rides. You're getting amplified upside when the stock runs, plus weekly cash when it chops. Growth AND income. @TerrifiedOfAI, this one's for you.
+**REX Growth & Income ETFs:** These give you 105-150% leveraged exposure to a single stock PLUS weekly income from a synthetic covered call overlay. The key difference between these and YieldMax (which I don't trust, for the record) is that REX only covers about *half* the position with options. The other half rides. You're getting amplified upside when the stock runs, plus weekly cash when it chops. Growth AND income.
 
 Here are the actual distribution rates as of April 13, 2026:
 
@@ -249,6 +249,25 @@ For context:
 - A high-yield savings (4.5%): $37.50/month. The moderate scenario pays **2.5x more.**
 - A 12-month CD (4.8%): $40/month, but your money is locked. This stays liquid.
 
+## 🌪️ The "What If" Stress Tests (Because It's an Emergency Fund)
+
+If this is where you park cash you might actually need, we have to look at what happens when the world catches on fire.
+
+**What if the market runs?**
+You underperform QQQ, flat out. QQQI caps your upside because of the covered calls. SGOV and USAI don't care about Nvidia's earnings. Your portfolio value will drift upward, but you won't crush the S&P 500. The trade-off is the $100/month.
+
+**What if the market is flat or choppy?**
+This is where the portfolio shines. When growth investors are complaining about their accounts going nowhere for 6 months, you're quietly collecting 8-10% annualized yields and auto-reinvesting at a discount. The Itch Slot (especially Roundhill funds) thrives in chop by extracting weekly premiums.
+
+**What if inflation spikes again?**
+SGOV yields lag but will eventually adjust as the Fed hikes. USAI is a natural inflation hedge—pipelines pass costs down the line. Gold (GLDY) historically acts as a safe haven when fiat gets weird.
+
+**What if there's a 20% market correction?**
+Your equity positions (QQQI, IWMI) will bleed, though slightly less than the underlying indexes due to the option premiums softening the blow. USAI will take a hit. SGOV ($2,375) will act as an anchor, barely moving. Your $10,000 might drop to $8,500, but the dividend machine keeps spitting out cash, buying more shares at the lows.
+
+**What if there's a war or geopolitical shock?**
+This is why the core is diversified. Tech and small caps might puke, but energy infrastructure (USAI) often spikes during conflicts, and gold (GLDY) is the ultimate fear trade. SGOV just sits there sipping tea while the world burns.
+
 ## 🔄 The Fidelity Basket: How the Machine Feeds Itself
 
 This is the same mechanism from the 3x Engine, and it's the part that makes this a system instead of just a pile of ETFs.
@@ -277,7 +296,7 @@ Happy Tax Day. Since this is a taxable account, here's what Uncle Sam actually t
 
 The core basket is built for tax efficiency. The satellites sacrifice efficiency for higher raw yield and engagement. At this allocation size, the math works.
 
-(@TerrifiedOfAI: "Why not just put the whole $10k in QQQ and let it grow?" Because QQQ doesn't pay you $95/month to exist. Because QQQ dropped 33% in 2022 and paid you nothing while it bled. Because some people need their money to WORK for them right now, not in 10 years. Growth is great. Income is useful. Both can coexist. In fact, the Itch Slot IS growth. REX gives you 1.05-1.5x leveraged exposure AND weekly income. That's the whole point. There, I said it.)
+("Why not just put the whole $10k in QQQ and let it grow?" Because QQQ doesn't pay you $95/month to exist. Because QQQ dropped 33% in 2022 and paid you nothing while it bled. Because some people need their money to WORK for them right now, not in 10 years. Growth is great. Income is useful. Both can coexist. In fact, the Itch Slot IS growth. REX gives you 1.05-1.5x leveraged exposure AND weekly income. That's the whole point. There, I said it.)
 
 ## 🔧 The Gamma Pin Side Note
 
