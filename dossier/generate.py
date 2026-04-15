@@ -904,17 +904,34 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     if is_opex_week:
         print("\n[13a/16] GAMMA PIN GRAVITY WATCH (OpEx Week)")
         try:
-            from dossier.gamma_pin_screener import scan_ticker
+            from dossier.gamma_pin_screener import scan_ticker, _next_monthly_opex
             # Scan top 5 momentum picks
             watch_tickers = [d["ticker"] for d in dossiers[:5]]
-            # Next monthly opex (approximate target)
-            target_expiry = "2026-04-17" if date < "2026-04-17" else "2026-05-15"
+            # Dynamic monthly OpEx calculation
+            target_expiry = _next_monthly_opex()
+            # Market regime context for filtering
+            vix_level = market_regime.get("vix", {}).get("vix_level", 20)
+            regime = market_regime.get("regime", "NORMAL")
+            is_risk_off = regime in ("FEAR", "PANIC")
+            if is_risk_off:
+                print(f"  ⚠️ REGIME: {regime} (VIX {vix_level:.1f}) — suppressing BELOW (long) signals")
             for ticker in watch_tickers:
                 d_data = next((d for d in dossiers if d["ticker"] == ticker), {})
                 res = scan_ticker(ticker, d_data.get("price", 0), target_expiry)
                 if res and res["snap_score"] > 40:
+                    # Regime gate: skip BELOW (long bias) in FEAR/PANIC
+                    if is_risk_off and res["overext_dir"] == "BELOW":
+                        print(f"  🚫 {ticker}: SKIPPED (BELOW in {regime} regime)")
+                        continue
+                    # Quality gate: skip GARBAGE gravity centroids
+                    if res.get("grav_quality") == "GARBAGE":
+                        print(f"  🗑️ {ticker}: SKIPPED (gravity centroid too far from price)")
+                        continue
                     gamma_warnings.append(res)
-                    print(f"  ⚠️ {ticker}: SNAP SCORE {res['snap_score']} (OE {res['overext_pct']}% {res['overext_dir']})")
+                    gq = res.get("grav_quality", "?")
+                    print(f"  ⚠️ {ticker}: SNAP {res['snap_score']} "
+                          f"(OE {res['overext_pct']}% {res['overext_dir']}) "
+                          f"[Grav:{gq}]")
         except Exception as e:
             print(f"  [WARN] Gamma watch failed: {e}")
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-👻 Gamma Pin Distance Screener v3 — OI Sandwich Finder
+👻 Gamma Pin Distance Screener v4 — OI Sandwich Finder (Backtest-Tuned)
 
 Finds stocks OUTSIDE their OI "sandwich zone" on OpEx day.
 
@@ -209,9 +209,10 @@ def analyze_oi_sandwich(chain: list[dict], current_price: float) -> dict | None:
 
     # ── Filter to Near-the-Money (NTM) strikes ──
     # Far-OTM lottery tickets distort centroids. Only use strikes within
-    # ±15% of current price for the sandwich zone calculation.
-    # This focuses on where the REAL hedging action is.
-    ntm_range = current_price * 0.15
+    # ±10% of current price for the sandwich zone calculation.
+    # Tightened from ±15% after March 2026 OpEx backtest showed
+    # gravity centers 50-110% from price due to far-OTM call skew.
+    ntm_range = current_price * 0.10
     ntm_low = current_price - ntm_range
     ntm_high = current_price + ntm_range
 
@@ -270,6 +271,19 @@ def analyze_oi_sandwich(chain: list[dict], current_price: float) -> dict | None:
     grav_dist = current_price - gravity
     grav_dist_pct = abs(grav_dist) / current_price * 100 if current_price > 0 else 0
     grav_dir = "ABOVE" if grav_dist > 0 else "BELOW"
+
+    # ── Gravity Quality Flag ──
+    # March OpEx backtest: centroids >15% from price are noise.
+    # EXK gravity $13.77 vs price $8.69 = 58% away → useless signal.
+    # Flag the quality so downstream consumers can filter.
+    if grav_dist_pct <= 5:
+        grav_quality = "HIGH"      # Tight — strong pin expected
+    elif grav_dist_pct <= 10:
+        grav_quality = "MODERATE"   # Plausible — partial pull likely
+    elif grav_dist_pct <= 15:
+        grav_quality = "LOW"        # Stretched — pin unlikely
+    else:
+        grav_quality = "GARBAGE"    # Centroid distorted by far-OTM OI
 
     # ── Max Pain (uses FULL chain, not NTM-filtered) ──
     all_strikes = sorted(set(list(call_oi_all.keys()) + list(put_oi_all.keys())))
@@ -404,6 +418,7 @@ def analyze_oi_sandwich(chain: list[dict], current_price: float) -> dict | None:
         "gravity": round(gravity, 2),
         "grav_dist_pct": round(grav_dist_pct, 2),
         "grav_dir": grav_dir,
+        "grav_quality": grav_quality,
         # Overextension (THE key metric)
         "overext_pct": round(overext_pct, 2),
         "overext_dir": overext_dir,
@@ -459,25 +474,33 @@ def scan_ticker(ticker: str, price: float, target_expiry: str,
     atr = (tv_data or {}).get("atr", 0)
     atr_overext = gamma["overext_dollars"] / atr if atr and atr > 0 else 0
 
-    # ── Snap Score ──
-    # Combines multiple factors that predict actual OpEx day movement:
-    #   1. Overextension % (primary — how far outside the sandwich)
-    #   2. OI concentration (higher = stronger gravitational pull)
-    #   3. ATR-normalized overextension (accounts for how much the stock normally moves)
-    #   4. Total OI magnitude (more OI = bigger gamma effect = stronger pin)
+    # ── Snap Score v2 ──
+    # Combines multiple factors that predict actual OpEx day movement.
+    # v2 changes (from March 2026 OpEx backtest):
+    #   - Added gravity quality penalty: garbage centroids get crushed
+    #   - Tighter NTM filter upstream already helps
     #
-    # A stock with 5% overextension + massive OI + tight sandwich
-    # is a much better play than one with 10% overextension + thin OI.
+    # A stock with 5% overextension + massive OI + tight sandwich + plausible gravity
+    # is a much better play than one with 10% overextension + thin OI + fantasy centroid.
     oi_score = min(math.log10(gamma["total_oi"] + 1), 6) / 6  # 0-1, log-scaled
     concentration_score = gamma["zone_concentration"] / 100     # 0-1
     overext_score = min(gamma["overext_pct"] / 15, 1.0)        # 0-1, capped at 15%
 
+    # Gravity quality multiplier — penalize absurd centroids
+    grav_quality = gamma.get("grav_quality", "MODERATE")
+    grav_multiplier = {
+        "HIGH": 1.0,
+        "MODERATE": 0.85,
+        "LOW": 0.55,
+        "GARBAGE": 0.20,
+    }.get(grav_quality, 0.5)
+
     snap_score = (
-        overext_score * 0.40 +          # Distance outside sandwich
+        overext_score * 0.35 +          # Distance outside sandwich
         oi_score * 0.25 +               # OI magnitude (gamma impact)
-        concentration_score * 0.20 +    # How tight the sandwich is
+        concentration_score * 0.25 +    # How tight the sandwich is
         min(atr_overext / 5, 1.0) * 0.15  # ATR-normalized stretch
-    ) * 100
+    ) * 100 * grav_multiplier
 
     return {
         "ticker": ticker,
@@ -492,6 +515,7 @@ def scan_ticker(ticker: str, price: float, target_expiry: str,
         "gravity": gamma["gravity"],
         "grav_dist_pct": gamma["grav_dist_pct"],
         "grav_dir": gamma["grav_dir"],
+        "grav_quality": gamma.get("grav_quality", "MODERATE"),
         # Overextension
         "overext_pct": gamma["overext_pct"],
         "overext_dir": gamma["overext_dir"],
@@ -566,7 +590,7 @@ def print_results(results: list[dict], scan_stats: dict):
     pinned = [r for r in results if r["overext_dir"] == "PINNED"]
 
     print(f"\n{'═'*100}")
-    print(f"  {CYN}{BLD}👻 GAMMA PIN SCREENER v3{R} — OI Sandwich Finder")
+    print(f"  {CYN}{BLD}👻 GAMMA PIN SCREENER v4{R} — OI Sandwich Finder (Backtest-Tuned)")
     print(f"  {GRY}OpEx: {scan_stats.get('target_expiry', '?')} | "
           f"Scanned: {scan_stats.get('scanned', 0)} | "
           f"Overextended: {len(overextended)} | "
@@ -698,15 +722,38 @@ def output_json(results: list[dict], scan_stats: dict):
 # ████  CLI MAIN  ████
 # ═══════════════════════════════════════════════════════════════════
 
+def _next_monthly_opex() -> str:
+    """Calculate the next monthly OpEx date (3rd Friday of month)."""
+    from calendar import monthrange
+    today = datetime.now().date()
+    year, month = today.year, today.month
+    # Find 3rd Friday: first day of month, find first Friday, add 14 days
+    first_day_weekday = datetime(year, month, 1).weekday()  # 0=Mon, 4=Fri
+    first_friday = 1 + (4 - first_day_weekday) % 7
+    third_friday = first_friday + 14
+    opex = datetime(year, month, third_friday).date()
+    # If we're past this month's OpEx, get next month's
+    if today > opex:
+        month += 1
+        if month > 12:
+            month, year = 1, year + 1
+        first_day_weekday = datetime(year, month, 1).weekday()
+        first_friday = 1 + (4 - first_day_weekday) % 7
+        third_friday = first_friday + 14
+        opex = datetime(year, month, third_friday).date()
+    return opex.strftime("%Y-%m-%d")
+
+
 def main():
+    default_expiry = _next_monthly_opex()
     parser = argparse.ArgumentParser(
-        description="👻 Gamma Pin Screener v3 — OI Sandwich Finder",
+        description="👻 Gamma Pin Screener v4 — OI Sandwich Finder (Backtest-Tuned)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--tickers", type=str,
                         help="Comma-separated tickers (skip TV scan)")
-    parser.add_argument("--expiry", type=str, default="2026-03-20",
-                        help="Target expiration YYYY-MM-DD (default: 2026-03-20)")
+    parser.add_argument("--expiry", type=str, default=default_expiry,
+                        help=f"Target expiration YYYY-MM-DD (default: {default_expiry})")
     parser.add_argument("--top", type=int, default=30,
                         help="Show top N results (default: 30)")
     parser.add_argument("--min-oi", type=int, default=500,
@@ -724,8 +771,8 @@ def main():
     t0 = time.time()
     target_expiry = args.expiry
 
-    print(f"\n  {CYN}{BLD}👻 GAMMA PIN SCREENER v3{R} — OI Sandwich Finder")
-    print(f"  {GRY}Target OpEx: {target_expiry} | Sort: {args.sort}{R}\n")
+    print(f"\n  {CYN}{BLD}👻 GAMMA PIN SCREENER v4{R} — OI Sandwich Finder (Backtest-Tuned)")
+    print(f"  {GRY}Target OpEx: {target_expiry} | Sort: {args.sort} | NTM: ±10%{R}\n")
 
     # ── Stage 1: Stock universe ──
     if args.tickers:
@@ -817,17 +864,31 @@ def main():
     else:
         print_results(results, scan_stats)
 
-    # Save API output
-    out_path = Path(__file__).resolve().parent.parent / "docs" / "api" / "gamma-pin-scan.json"
-    out_path.parent.mkdir(parents=True, exist_ok=True)
+    # Save API output (latest + date-stamped history for backtesting)
+    api_dir = Path(__file__).resolve().parent.parent / "docs" / "api"
+    api_dir.mkdir(parents=True, exist_ok=True)
     clean = []
     for r in results[:50]:
         cr = {k: v for k, v in r.items() if k not in ("top_strikes",)}
         cr["top_strikes"] = [(s, oi) for s, oi in r.get("top_strikes", [])]
         clean.append(cr)
-    api_output = {"scan_date": datetime.now().isoformat(), "target_expiry": target_expiry, "results": clean}
-    out_path.write_text(json.dumps(api_output, indent=2, default=str))
-    print(f"  {GRY}💾 Saved to {out_path}{R}\n")
+    api_output = {
+        "scan_date": datetime.now().isoformat(),
+        "target_expiry": target_expiry,
+        "screener_version": "v4",
+        "ntm_range_pct": 10,
+        "results": clean,
+    }
+    # Latest (overwritten each run)
+    latest_path = api_dir / "gamma-pin-scan.json"
+    latest_path.write_text(json.dumps(api_output, indent=2, default=str))
+    # Date-stamped archive (for backtesting)
+    history_dir = api_dir / "gamma-history"
+    history_dir.mkdir(parents=True, exist_ok=True)
+    dated_path = history_dir / f"gamma-pin-{target_expiry}.json"
+    dated_path.write_text(json.dumps(api_output, indent=2, default=str))
+    print(f"  {GRY}💾 Saved to {latest_path}{R}")
+    print(f"  {GRY}📁 Archive: {dated_path}{R}\n")
 
 
 if __name__ == "__main__":
