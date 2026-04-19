@@ -2,35 +2,37 @@
 
 Welcome back to Momentum Phinance. 
 
-Let's talk about the hardest part of managing a portfolio: knowing when to let your runners run, and knowing when to stop watering your weeds. Most retail traders get this backwards. They cut their winners early to "lock in profits" and hold their losers until they become permanent portfolio scars.
+Let's talk about the hardest part of managing a portfolio: knowing when to let your star players play, and knowing when to pull them off the field. Most retail traders get this backwards. They pull their top scorers early to "lock in profits" and leave the tired, injured players on the field until the season is ruined.
 
 Capital preservation isn't just a buzzword. It is a mathematical reality. 
 
-We are running a 35-stock portfolio strategy. No emotion. No arbitrary calendar-based rebalancing. No gut feelings. Just pure, price-driven mechanics. 
+We are running a 35-stock roster. No emotion. No arbitrary calendar-based rebalancing. No gut feelings. Just pure, performance-driven mechanics. Think of this as managing a premier league team. 
 
-Here is the exact breakdown of the allocation model and the math that drives it.
+Here is the exact breakdown of the roster and the math that drives it.
 
-## The 60/40 Structure
+## The 60/40 Roster
 
-We split the portfolio into a strict 60/40 allocation. Notice something about 60/40? It’s damn near the Golden Ratio (61.8%). It’s nature’s blueprint for structural integrity, and it works just as well for protecting capital.
+We split the team into a strict 60/40 allocation. Notice something about 60/40? It’s damn near the Golden Ratio (61.8%). It’s nature’s blueprint for structural integrity, and it works just as well for building a championship team.
 
-*   **The Core (60%):** 15 high-conviction, large-cap anchors. Each weighted at an exact 4%.
-*   **The Satellites (40%):** 20 high-growth, exploratory, or momentum plays. Each weighted at an exact 2%.
+*   **The Starters (60%):** 15 high-conviction anchors on the field. Each gets an exact 4% of the playing time.
+*   **The Bench (40%):** 20 high-growth, exploratory, or momentum prospects waiting for their shot. Each gets an exact 2% of the playing time.
 
 ![35-Stock Portfolio Strategy](https://raw.githubusercontent.com/mphinance/mphinance/main/docs/substack/musings/portfolio_allocation.png)
 
-## The 2:1 Rebalancing Trigger
+## The 2:1 Promotion Trigger
 
-This portfolio operates on a strict 2:1 weighting ratio (4% vs 2%). The rebalance trigger isn't based on market noise or a date on the calendar. A rebalance is only considered when a 2% satellite stock outgrows a 4% core stock in *pure dollar value*.
+This roster operates on a strict 2:1 weighting ratio (4% vs 2%). The promotion trigger isn't based on market noise or a date on the calendar. A lineup change is only considered when a guy on the bench playing half the minutes starts scoring as many goals in pure dollar value as a guy on the field.
 
 ### Why 2:1?
 
-In a standard $10,000 portfolio, your 4% positions represent $400 and your 2% positions represent $200. For the smaller position to overtake the larger one, two significant events must happen simultaneously:
+If your bench player is given half the minutes (2%) but generates the exact same output as the starter with double the minutes (4%), you have a clear performance divergence. 
 
-1.  **The satellite must gain 40%** (growing from $200 to $280).
-2.  **The core must drop 30%** (falling from $400 to $280).
+For the bench player to overtake the starter, two significant events must happen simultaneously:
 
-You could technically use a 3:2 weighting ratio (like 6% and 4%), where a 20% swing triggers a rebalance. But a 20% swing is often just normal sector rotation or algorithmic noise. Requiring a +40% gain colliding with a -30% drop ensures you are only stepping in when there is a meaningful, fundamental divergence. 
+1.  **The bench player must overperform by 40%** (growing from $200 to $280 in a $10k portfolio).
+2.  **The starter must underperform by 30%** (falling from $400 to $280).
+
+You could technically use a 3:2 weighting ratio (like 6% and 4%), where a 20% swing triggers a substitution. But a 20% swing is often just a player catching their breath or algorithmic noise. Requiring a +40% tear colliding with a -30% slump ensures you are only stepping in when a bench player has genuinely earned their spot in the starting 15. 
 
 ![2:1 Rebalancing Trigger](https://raw.githubusercontent.com/mphinance/mphinance/main/docs/substack/musings/rebalancing_trigger.png)
 
