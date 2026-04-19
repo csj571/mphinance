@@ -68,7 +68,9 @@ By locking in the +40% / -30% parameters, you give your winners the exact mathem
 
 These are the 15 high-conviction anchors, weighted at 4% each. The bedrock of the portfolio. 
 
-*A quick note for traditionalists looking at this list: You will see several highly volatile, small-cap names in this "Core" starting lineup (like ASTS, ONDS, UAMY, GLXY, NBIS). Why are they here instead of mega-caps like Berkshire? Because we don't just hold them; we aggressively farm them. We use that 4% allocation as collateral to execute the options wheel, consistently harvesting 2-5% weekly premiums. They earned their starting spot because their massive Implied Volatility literally pays the rent. You can't farm Berkshire.*
+*A quick note for traditionalists looking at this list: You will see several highly volatile, small-cap names in this "Core" starting lineup (like ASTS, ONDS, UAMY, GLXY, NBIS). Why are they here instead of mega-caps like Berkshire? Because they've earned it, and because we don't just hold them; we aggressively farm them.*
+
+*I started buying ONDS at $0.78 (one of my original 100) and UAMY at $3.10. I bought GLXY on the Toronto Stock Exchange at $9, sold the bulk of it at $40, got back in at $18, and just wheeled it at $22. I've made massive returns on ASTS and NBIS whether wheeling or holding—it didn't matter. We use that 4% allocation as collateral to execute the options wheel, consistently harvesting 2-5% weekly premiums while the suits in traditional finance pray for 4% a year. They earned their starting spot because their massive Implied Volatility literally pays the rent and gives us a massive cushion. You can't farm Berkshire.*
 
 *(Links point to the Ghost Alpha Deep Dive reports. Data is currently processing through the pipeline.)*
 
