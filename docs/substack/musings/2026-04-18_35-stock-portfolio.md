@@ -122,7 +122,7 @@ These are the 2% exploratory allocations. High-risk, high-reward.
 
 4. **BBAI** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/BBAI/deep_dive.html) : *They provide AI-powered decision intelligence directly to the US military and logistics sectors. It's Palantir-lite, operating in the shadows of complex government contracts. (Metric: Market Cap - $1.83B – A decent size, but not immune to volatility.)*
 
-5. **UEC** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/UEC/deep_dive.html) : *Unhedged uranium mining in North America. While others locked in low long-term contracts, UEC strategically sat on their resources, waiting for the spot price to explode.*
+5. **UEC** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/UEC/deep_dive.html) : *Unhedged uranium mining in North America. While others locked in low long-term contracts, UEC strategically sat on their resources, waiting for the spot price to explode. (Data: Massive upside validated by its run from a $4.66 52-week low to nearly $20, driven purely by the spot price squeeze.)*
 
 6. **PL** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/PL/deep_dive.html) : *They image the entire landmass of the Earth every single day. The raw data is valuable, but the AI insights derived from those daily global changes are a goldmine. (Metric: Market Cap - $13.32B – A significant player, not a micro-cap experiment.)*
 
@@ -132,7 +132,7 @@ These are the 2% exploratory allocations. High-risk, high-reward.
 
 9. **ACHR** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/ACHR/deep_dive.html) : *Backed by United Airlines and Stellantis, they are the closest to actually commercializing electric vertical takeoff and landing (eVTOL) aircraft for urban air mobility. (Metric: Revenue Growth - 0%.)*
 
-10. **CLS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/CLS/deep_dive.html) : *The unsung hero of the AI hardware boom. Celestica is the contract manufacturer physically assembling the high-end server racks and networking gear that power the cloud. (Metric: Revenue Growth - A staggering 43.6%.)*
+10. **CLS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/CLS/deep_dive.html) : *The unsung hero of the AI hardware boom. Celestica is the contract manufacturer physically assembling the high-end server racks and networking gear that power the cloud. (Data: I bought this at $90 last year; it's now kissing $400. That's a casual 340% return on picking the right shovel-seller.)*
 
 11. **TJX** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/TJX/deep_dive.html) : *The ultimate economic cockroach. In a recession, people trade down to T.J. Maxx. In a boom, people hunt for deals. Their inventory sourcing model is completely Amazon-proof. (Data: Revenue growth of 8.5% indicates a healthy expansion for a company of its size, while a 9.1% profit margin shows efficient operations in a tough retail landscape.)*
 
