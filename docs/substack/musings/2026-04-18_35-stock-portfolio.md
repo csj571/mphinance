@@ -68,21 +68,36 @@ These are the 15 high-conviction anchors, weighted at 4% each. The bedrock of th
 
 *(Links point to the Ghost Alpha Deep Dive reports. Data is currently processing through the pipeline.)*
 
-1. **AVGO** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/AVGO/deep_dive.html)
-2. **GOOGL** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/GOOGL/deep_dive.html)
-3. **COST** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/COST/deep_dive.html)
-4. **WMT** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/WMT/deep_dive.html)
-5. **TSLA** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/TSLA/deep_dive.html)
-6. **UBER** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/UBER/deep_dive.html)
-7. **MU** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/MU/deep_dive.html)
-8. **TJX** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/TJX/deep_dive.html)
-9. **TER** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/TER/deep_dive.html)
-10. **WEC** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/WEC/deep_dive.html)
-11. **CLS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/CLS/deep_dive.html)
-12. **GLXY** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/GLXY/deep_dive.html)
-13. **HIMS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/HIMS/deep_dive.html)
-14. **LLY** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/LLY/deep_dive.html)
-15. **BRK-B** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/BRK-B/deep_dive.html)
+1. **AVGO** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/AVGO/deep_dive.html) : *Broadcom Inc.*
+
+2. **GOOGL** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/GOOGL/deep_dive.html) : *Alphabet Inc.*
+
+3. **COST** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/COST/deep_dive.html) : *Costco Wholesale Corporation, together with its subsidiaries, engages in the operation of membership warehouses in the United States, Puerto Rico, Canada, Mexico, Japan, the United Kingdom, Korea, Australia, Taiwan, China, Spain, France, Iceland, New Zealand, and Sweden.*
+
+4. **WMT** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/WMT/deep_dive.html) : *Walmart Inc.*
+
+5. **TSLA** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/TSLA/deep_dive.html) : *Tesla, Inc.*
+
+6. **UBER** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/UBER/deep_dive.html) : *Uber Technologies, Inc.*
+
+7. **MU** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/MU/deep_dive.html) : *Micron Technology, Inc.*
+
+8. **TJX** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/TJX/deep_dive.html) : *The TJX Companies, Inc., together with its subsidiaries, operates as an off-price apparel and home fashions retailer worldwide.*
+
+9. **TER** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/TER/deep_dive.html) : *Teradyne, Inc.*
+
+10. **WEC** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/WEC/deep_dive.html) : *WEC Energy Group, Inc., through its subsidiaries, provides regulated natural gas and electricity, and renewable and nonregulated renewable energy services in the United States.*
+
+11. **CLS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/CLS/deep_dive.html) : *Celestica Inc., together with its subsidiaries, provides supply chain solutions in Asia, North America, and internationally.*
+
+12. **GLXY** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/GLXY/deep_dive.html) : *Galaxy Digital Inc.*
+
+13. **HIMS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/HIMS/deep_dive.html) : *Hims & Hers Health, Inc.*
+
+14. **LLY** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/LLY/deep_dive.html) : *Eli Lilly and Company discovers, develops, manufactures, and markets human pharmaceutical products in the United States, Europe, China, Japan, and internationally.*
+
+15. **BRK-B** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/BRK-B/deep_dive.html) : *Berkshire Hathaway Inc. operates as a multinational conglomerate holding company.*
+
 
 ---
 
@@ -94,23 +109,43 @@ These are the 15 high-conviction anchors, weighted at 4% each. The bedrock of th
 
 These are the 2% exploratory allocations. High-risk, high-reward.
 
-1. **RDDT** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/RDDT/deep_dive.html)
-2. **BULL** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/BULL/deep_dive.html)
-3. **LUNR** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/LUNR/deep_dive.html)
-4. **SMR** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/SMR/deep_dive.html)
-5. **UMAC** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/UMAC/deep_dive.html)
-6. **BBAI** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/BBAI/deep_dive.html)
-7. **PL** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/PL/deep_dive.html)
-8. **AMPX** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/AMPX/deep_dive.html)
-9. **OUST** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/OUST/deep_dive.html)
-10. **ACHR** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/ACHR/deep_dive.html)
-11. **PTRN** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/PTRN/deep_dive.html)
-12. **MLI** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/MLI/deep_dive.html)
-13. **KTOS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/KTOS/deep_dive.html)
-14. **ASTS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/ASTS/deep_dive.html)
-15. **RKLB** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/RKLB/deep_dive.html)
-16. **ONDS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/ONDS/deep_dive.html)
-17. **NBIS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/NBIS/deep_dive.html)
-18. **UAMY** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/UAMY/deep_dive.html)
-19. **NVDA** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/NVDA/deep_dive.html)
-20. **TSM** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/TSM/deep_dive.html)
+1. **RDDT** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/RDDT/deep_dive.html) : *Reddit, Inc.*
+
+2. **BULL** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/BULL/deep_dive.html) : *Webull Corporation operates as a digital investment platform.*
+
+3. **LUNR** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/LUNR/deep_dive.html) : *Intuitive Machines, Inc.*
+
+4. **SMR** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/SMR/deep_dive.html) : *NuScale Power Corporation provides small modular reactor technology solutions.*
+
+5. **UMAC** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/UMAC/deep_dive.html) : *Unusual Machines, Inc.*
+
+6. **BBAI** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/BBAI/deep_dive.html) : *BigBear.ai Holdings, Inc.*
+
+7. **PL** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/PL/deep_dive.html) : *Planet Labs PBC engages in the design, construction, and launch of constellations of satellites with the intent of providing high-cadence geospatial data delivered to customers through an online platform in the United States and internationally.*
+
+8. **AMPX** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/AMPX/deep_dive.html) : *Amprius Technologies, Inc.*
+
+9. **OUST** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/OUST/deep_dive.html) : *Ouster, Inc.*
+
+10. **ACHR** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/ACHR/deep_dive.html) : *Archer Aviation Inc., together with its subsidiaries, designs and develops aircraft and related technologies and services for commercial and defense sectors in the United States and internationally.*
+
+11. **PTRN** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/PTRN/deep_dive.html) : *Pattern Group Inc.*
+
+12. **MLI** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/MLI/deep_dive.html) : *Mueller Industries, Inc.*
+
+13. **KTOS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/KTOS/deep_dive.html) : *Kratos Defense & Security Solutions, Inc., a technology company, provides technology, hardware, products, system, and software for the defense, national security, and commercial markets in the United States, other North America, the Asia Pacific, the Middle East, Europe, and Internationally.*
+
+14. **ASTS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/ASTS/deep_dive.html) : *AST SpaceMobile, Inc., together with its subsidiaries, designs and develops the constellation of BlueBird satellites in the United States.*
+
+15. **RKLB** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/RKLB/deep_dive.html) : *Rocket Lab Corporation, a space company, provides launch services and space systems solutions in the United States, Canada, Japan, and internationally.*
+
+16. **ONDS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/ONDS/deep_dive.html) : *Ondas Inc.*
+
+17. **NBIS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/NBIS/deep_dive.html) : *Nebius Group N.V., a technology company, engages in building full-stack infrastructure to service the global AI industry in the Netherlands, Europe, North America, and Israel.*
+
+18. **UAMY** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/UAMY/deep_dive.html) : *United States Antimony Corporation produces and sells antimony, zeolite, and precious metals in the United States and Canada.*
+
+19. **NVDA** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/NVDA/deep_dive.html) : *NVIDIA Corporation provides graphics, and compute and networking solutions in the United States, Taiwan, China, and internationally.*
+
+20. **TSM** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/TSM/deep_dive.html) : *Taiwan Semiconductor Manufacturing Company Limited manufactures, packages, tests, and sells integrated circuits and other semiconductor devices.*
+
