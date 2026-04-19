@@ -1,5 +1,7 @@
 # The 35-Stock Protocol: The Asymmetrical Math of Capital Preservation
 
+![35-Stock Strategy](https://raw.githubusercontent.com/mphinance/mphinance/main/docs/substack/musings/35_stock_hero.png)
+
 Welcome back to Momentum Phinance. 
 
 Let's talk about the hardest part of managing a portfolio: knowing when to let your star players play, and knowing when to pull them off the field. Most retail traders get this backwards. They pull their top scorers early to "lock in profits" and leave the tired, injured players on the field until the season is ruined.
