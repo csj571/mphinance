@@ -140,7 +140,7 @@ These are the 2% exploratory allocations. High-risk, high-reward.
 
 12. **TSLA** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/TSLA/deep_dive.html) : *Stop pricing it as a car company. The real upside is in the Optimus humanoid robot and their Dojo supercomputer network. It's a robotics and energy company. (Metric: Revenue Growth - A frankly alarming -3.1%.)*
 
-13. **PTRN** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/PTRN/deep_dive.html) : *A massive pure-play renewable energy developer. They don't just build wind and solar; they own the high-voltage transmission lines required to actually move the power. (Metric: Price - ~$13.53 (Change: 0.45%).)*
+13. **PTRN** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/PTRN/deep_dive.html) : *An e-commerce accelerator operating as a silent software ghost. They don't just help brands sell online; they acquire the inventory and control the entire marketplace presence, acting as a high-tech toll booth. (Data: A massive 40.3% revenue growth makes this $2.69B market cap company a serious underdog.)*
 
 14. **BULL** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/BULL/deep_dive.html) : *A digital brokerage that is rapidly eating Robinhood's market share in active trading, with a much more sophisticated platform for serious retail flow. (Metric: Market Cap - $3.57B – A mid-cap player with room to run.)*
 
