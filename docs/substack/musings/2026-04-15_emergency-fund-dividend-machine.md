@@ -8,7 +8,7 @@ That's the goal. Let's go.
 
 *Not financial advice. I'm a damn felon, not a fiduciary. Do your own research. Talk to a CPA.*
 
-![The $100/Month Dividend Machine](hero_dividend_machine.png)
+![The $100/Month Dividend Machine](https://raw.githubusercontent.com/mphinance/mphinance/main/docs/substack/musings/assets/hero_dividend_machine.png)
 
 ---
 
@@ -80,7 +80,7 @@ I wrote [an entire article about USAI yesterday](https://mphinance.substack.com/
 
 USAI provides two things the other three don't: sector diversification away from tech, and qualified dividends that get taxed at 15% instead of your ordinary income rate. That's the most tax-efficient dollar in the portfolio.
 
-![Core Basket Overview](core_basket_overview.png)
+![Core Basket Overview](https://raw.githubusercontent.com/mphinance/mphinance/main/docs/substack/musings/assets/core_basket_overview.png)
 
 **Core Basket Total: $68.18/month = $818/year (8.6% blended yield)**
 
@@ -125,23 +125,23 @@ There are two families I like for this slot:
 
 Here are the actual distribution rates as of April 13, 2026:
 
-- **TSII** — TSLA Growth & Income. **58.64% distribution rate.** Yes, really.
-- **NVII** — NVDA Growth & Income. **36.38% distribution rate.** AI conviction + weekly cash.
-- **CWII** — CRWV Growth & Income. **36.34%.** CoreWeave/AI infrastructure play.
-- **LLII** — LLY Growth & Income. **32.01%.** Healthcare momentum.
-- **GIF** — The whole Growth & Income universe. **31.60%.** Can't pick? Buy the basket.
-- **MSII** — MSTR Growth & Income. **28.69%.** Bitcoin proxy with weekly income.
-- **PLTI** — PLTR Growth & Income. **24.47%.** Government AI contracts.
-- **COII** — COIN Growth & Income. **26.00%.** Crypto exchange yield.
-- **HOII** — HOOD Growth & Income. **23.74%.** Fintech + weekly cash.
+- **TSII:** TSLA Growth & Income. **58.64% distribution rate.** Yes, really.
+- **NVII:** NVDA Growth & Income. **36.38% distribution rate.** AI conviction + weekly cash.
+- **CWII:** CRWV Growth & Income. **36.34%.** CoreWeave/AI infrastructure play.
+- **LLII:** LLY Growth & Income. **32.01%.** Healthcare momentum.
+- **GIF:** The whole Growth & Income universe. **31.60%.** Can't pick? Buy the basket.
+- **MSII:** MSTR Growth & Income. **28.69%.** Bitcoin proxy with weekly income.
+- **PLTI:** PLTR Growth & Income. **24.47%.** Government AI contracts.
+- **COII:** COIN Growth & Income. **26.00%.** Crypto exchange yield.
+- **HOII:** HOOD Growth & Income. **23.74%.** Fintech + weekly cash.
 
 **Roundhill WeeklyPay 1.2x ETFs:** These target 120% of a stock's *weekly* performance (not daily, which matters for compounding decay) and pay weekly distributions. Simpler structure, cleaner math. Massive lineup:
 
-- **NVDW** — 1.2x NVDA weekly. ~50-65% yield. The AI income beast.
-- **TSLW** — 1.2x TSLA weekly. Tesla exposure + weekly distributions.
-- **COIW** — 1.2x COIN weekly. Crypto proxy with weekly cash.
-- **PLTW** — 1.2x PLTR weekly. Palantir momentum play.
-- **GLDW** — 1.2x Gold weekly. Macro hedge that pays you.
+- **NVDW:** 1.2x NVDA weekly. ~50-65% yield. The AI income beast.
+- **TSLW:** 1.2x TSLA weekly. Tesla exposure + weekly distributions.
+- **COIW:** 1.2x COIN weekly. Crypto proxy with weekly cash.
+- **PLTW:** 1.2x PLTR weekly. Palantir momentum play.
+- **GLDW:** 1.2x Gold weekly. Macro hedge that pays you.
 - Plus AAPW, AMZW, METW, MSFW, GOOW, HOOW, and more.
 
 ### The Monthly Rotation
@@ -202,7 +202,7 @@ PLTR    $ 142.35   22.9 🔴 D   44.9%   -31.4%     -6.8%   40.6  CHOP/DOWN  Rou
 
 We are buying **NVII** for our $250 Itch Slot this month, securing a 36% distribution rate while keeping leveraged upside exposure to the strongest AI trend in the market. Check back next month when we run it again.
 
-![Portfolio Income Breakdown](portfolio_income_breakdown.png)
+![Portfolio Income Breakdown](https://raw.githubusercontent.com/mphinance/mphinance/main/docs/substack/musings/assets/portfolio_income_breakdown.png)
 
 ---
 
@@ -210,16 +210,16 @@ We are buying **NVII** for our $250 Itch Slot this month, securing a 36% distrib
 
 I verified these numbers using actual per-share distribution data and the real REX distribution rates from their fund page (as of April 13, 2026). The core basket math is the same regardless of which scenario you pick. The variable is how much you allocate to the Itch Slot and which ticker you load.
 
-**Tier 1 — Core Basket (equal weight, monthly dividends):**
+**Tier 1: Core Basket (equal weight, monthly dividends):**
 
 - SGOV: ~3.5% yield
 - QQQI: ~13.8% yield
 - IWMI: ~13.0% yield
 - USAI: ~4.2% yield
 
-**Tier 2 — GLDY Satellite: $250, ~30% yield**
+**Tier 2: GLDY Satellite - $250, ~30% yield**
 
-**Tier 3 — Itch Slot: Varies by allocation and ticker**
+**Tier 3: Itch Slot - Varies by allocation and ticker**
 
 Here are the scenarios, from conservative to "let's see what happens":
 
@@ -260,7 +260,7 @@ You underperform QQQ, flat out. QQQI caps your upside because of the covered cal
 This is where the portfolio shines. When growth investors are complaining about their accounts going nowhere for 6 months, you're quietly collecting 8-10% annualized yields and auto-reinvesting at a discount. The Itch Slot (especially Roundhill funds) thrives in chop by extracting weekly premiums.
 
 **What if inflation spikes again?**
-SGOV yields lag but will eventually adjust as the Fed hikes. USAI is a natural inflation hedge—pipelines pass costs down the line. Gold (GLDY) historically acts as a safe haven when fiat gets weird.
+SGOV yields lag but will eventually adjust as the Fed hikes. USAI is a natural inflation hedge: pipelines pass costs down the line. Gold (GLDY) historically acts as a safe haven when fiat gets weird.
 
 **What if there's a 20% market correction?**
 Your equity positions (QQQI, IWMI) will bleed, though slightly less than the underlying indexes due to the option premiums softening the blow. USAI will take a hit. SGOV ($2,375) will act as an anchor, barely moving. Your $10,000 might drop to $8,500, but the dividend machine keeps spitting out cash, buying more shares at the lows.
