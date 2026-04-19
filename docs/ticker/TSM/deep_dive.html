@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSM Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for TSM.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/TSM/chart/" target="_blank">TSM</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Technology &#xB7; Semiconductors &#xB7; 2026-04-18</div>
+  </div>
+  <div>
+    <div class="pr">$370.5</div>
+    <div class="ch pos">+1.97%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[TSM] Deep Dive: The Silicon Sovereign in the AI Empire</h2>
+<p><strong>Date:</strong> 2026-04-18</p>
+<p><strong>Price:</strong> ~$370.5 | <strong>Verdict:</strong> Strong Buy</p>
+
+<p>If you think TSM is just another chipmaker, you're looking at the wrong ledger. This isn't just a stock; it's the foundational bedrock upon which the entire AI revolution is being built.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market often sees Taiwan Semiconductor Manufacturing Company (TSM) as a sophisticated contract manufacturer, a foundry that takes designs and spits out silicon. While technically true, this view is dangerously myopic. The reality is TSM isn't just <em>a</em> foundry; it is <em>the</em> foundry, holding an indispensable chokehold on the most advanced semiconductor manufacturing processes critical for AI, high-performance computing, and next-gen mobile devices.</p>
+
+<p>Consider this: almost every chip that powers the generative AI explosion – from NVIDIA's GPUs to Apple's cutting-edge processors – starts its life in a TSM fab. They aren't just partners; they are essential collaborators in R&D, pushing the boundaries of physics and engineering. This isn't a commodity business; it's a technological arms race where TSM consistently leads, rendering its competition perpetually a step behind, or worse, unable to compete at the bleeding edge.</p>
+
+<p>The market sometimes frets about geopolitical risks or CapEx cycles, treating TSM like a cyclical industrial giant. But this misunderstanding ignores their unique position of technological dominance, pricing power, and strategic importance that transcends typical industry dynamics. TSM is not just participating in the AI boom; it's <em>enabling</em> it. You want to bet on AI? You bet on the one company that every major AI player <em>must</em> rely on.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<p>Let's talk brass tacks. These aren't just good numbers; they're the kind of stats that make other companies blush:</p>
+
+<ul>
+<li><strong>Revenue Growth:</strong> A staggering <strong>35.1%</strong>. In the semiconductor space, leading with this kind of top-line expansion signals robust demand and market share gains, not just riding a wave but creating one.</li>
+<li><strong>Profit Margin:</strong> An eye-watering <strong>46.5%</strong>. This isn't just efficient; it's evidence of significant pricing power and technological leverage. TSM isn't just making chips; they're printing money.</li>
+<li><strong>P/E Ratio:</strong> <strong>31.86x</strong>. Looks high? Hold your horses.</li>
+<li><strong>Forward P/E Ratio:</strong> A much more palatable <strong>19.35x</strong>. This aggressive compression in the forward P/E screams anticipated growth and strong future earnings, validating the current premium as a forward-looking bargain.</li>
+</ul>
+
+<p>TSM is a growth engine with fortress-like profitability, trading at a forward multiple that significantly undervalues its market dominance and future potential.</p>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>AI's Indispensable Architect:</strong> TSM is the exclusive, or near-exclusive, manufacturer for the most advanced AI accelerators and CPUs from companies like NVIDIA, AMD, and Apple. As AI demand explodes, TSM's order books swell, guaranteeing robust revenue streams for years. They are the ultimate "picks and shovels" play for the AI gold rush.</li>
+<li><strong>Advanced Node Leadership & Pricing Power:</strong> TSM's relentless innovation in 3nm, 2nm, and beyond solidifies its technological moat. This isn't just about being first; it's about being <em>the only one</em> capable of mass-producing at these nodes with high yields. This technological lead gives them unparalleled pricing power, directly contributing to those fat profit margins.</li>
+<li><strong>Diversified Demand & Market Expansion:</strong> Beyond AI, TSM benefits from the continued proliferation of 5G, IoT, and high-performance computing across diverse industries. This broad demand base cushions against single-sector volatility, providing multiple avenues for growth.</li>
+<li><strong>Analyst Conviction:</strong> The street largely agrees, with an average analyst target price of <strong>$457.73</strong>. This implies a significant upside from current levels, reflecting professional consensus on TSM's dominant position and growth trajectory.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Geopolitical Tensions:</strong> The elephant in the room. Taiwan's geopolitical status with mainland China remains a persistent, if currently low-probability, tail risk. While the global reliance on TSM's fabs offers some deterrent, it cannot be entirely dismissed.</li>
+<li><strong>Intensified Competition & CapEx:</strong> Intel Foundry Services (IFS) and Samsung are aggressively investing to catch up in advanced nodes. While TSM currently holds a substantial lead, a prolonged and successful push by competitors could eventually erode some market share or pricing power. TSM's own massive CapEx requirements are also a constant drain on cash.</li>
+<li><strong>Global Semiconductor Cyclicality:</strong> While AI provides a strong secular tailwind, the broader semiconductor market is still susceptible to macroeconomic downturns. A severe global recession could impact demand for consumer electronics and other non-AI chips, even if advanced nodes remain robust.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+<p>TSM's chart is singing a bullish tune louder than a rock concert, but with a few high notes to watch:</p>
+
+<ul>
+<li><strong>EMA Stack:</strong> FULL BULLISH. The 8-EMA ($366.15) is above the 21-EMA ($356.44), which is above the 34-EMA ($352.46). This textbook alignment indicates strong short-to-medium term upward momentum.</li>
+<li><strong>SMAs:</strong> The SMA 50 at $353.74 reinforces the bullish posture, sitting comfortably below current price. The SMA 200 is effectively non-existent at these levels or well below, signifying the powerful, extended rally.</li>
+<li><strong>Trend:</strong> Clearly <strong>Bullish</strong>, confirmed by a recent <strong>Golden Cross</strong>. This is the kind of signal institutional money loves.</li>
+<li><strong>RSI(14):</strong> Clocking in at <strong>70.82</strong>. This is in overbought territory, suggesting that while momentum is strong, a short-term pullback or consolidation to relieve this pressure wouldn't be surprising, and might even be healthy.</li>
+<li><strong>ADX:</strong> At <strong>22.08</strong>, indicating a moderate but strengthening trend. It's not yet screaming "parabolic," which means there's still room to run without being excessively stretched.</li>
+<li><strong>Pivots:</strong> Current price ~$370.5 sits between R1 ($368.85) and R2 ($374.35).</li>
+<li><strong>Resistance:</strong> R1 ($368.85) has been overcome, next target is R2 ($374.35).</li>
+<li><strong>Support:</strong> PP ($364.7), S1 ($359.2), S2 ($355.05). These are key levels to watch on any pullback.</li>
+<li><strong>ATR:</strong> <strong>13.05</strong>. TSM moves, so expect volatility.</li>
+<li><strong>Relative Volume:</strong> <strong>1.33x</strong>. Higher-than-average volume confirms conviction behind recent moves.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+<p>TSM is in full beast mode, but smart money doesn't chase blindly. Here's how Sam the Ghost plays it:</p>
+
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>If TSM consolidates briefly then pushes cleanly above R2 at <strong>$374.35</strong> on strong volume (relative volume > 1.5x), this indicates fresh momentum.</p>
+<ul>
+<li><strong>Entry:</strong> Long above $374.5, confirming the break.</li>
+<li><strong>Target:</strong> Look for a move towards the 52-week high of $389.11, with potential to push past $400.</li>
+<li><strong>Stop Loss:</strong> A clean close back below $370 (above R1) or $368.85 (R1 itself) would invalidate the immediate breakout.</li>
+</ul>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Given the elevated RSI (70.82), a healthy pullback is the <em>preferred</em> entry. Look for a retest of key moving averages or pivot support.</p>
+<ul>
+<li><strong>Entry:</strong> Scale in on dips towards the 8-EMA (~$366.15), the Pivot Point (~$364.7), or ideally S1 (~$359.2) where you have multiple confluence levels. A deeper dip towards the 21-EMA (~$356.44) or the SMA 50 (~$353.74) would be an even sweeter spot. Wait for signs of buyers stepping in (e.g., bullish candlestick formations).</li>
+<li><strong>Target:</strong> Initial target is recapturing previous highs, then R2 ($374.35) and beyond.</li>
+<li><strong>Stop Loss:</strong> A break and close below S2 ($355.05) or the 34-EMA ($352.46) could signal a deeper correction.</li>
+</ul>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>While bullish, no stock goes up in a straight line. If TSM loses the critical EMA stack and key pivot supports, the bullish thesis is temporarily invalidated.</p>
+<p><em>   <strong>Entry:</strong> Consider hedging or taking profits if TSM breaks and sustains below the 34-EMA ($352.46) </em>and* S2 ($355.05) on increased volume.</p>
+<ul>
+<li><strong>Target:</strong> A deeper correction towards $330-$340 levels, possibly testing the range lows or where the SMA 200 (if active) might eventually form.</li>
+<li><strong>Stop Loss:</strong> If price recovers above the 34-EMA, signaling the trend is back on.</li>
+</ul>
+
+<h3>🏁 Final Verdict</h3>
+<p>TSM is the undisputed king of silicon, an indispensable engine powering the AI revolution, and is trading at a discount given its forward growth. Expect a multi-year secular bull run, targeting north of <strong>$450</strong>.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">43.6%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">45.8%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">1</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BULLISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$349.70</div><div class="ma-d pos">+5.9%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$353.74</div><div class="ma-d pos">+4.7%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$331.61</div><div class="ma-d pos">+11.7%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BULLISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$366.15</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$356.44</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$352.46</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neg">71</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">83/82</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm pos">+3.13</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">22.1</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$265.35</span><span>$370.5 (85%)</span><span>$389.11</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:85%"></div><div class="rng-dot" style="left:85%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$359.90</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$341.83</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$327.23</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$312.63</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$375.44</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$323.96</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$13.05</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">1.33x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$374.35 &#xB7; R1=$368.85 &#xB7; PP=$364.70 &#xB7; S1=$359.20 &#xB7; S2=$355.05
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">Taiwan Semiconductor Manufacturing Company Limited</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$1921.56B</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">76,907</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NYQ</div></div>
+      </div>
+      <div class="fd-desc">Taiwan Semiconductor Manufacturing Company Limited, together with its subsidiaries, manufactures, packages, tests, and sells integrated circuits and other semiconductor devices in Taiwan, China, Europe, the Middle East, Africa, Japan, the United States, and internationally. It provides various wafer fabrication processes, such as processes to manufacture complementary metal- oxide-semiconductor (CMOS) logic, mixed-signal, radio frequency, embedded memory, bipolar CMOS mixed-signal, and others. The company also involved in providing customer and engineering support services; manufacturing of masks; investment in technology start-up companies; research, designing, developing, manufacturing, packaging, testing, and sale of color filters; and investment activities.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://www.tsmc.com" target="_blank" style="color:#00f3ff">https://www.tsmc.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-mid">55</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-hi">100</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-hi">82</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">90</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">31.86</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">19.35</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">0.47</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">56.67</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">2.55</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">1.23</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 1.77 &middot; P/FCF: 2.7</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v pos">+35.1%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v pos">+58.4%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v pos">+58.3%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$98.92</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">61.9%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v pos">58.1%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v pos">46.5%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v pos">36.2%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v pos">17.3%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">1.25</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm pos">2.49</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">17.1</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$1016.27B</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$3383.60B</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$721.56B</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$2348.38B</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">0.95%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">$3.51</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">27.9%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">2026-06-11</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (18 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$351.00</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$452.50</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$600.00</div></div>
+        </div>
+        <div class="est-labels"><span>$351</span><span>Current $370</span><span>$600</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:8%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">STRONG_BUY</span> &middot; Mean Target: $457.73</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-04-18 08:57 PM CST</div>
+</div>
+</body>
+</html>

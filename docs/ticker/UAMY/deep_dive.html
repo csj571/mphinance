@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UAMY Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for UAMY.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/UAMY/chart/" target="_blank">UAMY</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Basic Materials &#xB7; Other Industrial Metals & Mining &#xB7; 2026-04-18</div>
+  </div>
+  <div>
+    <div class="pr">$10.57</div>
+    <div class="ch pos">+1.44%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[UAMY] Deep Dive: The Unprofitable Growth Story with Golden Technicals</h2>
+<p><strong>Date:</strong> 2026-04-18</p>
+<p><strong>Price:</strong> ~$10.57 | <strong>Verdict:</strong> Speculative Buy</p>
+
+<p>Strap in, retail rebels. We're diving into UAMY, a name that's serving up a cocktail of massive revenue growth yet no profits, all while its chart screams "bullish." This isn't your grandma's value stock; it's a high-octane bet on future potential.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market often sees UAMY as a risky, unprofitable basic materials play. A quick glance at the -11.1% profit margin and an 81.31x forward P/E would send most traditional investors running for the hills. They see the red ink, the long road to profitability, and the inherent volatility of the mining sector. It's perceived as a speculative gamble, lacking the stable fundamentals Wall Street typically craves.</p>
+
+<p>However, that's just one side of the coin. The reality for UAMY is a company undergoing explosive transformation, evidenced by a staggering 131.4% revenue growth. This isn't just noise; it's a clear signal of burgeoning demand for its products, likely critical industrial metals or minerals pivotal to emerging technologies. While profitability lags, the company is aggressively scaling, investing in future capacity, and positioning itself within a sector experiencing significant tailwinds. The charts are picking up on this underlying momentum, screaming "full bullish" even if the P&L isn't quite there yet.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<p>UAMY, currently at a <strong>$1.52B Market Cap</strong>, is a mid-cap player in the Basic Materials sector. The headline number that slaps you in the face is a mind-blowing <strong>131.4% Revenue Growth</strong>. This isn't just growth; it's hyper-growth, indicating a strong ramp-up in operations or demand.</p>
+
+<p>Now, for the "but": the <strong>Profit Margin sits at -11.1%</strong>. Yes, it's unprofitable <em>right now</em>. This translates to a <strong>P/E of "None,"</strong> as there are no earnings to calculate it against. However, future expectations are high, with a <strong>Forward P/E of 81.31x</strong>, suggesting analysts anticipate significant profitability down the line to justify that multiple. The <strong>Beta is a super low 0.1</strong>, meaning it dances to its own drum, largely uncorrelated with broader market swings – a double-edged sword that provides diversification but might also miss out on general market tailwinds.</p>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Explosive Revenue Growth (131.4%):</strong> This isn't just a slight uptick; it's a full-blown demand surge. For a basic materials company, this points to strong market adoption or critical necessity for its output, positioning UAMY for future market dominance once scale is achieved.</li>
+<li><strong>Golden Technical Momentum:</strong> The chart is a beauty. We're sporting a <strong>FULL BULLISH EMA stack (8:$9.76, 21:$9.3, 34:$9.15)</strong> and a confirmed <strong>Golden Cross</strong>. This isn't just short-term bounce; it signals a robust, sustained uptrend. RSI(14) at 62.85 suggests plenty of room to run before becoming overbought.</li>
+<li><strong>Significant Valuation Gap:</strong> Despite the current price, analysts see substantial upside. The stock is currently valued at <strong>FAIR VALUE with a 19.8% gap to its target of $12.67</strong>. This isn't just speculative hopium; it's a data-backed price target from the Street.</li>
+<li><strong>Strategic Sector Play:</strong> As a Basic Materials company, UAMY is inherently exposed to critical industrial metals or minerals. With global trends like electrification, infrastructure development, and renewable energy, demand for such materials is only set to skyrocket, providing a long-term structural tailwind.</li>
+</ol>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Profitability Roadblock:</strong> That <strong>-11.1% profit margin</strong> and sky-high <strong>Forward P/E of 81.31x</strong> are stark reminders that UAMY is a growth story yet to translate into consistent earnings. Failure to reach profitability as projected could lead to significant downside re-rating.</li>
+<li><strong>Commodity Price Volatility:</strong> Operating in basic materials means UAMY's fortunes are heavily tied to the volatile swings of commodity prices. A downturn in the specific metals or minerals it produces could quickly erode revenue and further delay the path to profitability.</li>
+<li><strong>Project Execution and Capital Intensity:</strong> Mining and materials projects are inherently capital-intensive and fraught with operational risks, from geological surprises to regulatory hurdles and environmental concerns. Delays or cost overruns could strain cash flow and investor confidence.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+<p>The charts for UAMY are screaming bullish. We're currently trading around <strong>$10.57</strong>, firmly above all key short-term moving averages. The <strong>EMA stack is FULL BULLISH</strong>, with the 8-day EMA ($9.76) above the 21-day ($9.3), which is above the 34-day ($9.15) – a textbook sign of strong upward momentum. Furthermore, a <strong>Golden Cross</strong> confirms a bullish long-term trend, even without a visible SMA 200 (suggesting this trend is relatively young or highly aggressive).</p>
+
+<p>The <strong>SMA 50 is at $8.95</strong>, acting as a crucial intermediate-term support. The <strong>RSI(14) at 62.85</strong> is healthy, showing strength without being overbought, indicating there's still fuel in the tank for further upside. <strong>ADX at 16.7</strong> suggests the trend is present but not yet parabolic, which is good for sustainability.</p>
+
+<p>Looking at pivots, we're currently just below the <strong>Pivot Point (PP) at $10.59</strong>. Immediate resistance is at <strong>R1=$10.81</strong>, followed by <strong>R2=$11.21</strong>. On the support side, <strong>S1 is at $10.19</strong> and <strong>S2 is at $9.97</strong>. The <strong>ATR is $0.92</strong>, giving us a good gauge of daily volatility for setting stops. Relative volume is near average at <strong>0.95x</strong>.</p>
+
+<h3>📝 Trading Playbook</h3>
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>If UAMY can decisively clear the R1 pivot at <strong>$10.81</strong>, that's your signal. Look for sustained buying interest to confirm. A move above here opens the door to <strong>R2 at $11.21</strong>, potentially heading towards the analyst target of $12.67. Place a tight stop just below $10.59 (PP) to manage risk.</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Given the strong technicals, a pullback to key support is often the best entry. Watch for a retest of the 8-day EMA around <strong>$9.76</strong> or the S1 support level at <strong>$10.19</strong>. This area should provide solid support for an entry. Target the analyst price target of <strong>$12.67</strong>. A sensible stop would be just below the SMA 50 at <strong>$8.95</strong>, which would signal a potential trend failure.</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>If UAMY drops below the key short-term moving averages and breaches the <strong>SMA 50 at $8.95</strong>, the bullish trend is likely broken. A close below this level would be a strong sell signal, potentially leading to further downside towards the 52W low of $4.36 (though that's a long way off). Exit positions to protect capital, as the growth story would be losing its technical backing.</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>UAMY is a high-growth, speculative play with a killer technical setup, poised to break higher if it maintains momentum and continues its path to profitability. Price target: <strong>$12.67</strong>.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">116.9%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">128.3%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">1</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BULLISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$9.01</div><div class="ma-d pos">+17.3%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$8.95</div><div class="ma-d pos">+18.1%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$7.94</div><div class="ma-d pos">+33.1%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BULLISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$9.76</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$9.30</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$9.15</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">63</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">76/86</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm pos">+0.23</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">16.7</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$4.36</span><span>$10.57 (66%)</span><span>$13.84</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:66%"></div><div class="rng-dot" style="left:66%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$11.60</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$10.22</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$9.10</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$7.98</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$10.93</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$7.09</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$0.92</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">0.95x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$11.21 &#xB7; R1=$10.81 &#xB7; PP=$10.59 &#xB7; S1=$10.19 &#xB7; S2=$9.97
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">United States Antimony Corporation</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$1.52B</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">100</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NYQ</div></div>
+      </div>
+      <div class="fd-desc">United States Antimony Corporation produces and sells antimony, zeolite, and precious metals in the United States and Canada. It operates in two segments: Antimony and Zeolite. The company offers antimony trioxide that is primarily used in conjunction with a halogen to form a synergistic flame retardant system for plastics, rubber, fiberglass, textile goods, paints, coatings, and paper, as well as color fastener in paints and as a phosphorescent agent in fluorescent light bulbs; antimony metal for use in bearings, storage batteries, and ordnance; and antimony trisulfide used as a primer in ammunition.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://www.usantimony.com" target="_blank" style="color:#00f3ff">https://www.usantimony.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-lo">0</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-hi">100</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-lo">30</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">90</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">N/A</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">81.31</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">38.60</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">10.49</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">-193.77</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">N/A</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 37.67 &middot; P/FCF: N/A</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v pos">+131.4%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v pos">+0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v pos">+0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$0.32</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">25.2%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v neg">-29.6%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v neg">-11.1%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v neg">-5.1%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v neg">-5.9%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">0.10</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm pos">5.38</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">0.2</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$243,531</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$35.07M</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$-35,435,596</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$-9,690,993</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">0.00%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">N/A</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">N/A</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (3 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$11.50</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$13.00</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$13.50</div></div>
+        </div>
+        <div class="est-labels"><span>$12</span><span>Current $11</span><span>$14</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:0%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">STRONG_BUY</span> &middot; Mean Target: $12.67</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-04-18 09:06 PM CST</div>
+</div>
+</body>
+</html>

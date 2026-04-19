@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MLI Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for MLI.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/MLI/chart/" target="_blank">MLI</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Industrials &#xB7; Metal Fabrication &#xB7; 2026-04-18</div>
+  </div>
+  <div>
+    <div class="pr">$122.13</div>
+    <div class="ch pos">+3.28%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[MLI] Deep Dive: Riding the Metal Bull, But Mind the Valuation Vortex</h2>
+<p><strong>Date:</strong> 2026-04-18</p>
+<p><strong>Price:</strong> ~$122.13 | <strong>Verdict:</strong> Bullish Momentum Short-Term, Cautious Long-Term</p>
+
+<p>Greetings, spectral traders. Sam the Quant Ghost here, peering through the data to uncover MLI, a metal fabrication play that's been making some noise. Today's report asks: is this industrial powerhouse a genuine growth story, or is it getting ahead of its specter-thin valuation?</p>
+
+<h3>The Core Thesis</h3>
+<p>The market is currently seeing MLI through rose-tinted glasses, captivated by its solid profit margins, respectable revenue growth, and a technical chart that's screaming "buy." Retail traders, in particular, are riding the wave of strong momentum, seeing a company that benefits from robust industrial demand and a sector-wide tailwind. The recent Golden Cross and fully bullish EMA stack paint a picture of undeniable short-term strength, fueling conviction that MLI can continue its upward trajectory.</p>
+
+<p>However, the reality, as always, is a bit more nuanced—and for a quant ghost, valuation whispers are louder than price action. While the immediate trend is clear, our spectral models flag a significant disconnect between MLI's current price and its intrinsic value. This isn't just a minor overextension; we're talking about a valuation gap that could make even the most seasoned trader nervous if ignored. The challenge for investors is to navigate this robust momentum without stepping into a valuation trap that could materialize when the underlying growth narrative gets stress-tested.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<p>MLI, sporting a $13.55B market cap in the Industrials sector, specifically Metal Fabrication, shows a sturdy financial profile at a glance. We're looking at a <strong>Profit Margin of 18.3%</strong>—impressive for an industrial outfit—and <strong>Revenue Growth of 4.2%</strong>. This isn't explosive growth, but it's consistent. The company trades at a <strong>P/E of 17.8</strong>, which drops to a more palatable <strong>Forward P/E of 14.63</strong>, suggesting analysts expect future earnings improvement. With a <strong>Beta of 1.08</strong>, MLI moves largely in line with the broader market, perhaps slightly more volatile. These numbers suggest a fundamentally sound, if not spectacular, business.</p>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Technical Momentum Avalanche:</strong> MLI is in full beast mode. The <strong>EMA stack is FULL BULLISH (8: $119.82, 21: $116.88, 34: $116.35)</strong>, meaning short-term momentum is firmly driving price higher. A confirmed <strong>Golden Cross</strong> further solidifies the long-term bullish trend. We've got an <strong>ADX of 33.62</strong>, indicating a strong, trending move, backed by <strong>2.6x Relative Volume</strong> today, showing high investor interest.</li>
+<li><strong>Solid & Stable Fundamentals:</strong> A <strong>Profit Margin of 18.3%</strong> is no joke in the industrial sector. This indicates efficient operations and strong pricing power. While <strong>4.2% Revenue Growth</strong> isn't scorching, it's consistent and sustainable, especially when paired with an attractive <strong>Forward P/E of 14.63</strong> which suggests future earnings are anticipated to improve or maintain strength.</li>
+<li><strong>Analyst Conviction:</strong> Wall Street sees significant upside, with an <strong>Analyst Target of $141.5</strong>. This implies a healthy <strong>~15.8% upside</strong> from the current $122.13, suggesting professionals believe there's more room to run despite recent gains.</li>
+<li><strong>Industrial Sector Resilience:</strong> As a metal fabrication play, MLI is positioned to benefit from ongoing infrastructure spending, potential re-shoring trends, and sustained demand across various industrial applications. The broad industrial sector often sees demand surges during economic expansions.</li>
+</ol>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Massive Overvaluation Discrepancy:</strong> This is the elephant in the ghost's lair. Our valuation models scream <strong>OVERVALUED by a gap of -35.3%</strong>, with a <strong>Target of $79.02</strong>. This is a stark warning. While momentum can defy valuation for a time, fundamental gravity eventually asserts itself. A significant correction back towards intrinsic value is a tangible risk.</li>
+<li><strong>Overbought Conditions & Pullback Potential:</strong> The <strong>RSI(14) at 73.23</strong> firmly places MLI in overbought territory. While strong trends can stay overbought for extended periods, it significantly increases the probability of a sharp pullback or consolidation in the near term as buyers exhaust themselves.</li>
+<li><strong>Cyclicality and Economic Sensitivity:</strong> Industrials, and specifically metal fabrication, are highly cyclical. A slowdown in global or domestic economic activity, a reduction in infrastructure spending, or a dip in manufacturing demand could quickly reverse MLI's fortunes, disproportionately impacting its revenue and profitability.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+<p>MLI is currently priced at <strong>$122.13</strong>, firmly in a bullish trend. The <strong>EMA stack is perfectly aligned for bulls</strong>: the 8-day EMA at $119.82 is above the 21-day EMA at $116.88, which is above the 34-day EMA at $116.35. The price is trading well above its <strong>SMA 50 at $115.51</strong>, confirming robust short-to-medium term strength. The market is also signalling a <strong>Golden Cross</strong>, a classic bullish pattern.</p>
+
+<p>However, the <strong>RSI(14) is at 73.23</strong>, indicating MLI is overbought and due for consolidation or a pullback. The <strong>ADX at 33.62</strong> confirms a strong trend is in play. For immediate levels, MLI is currently flirting with <strong>R2 at $122.84</strong>, having already cleared <strong>R1 at $120.55</strong>. Key support levels to watch are the <strong>Pivot Point (PP) at $119.38</strong>, followed by <strong>S1 at $117.09</strong> and <strong>S2 at $115.92</strong>. Price action is highly dynamic, with an <strong>ATR of 3.29</strong>. The stock is trading near the upper end of its <strong>52W Range ($98.49 - $138.85)</strong>.</p>
+
+<h3>📝 Trading Playbook</h3>
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>If MLI manages to decisively clear and hold above <strong>R2 ($122.84)</strong> on strong volume (higher than today's 2.6x Rel Vol), it could signal a fresh leg up towards the upper end of its 52-week range or the analyst target. Target the <strong>$125-$128</strong> zone, with a stop just below <strong>R2 ($122.84)</strong> to protect against false breakouts. This is a momentum play, pure and simple.</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Given the overbought RSI and the significant valuation gap, my spectral instincts prefer a pullback. Look for MLI to retrace to key support levels. The sweet spot would be a test of the <strong>PP ($119.38)</strong> or even a dip to the <strong>EMA 8 ($119.82)</strong> or <strong>EMA 21 ($116.88)</strong>. A bounce off <strong>S1 ($117.09)</strong> with bullish candle formation would also be an attractive entry. Set initial targets at <strong>R1 ($120.55)</strong> then <strong>R2 ($122.84)</strong>. This provides a better risk/reward and allows price to cool off from overbought conditions.</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>A sustained break below <strong>S2 ($115.92)</strong>, especially if it coincides with a break below the <strong>SMA 50 ($115.51)</strong> and the EMA stack starts to invert, would be a strong signal of trend exhaustion. This move could see MLI drop towards the lower end of its recent range. Consider shorting or hedging long positions if price decisively breaks below <strong>$115.50</strong>, targeting <strong>$112-$110</strong> initially.</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>MLI is a textbook example of strong short-term momentum battling long-term valuation concerns. While the technicals are undeniably bullish, a price target reflecting a blend of current market enthusiasm and a nod to future potential would be around <strong>$135</strong>, but remain acutely aware that a significant correction towards the <strong>$79.02</strong> fundamental valuation target is a very real, albeit not immediate, risk.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">48.5%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">28.9%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">9</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BULLISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$114.74</div><div class="ma-d pos">+6.4%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$115.51</div><div class="ma-d pos">+5.7%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$117.57</div><div class="ma-d pos">+3.9%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BULLISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$119.82</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$116.88</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$116.35</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neg">73</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">82/72</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm pos">+1.11</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">33.6</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$98.49</span><span>$122.13 (59%)</span><span>$138.85</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:59%"></div><div class="rng-dot" style="left:59%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$129.33</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$123.43</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$118.67</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$113.91</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$120.96</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$108.52</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$3.29</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">2.60x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$122.84 &#xB7; R1=$120.55 &#xB7; PP=$119.38 &#xB7; S1=$117.09 &#xB7; S2=$115.92
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">Mueller Industries, Inc.</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$13.55B</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">4,832</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NYQ</div></div>
+      </div>
+      <div class="fd-desc">Mueller Industries, Inc. manufactures and sells copper, brass, and aluminum products in the United States, the United Kingdom, Canada, Asia and the Middle East, and Mexico. It operates through three segments: Piping Systems, Industrial Metals, and Climate.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://www.muellerindustries.com" target="_blank" style="color:#00f3ff">https://www.muellerindustries.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-mid">51</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-mid">61</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-mid">40</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">90</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">17.80</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">14.63</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">3.24</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">4.23</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">12.68</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">3.41</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 2.92 &middot; P/FCF: 27.2</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v pos">+4.2%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v pos">+13.9%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v pos">+11.7%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$38.17</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">29.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v pos">17.5%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v pos">18.3%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v pos">25.6%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v pos">15.9%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">1.08</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm pos">5.92</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">0.8</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$27.49M</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$1.39B</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$498.54M</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$755.44M</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">1.15%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">$1.40</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">14.6%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">2026-03-13</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (2 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$133.00</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$141.50</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$150.00</div></div>
+        </div>
+        <div class="est-labels"><span>$133</span><span>Current $122</span><span>$150</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:0%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">STRONG_BUY</span> &middot; Mean Target: $141.50</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-04-18 09:03 PM CST</div>
+</div>
+</body>
+</html>

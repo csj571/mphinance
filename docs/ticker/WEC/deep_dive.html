@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WEC Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for WEC.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/WEC/chart/" target="_blank">WEC</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Utilities &#xB7; Utilities - Regulated Electric &#xB7; 2026-04-18</div>
+  </div>
+  <div>
+    <div class="pr">$115.87</div>
+    <div class="ch neg">-0.48%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[WEC] Deep Dive: Steady Currents, Shaky Valuation?</h2>
+<p><strong>Date:</strong> 2026-04-18 | <strong>Price:</strong> ~$115.87 | <strong>Verdict:</strong> Hold, but Watch for Pullbacks</p>
+
+<p>Today, WEC Energy Group, the reliable utility titan, is floating slightly lower (-0.48%), hinting at a moment of market indecision. But beneath the surface, Sam the Quant Ghost smells a deeper conflict brewing: solid fundamentals and bullish technicals are duking it out with a valuation model screaming "overpriced."</p>
+
+<h3>The Core Thesis</h3>
+<p>The market often sees WEC as the quintessential "widow and orphan" stock – boring, stable, and a safe haven. And at first glance, they're not wrong. This is a regulated electric utility, meaning predictable cash flows, steady dividends, and a low Beta (0.53) that laughs in the face of market volatility. It’s the kind of stock you buy, tuck away, and forget about… mostly.</p>
+
+<p>However, the "reality" for WEC is more nuanced. While the market is pricing in continued regulatory success and infrastructure investment, our models are flashing bright red. This stock is currently tagged as "OVERVALUED" with a whopping -29.9% gap to its intrinsic value, implying a target closer to $81.25. So, while the street might be chasing the stability and dividend yield, we need to ask: are we paying too high a premium for that peace of mind? The tension between reliable income and an inflated price tag is the core battleground for WEC.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<p>Let's cut to the chase with the digits that matter:</p>
+
+<ul>
+<li><strong>Market Cap:</strong> A substantial $37.74B. This isn't some small-cap gamble; it's a sector giant.</li>
+<li><strong>Revenue Growth:</strong> A robust 11.1%. For a utility, this isn't just steady – it’s impressive, suggesting successful rate cases or strong demand expansion.</li>
+<li><strong>Profit Margin:</strong> A healthy 15.9%. This indicates efficient operations and strong pricing power within its regulated environment.</li>
+<li><strong>P/E Ratio:</strong> A current P/E of 24.09, which drops to a more palatable 19.28 for the forward P/E. This suggests earnings are expected to grow, but 24x for a utility still raises eyebrows.</li>
+<li><strong>Beta:</strong> 0.53. In a market full of swings, WEC offers half the volatility, making it a defensive player par excellence.</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Regulatory Tailwinds & Infrastructure Spend:</strong> WEC operates in regulated environments, which, while limiting explosive growth, also grants predictable returns on approved infrastructure investments. Continued capital expenditure on grid modernization, renewable energy integration, and transmission projects provides a clear runway for earnings growth through rate base expansion.</li>
+<li><strong>Defensive Play in Volatile Markets:</strong> With a Beta of just 0.53, WEC acts as a concrete bunker when the broader market gets shaky. As economic uncertainty or geopolitical tensions rise, institutional money often rotates into these stable, dividend-paying utilities, providing a floor for the stock price.</li>
+<li><strong>Consistent Dividend Growth Potential:</strong> While not explicitly mentioned as a <em>growth</em> catalyst, WEC's strong profit margins and predictable cash flows allow for consistent dividend payouts and increases, attracting income-focused investors and potentially elevating its valuation multiple over time, assuming regulatory bodies play ball.</li>
+<li><strong>Analyst Conviction:</strong> Despite our valuation concerns, the analyst consensus target sits at $123.09, signaling that the Street sees further upside from current levels, largely driven by perceived stability and regulatory certainty.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Stretched Valuation (The Big One):</strong> Our models scream "OVERVALUED" with a gap of nearly -30%, implying a fair value of $81.25. The current P/E of 24.09, even with decent growth, is rich for a utility. Investors are paying a premium, and any hiccup could trigger a significant re-rating.</li>
+<li><strong>Interest Rate Sensitivity:</strong> Utilities are capital-intensive, relying heavily on debt financing for infrastructure projects. Rising interest rates increase borrowing costs, which can eat into profit margins if rate hikes aren't approved by regulators or if regulatory lag affects recovery.</li>
+<li><strong>Regulatory Headwinds:</strong> While regulated environments offer predictability, they also come with inherent risks. Unfavorable regulatory decisions regarding rate increase requests, cost recovery, or environmental compliance could severely impact WEC's profitability and future growth prospects.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+<p>Alright, let's get into the chart candy. WEC is trading around $115.87, slightly below its 8-period EMA of $116.26.</p>
+
+<ul>
+<li><strong>EMA Stack:</strong> It's a "FULL BULLISH" stack (8: $116.26, 21: $115.97, 34: $115.38). This is textbook bullish momentum, indicating that short-term average prices are ascending and properly ordered.</li>
+<li><strong>Trend:</strong> The "Golden Cross" confirms a long-term bullish trend, suggesting institutional buying and sustained upward pressure.</li>
+<li><strong>SMA 50:</strong> $115.15. This is acting as a dynamic support level, very close to where we are now.</li>
+<li><strong>RSI(14):</strong> At 56.02, it's sitting comfortably in bullish territory without being overbought. Plenty of room to run if momentum picks up.</li>
+<li><strong>Pivots:</strong> Current price ($115.87) is just above the Daily Pivot Point ($115.72).</li>
+<li><strong>Resistance:</strong> R1 at $117.24, R2 at $118.05. These are the immediate hurdles.</li>
+<li><strong>Support:</strong> S1 at $114.91, S2 at $113.39. These levels are critical for any pullback.</li>
+<li><strong>ATR:</strong> 1.9. Daily volatility is relatively low, meaning less dramatic swings.</li>
+<li><strong>Relative Volume:</strong> 0.67x. Today's volume is below average, which can lead to chop or make price moves less decisive.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>If WEC reclaims and holds above the 8-period EMA ($116.26) on increasing volume, look for a push towards <strong>R1 at $117.24</strong>. A decisive break of R1 could target <strong>R2 at $118.05</strong>, putting the 52-week high ($119.62) within sight. A tight stop loss below the Daily Pivot Point ($115.72) would be prudent.</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Given the strong EMA stack and Golden Cross, a healthy pullback could be an opportunity. Watch for a test of <strong>S1 ($114.91)</strong> or the <strong>SMA 50 ($115.15)</strong>. If either of these levels holds and shows signs of buyers stepping in (e.g., candlestick reversal patterns), consider an entry. Your target would be R1 ($117.24) and R2 ($118.05), with a stop below S2 ($113.39) to protect against further downside. This aligns with a cautious accumulation strategy given the valuation.</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>A clear break and close below <strong>S2 ($113.39)</strong> on heavy volume would indicate a potential trend reversal or a deeper correction. This would invalidate the bullish technicals and could see WEC heading towards its fundamental valuation target of $81.25. If long, this would be a mandatory stop-loss trigger. For the ultra-bearish, this could present a short opportunity with a target of $102.09 (52W Low) or even lower.</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>Hold, but with a wary eye. While institutional momentum could push WEC towards the $123.09 analyst target short-term, be warned: true fundamental value likely sits closer to $81.25.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">27.2%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">16.9%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">15</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">5%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BULLISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$115.53</div><div class="ma-d pos">+0.3%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$115.15</div><div class="ma-d pos">+0.6%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$110.81</div><div class="ma-d pos">+4.6%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BULLISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$116.26</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$115.97</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$115.38</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">56</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">31/38</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm neg">-0.15</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">15.8</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$102.09</span><span>$115.87 (79%)</span><span>$119.62</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:79%"></div><div class="rng-dot" style="left:79%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$115.48</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$112.92</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$110.86</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$108.79</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$119.61</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$111.45</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$1.90</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">0.67x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$118.05 &#xB7; R1=$117.24 &#xB7; PP=$115.72 &#xB7; S1=$114.91 &#xB7; S2=$113.39
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">WEC Energy Group, Inc.</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$37.74B</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">7,151</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NYQ</div></div>
+      </div>
+      <div class="fd-desc">WEC Energy Group, Inc., through its subsidiaries, provides regulated natural gas and electricity, and renewable and nonregulated renewable energy services in the United States. The company operates through Wisconsin, Illinois, Other States, Electric Transmission, and Non-Utility Energy Infrastructure segments. It generates and distributes electricity from coal, natural gas, oil, and nuclear, as well as renewable energy resources, including wind, solar, hydroelectric, and biomass; and distributes and hydroelectric natural gas.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://www.wecenergygroup.com" target="_blank" style="color:#00f3ff">https://www.wecenergygroup.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-mid">57</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-mid">44</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-lo">38</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">75</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">24.09</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">19.28</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">3.85</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">2.77</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">15.65</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">2.58</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 6.18 &middot; P/FCF: N/A</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v pos">+11.1%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v neg">-32.5%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v neg">-30.2%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$30.45</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">42.4%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v pos">21.3%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v pos">15.9%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v pos">11.6%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v pos">3.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">0.53</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm neg">0.59</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">159.3</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$22.39B</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$27.60M</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$-2,139,337,472</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$3.38B</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">3.29%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">$3.81</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">74.2%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">2026-05-14</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (17 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$108.00</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$125.00</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$140.00</div></div>
+        </div>
+        <div class="est-labels"><span>$108</span><span>Current $116</span><span>$140</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:25%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">BUY</span> &middot; Mean Target: $123.09</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-04-18 09:00 PM CST</div>
+</div>
+</body>
+</html>

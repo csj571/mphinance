@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WMT Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for WMT.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/WMT/chart/" target="_blank">WMT</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Consumer Defensive &#xB7; Discount Stores &#xB7; 2026-04-18</div>
+  </div>
+  <div>
+    <div class="pr">$127.5</div>
+    <div class="ch pos">+2.15%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[WMT] Deep Dive: The Trillion-Dollar Bargain Hunter or a Valuation Ghost Story?</h2>
+<p><strong>Date:</strong> 2026-04-18</p>
+<p><strong>Price:</strong> ~$127.5 | <strong>Verdict:</strong> ACCUMULATE</p>
+
+<p>Walmart (WMT) – the retail behemoth that practically invented discount shopping. But is this sleepy defensive giant quietly transforming, or is its recent momentum a phantom rally disconnected from reality? Let's dive in.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market often sees WMT as the quintessential defensive stock – a low-beta (0.66) fortress for your portfolio, a safe haven where consumers flock regardless of economic turbulence. It's the stable, dividend-paying giant synonymous with everyday low prices. And yes, at a monstrous $1016.48B market cap, it certainly fits the "giant" bill.</p>
+
+<p>However, beneath the surface of the brick-and-mortar legacy, Walmart is a company aggressively reinventing itself. It's pushing hard into e-commerce, digital advertising, and even healthcare, aiming to be far more than just a place to buy groceries and socks. This strategic pivot explains some of the enthusiasm, but the quant in me can't ignore the elephant in the room: WMT is currently trading at a P/E of 46.7 (Forward P/E 38.84). Our internal valuation screams <strong>OVERVALUED</strong> with a target of $59.81 – a staggering -53.1% gap. This isn't just a slight premium; it's a stark divergence. The big question is whether the market is truly seeing future growth the models miss, or if this is a classic case of momentum overriding fundamental sanity.</p>
+
+<h3>📊 The Numbers You Need</h3>
+
+<ul>
+<li><strong>Revenue Growth (5.6%):</strong> Solid for a company of this scale, indicating its ability to expand even from a massive base. It's not tech-level growth, but it's consistent.</li>
+<li><strong>Profit Margin (3.1%):</strong> Lean, as expected for a discount retailer. Every penny counts here, showcasing operational efficiency rather than pricing power.</li>
+<li><strong>P/E (46.7) & Forward P/E (38.84):</strong> This is where eyebrows raise. For a consumer defensive stock with these margins, these multiples are lofty. The market is clearly baking in significant future growth and profitability improvements.</li>
+<li><strong>Market Cap ($1016.48B):</strong> A trillion-dollar titan, demonstrating immense scale and market presence.</li>
+<li><strong>Beta (0.66):</strong> True to form, WMT is less volatile than the overall market, making it a defensive play in choppy waters.</li>
+<li><strong>Analyst Target ($136.44):</strong> The Street sees upside, about a 7% jump from current levels, suggesting continued belief in its transformation.</li>
+<li><strong>Valuation Target ($59.81):</strong> My ghost-sense, backed by hard numbers, puts fair value significantly lower. This is the specter haunting WMT's current price.</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+
+<ol>
+<li><strong>E-commerce & Omnichannel Dominance:</strong> Walmart isn't just competing with Amazon; it's building its own formidable digital fortress. Investments in Walmart+, delivery services, and expanding its online marketplace are driving significant growth. This isn't just about selling more online; it's about integrating physical and digital assets into a seamless, sticky customer experience.</li>
+<li><strong>Emerging Profit Centers (Walmart Connect & Health):</strong> Beyond traditional retail, Walmart is leveraging its massive customer data and store footprint to build new, high-margin revenue streams. Walmart Connect, its advertising business, is scaling rapidly, and its push into healthcare clinics and pharmacy services offers further diversification and margin expansion potential.</li>
+<li><strong>Defensive Moat in Economic Uncertainty:</strong> With a Beta of 0.66, WMT is a haven when the market gets shaky. In an inflationary or recessionary environment, consumers gravitate towards value, playing directly into Walmart's strength. This makes it an attractive defensive holding for portfolio stability.</li>
+<li><strong>International Growth & Innovation:</strong> Walmart isn't just a U.S. story. Its international ventures, particularly Flipkart in India, represent massive untapped growth potential in burgeoning economies, providing diversification beyond its mature domestic market.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+
+<ol>
+<li><strong>Exorbitant Valuation:</strong> This is the big one. Trading at a P/E of 46.7, when our valuation model spits out a target of $59.81, screams "overheated." The market is pricing in near-perfect execution and rapid, sustained growth that might be challenging for a company of this size, especially with thin 3.1% profit margins. A significant correction is a very real possibility if growth falters or the market reassesses its long-term potential.</li>
+<li><strong>Intense Competition & Margin Pressure:</strong> The retail landscape is brutal. Amazon looms large, Target is a fierce competitor, and regional players constantly nip at WMT's heels. This intense competition, combined with rising labor costs and supply chain complexities, will perpetually pressure Walmart's already slim profit margins.</li>
+<li><strong>Macroeconomic Headwinds:</strong> While defensive, Walmart isn't immune. Persistent inflation eroding consumer purchasing power, higher interest rates impacting capital expenditure, or a deeper recession could still dampen sales and force more aggressive discounting, further squeezing margins.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+
+<p>WMT is flexing some serious muscle right now. The price sits at ~$127.5, having moved 2.15% recently.</p>
+
+<ul>
+<li><strong>EMA Stack: FULL BULLISH!</strong> The 8-EMA ($125.74) is above the 21-EMA ($125.07), which is above the 34-EMA ($124.58). This is a strong short-term uptrend signal.</li>
+<li><strong>Golden Cross:</strong> Adding to the bullish conviction, WMT has achieved a Golden Cross, where a shorter-term moving average (implied here by the general "Bullish" trend data and often the 50-SMA crossing the 200-SMA, though 200-SMA isn't provided) crosses above a longer-term one. This is a classic long-term bullish indicator.</li>
+<li><strong>SMAs:</strong> The SMA 50 at $125.45 is acting as dynamic support, confirming the trend.</li>
+<li><strong>RSI(14): 60.06:</strong> Not overbought, meaning there's still room for upward momentum before it needs a breather.</li>
+</ul>
+<p><em>   <strong>ADX: 11.39:</strong> This is relatively low, indicating weak trend strength </em>despite* the bullish direction. This suggests the recent rally isn't yet in full "trend" mode, potentially hinting at consolidation or requiring a stronger catalyst to accelerate.</p>
+<ul>
+<li><strong>Pivots:</strong> Current price is above R2 ($126.88), suggesting strong immediate momentum. Resistance levels are cleared.</li>
+<li><strong>52W Range:</strong> At $127.5, WMT is nearing its 52-week high of $134.41, indicating upward pressure.</li>
+<li><strong>ATR: 2.88:</strong> Daily average true range suggests decent intraday volatility for trading opportunities.</li>
+<li><strong>Rel Vol: 1.29x:</strong> Higher than average volume shows increased interest and conviction in the recent price move.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>WMT has cleared its immediate resistances and is showing full bullish technicals. If it can breach and hold above the 52W high of $134.41 on strong volume, look for a continuation towards the analyst target of $136.44 and potentially higher. Consider entry on a confirmed daily close above $134.41. Stop-loss can be set just below R2 at $126.88.</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Given the strong underlying trend and bullish EMAs, a healthy pullback could offer a better entry, especially with that valuation overhang in mind. Look for a retest of the EMA stack (8-EMA at $125.74, 21-EMA at $125.07, or the SMA 50 at $125.45). The Pivot Point (PP) at $124.91 and S1 at $123.88 are also key support zones. A confirmed bounce off these levels, especially if RSI cools slightly, presents an attractive entry point for a swing trade or longer-term accumulation.</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>A clear break and daily close below S2 ($122.94), especially if accompanied by heavy selling volume and the EMAs flipping bearish, would signal trend failure. This would invalidate the current bullish structure and likely lead to a retest of the lower end of the 52W range ($98.48). While the extreme $59.81 valuation target seems unlikely to be hit short-term, such a break could ignite a broader re-evaluation of WMT's growth prospects versus its current price. Initiate a short or take profits if $122.94 fails.</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>WMT is a fascinating paradox: a transforming giant with bullish momentum, yet carrying a massive valuation premium that could become a serious headwind. I'm calling for <strong>ACCUMULATE</strong> with a near-term target of <strong>$135</strong>, but consider this a trade on momentum rather than deep value. Be acutely aware of the fundamental valuation gap and stay agile.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">26.2%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">23.1%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">0</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BULLISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$124.37</div><div class="ma-d pos">+2.5%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$125.45</div><div class="ma-d pos">+1.6%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$120.14</div><div class="ma-d pos">+6.1%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BULLISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$125.74</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$125.07</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$124.58</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">60</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">74/52</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm pos">+0.15</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">11.4</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$98.48</span><span>$127.5 (81%)</span><span>$134.41</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:81%"></div><div class="rng-dot" style="left:81%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$125.93</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$120.68</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$116.44</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$112.21</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$129.91</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$118.83</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$2.88</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">1.29x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$126.88 &#xB7; R1=$125.85 &#xB7; PP=$124.91 &#xB7; S1=$123.88 &#xB7; S2=$122.94
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">Walmart Inc.</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$1016.48B</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">2,100,000</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NMS</div></div>
+      </div>
+      <div class="fd-desc">Walmart Inc. engages in the operation of retail and wholesale stores and clubs, ecommerce websites, and mobile applications worldwide. The company operates through three segments: Walmart U.S., Walmart International, and Sam's Club U.S.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://www.stock.walmart.com" target="_blank" style="color:#00f3ff">https://www.stock.walmart.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-lo">4</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-mid">46</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-lo">27</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">90</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">46.70</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">38.84</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">1.43</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">10.20</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">24.55</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">4.68</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 1.51 &middot; P/FCF: 96.3</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v pos">+5.6%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v neg">-19.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v neg">-19.4%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$89.33</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">24.9%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v pos">4.6%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v pos">3.1%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v pos">21.8%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v pos">6.8%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">0.66</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm neg">0.79</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">64.4</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$68.43B</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$10.73B</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$10.55B</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$41.56B</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">0.78%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">$0.99</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">34.4%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">2026-05-08</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (41 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$62.00</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$138.00</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$150.00</div></div>
+        </div>
+        <div class="est-labels"><span>$62</span><span>Current $128</span><span>$150</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:74%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">STRONG_BUY</span> &middot; Mean Target: $136.44</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-04-18 09:04 PM CST</div>
+</div>
+</body>
+</html>

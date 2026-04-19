@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RDDT Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for RDDT.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/RDDT/chart/" target="_blank">RDDT</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Communication Services &#xB7; Internet Content & Information &#xB7; 2026-04-18</div>
+  </div>
+  <div>
+    <div class="pr">$163.8</div>
+    <div class="ch pos">+0.83%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[RDDT] Deep Dive: The Front Page of the Internet's High-Beta Gamble</h2>
+<p><strong>Date:</strong> 2026-04-18</p>
+<p><strong>Price:</strong> ~$163.8 | <strong>Verdict:</strong> Cautious Bullish (Long-term)</p>
+
+<p>Reddit, the internet's quirky town square, has delivered explosive growth, but its chart is flashing more red than a r/wallstreetbets YOLO post right now. Is this a golden opportunity or a classic pump-and-dump setup?</p>
+
+<h3>The Core Thesis</h3>
+<p>The market sees RDDT as a nascent social media giant, a digital coliseum where communities thrive, and data flows. They're enamored by the massive user base and the potential for advertising revenue and new monetization avenues, especially with AI training data partnerships rumored to be a goldmine. The recent IPO excitement, followed by a post-lockup rally, suggests a strong belief in its future. However, reality dictates a more nuanced look. While Reddit <em>is</em> growing rapidly, its path to sustained profitability and market dominance in an incredibly competitive digital landscape is far from certain. The current price action screams 'hot stock,' but beneath the surface, there's a tug-of-war between undeniable growth and a valuation that's starting to look like it ate too many banana-ketchup sandwiches.</p>
+
+<p>Retail traders, myself included, are drawn to the story – a platform by the people, for the people, now publicly traded. This narrative, coupled with impressive top-line growth, fuels speculative fervor. Yet, the quant in me raises an eyebrow at the extremes. We're looking at a company with phenomenal potential, but also one that's currently trading at a premium that requires flawless execution and significant future expansion to justify. The real question isn't <em>if</em> Reddit will grow, but <em>how much</em> of that growth is already priced in, and whether the current valuation leaves any room for error, or for us, the retail sharks, to snap up value.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<p>Let's get down to the digits, folks. RDDT isn't just growing; it's <em>exploding</em>. We're talking <strong>69.7% Revenue Growth</strong>, which is simply insane for a company of its size ($31.29B Market Cap). That's not just a sign of engagement; it's a testament to its expanding reach and monetization efforts. And it's not just top-line fluff either; a healthy <strong>24.1% Profit Margin</strong> shows they're converting those eyeballs into actual earnings.</p>
+
+<p>Now, the valuation numbers tell a dual story. A trailing <strong>P/E of 62.52</strong> screams "growth stock," indicating the market is paying a premium for future earnings. But here's the kicker: the <strong>Forward P/E slashes down to 19.96</strong>. This implies analysts expect a massive surge in earnings or a significant slowdown in price appreciation relative to future earnings, making it look much more reasonable on a forward basis. Just remember, this stock comes with a <strong>Beta of 2.41</strong> – it’s a roller coaster, moving more than twice the general market. Buckle up.</p>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>AI Goldmine & Data Licensing:</strong> Reddit's vast repository of user-generated content is a data scientist's dream. Recent partnerships for AI model training showcase a powerful new revenue stream. Imagine every query, every discussion, every nuanced opinion being monetized as prime training data. This is a frontier that could dwarf traditional ad revenue.</li>
+<li><strong>Advertising Monetization & International Expansion:</strong> Despite its maturity, Reddit still has significant runway to optimize its advertising platform and expand its global user base and ad load. With <strong>69.7% revenue growth</strong>, they're clearly executing, but there's more juice to squeeze, especially as they refine ad targeting and format integration without alienating the core user base.</li>
+<li><strong>Community-Driven Content & Engagement Stickiness:</strong> Unlike other social platforms, Reddit's strength lies in its decentralized, community-driven nature. This fosters incredibly sticky engagement and niche content that's difficult for competitors to replicate. As the internet fragments, Reddit offers a consistent home for specific interests, making it an invaluable platform for advertisers targeting engaged communities.</li>
+<li><strong>Forward P/E & Analyst Optimism:</strong> A forward P/E of <strong>19.96</strong> is significantly more attractive than its current <strong>62.52</strong>, suggesting strong expected earnings growth. Couple that with a consensus <strong>Analyst Target of $228.12</strong>, and the pros clearly see substantial upside from current levels. They're betting on the growth story maturing into strong profitability.</li>
+</ol>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Extreme Overbought Conditions & Valuation Discrepancy:</strong> Let's not sugarcoat it: the <strong>RSI(14) at 87.76</strong> is screaming "Danger, Will Robinson!" This stock is extremely overbought, indicating a high probability of a near-term pullback. Furthermore, our internal <strong>Valuation Target of $146.94</strong> suggests a <strong>-10.3% gap</strong> from the current price, implying it's currently trading above its fair value. You're paying a premium.</li>
+<li><strong>Content Moderation & User Backlash:</strong> Reddit's open platform, while a strength, is also a constant moderation challenge. High-profile controversies or missteps in content policy can lead to significant user backlash, boycotts, and damage to brand reputation, directly impacting engagement and ad revenue. This is a persistent operational risk.</li>
+<li><strong>High Beta Volatility & Market Sensitivity:</strong> With a <strong>Beta of 2.41</strong>, RDDT is a highly volatile stock. While this can amplify gains in a bull market, it also means it will significantly underperform during market downturns. Retail traders need to understand this isn't a sleepy dividend payer; it's a high-octane growth play susceptible to broad market sentiment shifts.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+<p>Alright, chart junkies, listen up. RDDT is currently dancing around $163.8, significantly above its recent moving averages. We've got a certified <strong>Bullish Trend</strong> thanks to a <strong>Golden Cross</strong> – that's when a shorter-term moving average crosses above a longer-term one, usually a strong buy signal. However, don't just blindly ape in. The <strong>EMA Stack (8: $153.51, 21: $146.15, 34: $147.2)</strong> is "TANGLED," indicating recent chop and not a perfectly smooth upward trajectory, even though price is above all of them. The <strong>SMA 50 at $141.97</strong> is a solid level of dynamic support, but we're quite a distance from it.</p>
+
+<p>The major red flag, and I mean flashing neon sign, is the <strong>RSI(14) at 87.76</strong>. That's deep in overbought territory, screaming for a cool-off. The <strong>ADX at 17.77</strong> also tells us that despite the recent rally and Golden Cross, the <em>strength</em> of the current trend isn't exceptionally robust just yet.</p>
+
+<p>Looking at our pivots, we're currently hovering between <strong>R1 ($165.29)</strong> and <strong>R2 ($168.14)</strong>. Breaking above R2 could signal a continuation, but with that RSI, it's a high-risk move. On the downside, <strong>PP ($161.15)</strong>, <strong>S1 ($158.3)</strong>, and <strong>S2 ($154.16)</strong> are your immediate support levels to watch. The <strong>ATR of 7.93</strong> confirms this stock moves fast, so be prepared for swings. The 52-week range of <strong>$119.27 - $263.5</strong> shows it's been a wild ride, and we're currently sitting above the mid-point but still well below its all-time highs.</p>
+
+<h3>📝 Trading Playbook</h3>
+<p>This isn't a market for the faint of heart, but if you've got the guts and the data, here's how we play it:</p>
+
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>Given the overbought RSI, a breakout here is purely for the aggressive trend follower.</p>
+<ul>
+<li><strong>Entry:</strong> A clear, high-volume break and hold above <strong>R2 at $168.14</strong>. This needs conviction.</li>
+<li><strong>Stop-Loss:</strong> A close back below <strong>R1 at $165.29</strong>. Protect your capital.</li>
+<li><strong>Target:</strong> Eyes on the $175-$180 zone, but be quick. This is playing with fire.</li>
+</ul>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>This is where Sam the Ghost makes his money. Patience pays.</p>
+<ul>
+<li><strong>Entry:</strong> Look for a pullback to the <strong>S1 ($158.3)</strong> or ideally, the <strong>S2 ($154.16)</strong> level. Even better, a retest of the 8-day EMA ($153.51) or the 21/34 EMAs ($146.15 / $147.2) would offer a much better risk/reward. The <strong>Valuation Target of $146.94</strong> also aligns nicely with this zone.</li>
+<li><strong>Stop-Loss:</strong> A close below the <strong>SMA 50 at $141.97</strong>. This would invalidate the short-term bullish trend.</li>
+<li><strong>Target:</strong> Initial target back to <strong>R1 ($165.29)</strong>, then <strong>R2 ($168.14)</strong>. For longer-term holds, target the analyst consensus of <strong>$228.12</strong> once the RSI cools off.</li>
+</ul>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>Always have an exit plan.</p>
+<ul>
+<li><strong>Entry:</strong> A sustained break and close below <strong>S2 ($154.16)</strong>, especially if accompanied by increased volume, signaling the sellers are taking control.</li>
+<li><strong>Stop-Loss:</strong> A re-claim of <strong>PP ($161.15)</strong>.</li>
+<li><strong>Target:</strong> Initial target to the low end of the 52W range around $120. This is a speculative short or a signal to take profits if you’re long.</li>
+</ul>
+
+<h3>🏁 Final Verdict</h3>
+<p>RDDT is a high-growth, high-beta beast with immense long-term potential but facing immediate overbought conditions. We're bullish on the story but cautious on the entry. Wait for the dip, quant-style. <strong>Price Target: $190.00</strong> by year-end 2026, contingent on a healthy pullback first.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">66.7%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">58.4%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">4</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">TANGLED</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$141.39</div><div class="ma-d pos">+15.8%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$141.97</div><div class="ma-d pos">+15.4%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$182.02</div><div class="ma-d neg">-10.0%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">TANGLED</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$153.51</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$146.15</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$147.20</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neg">88</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">90/94</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm pos">+3.95</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">17.8</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$119.27</span><span>$163.8 (31%)</span><span>$263.5</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:31%"></div><div class="rng-dot" style="left:31%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$229.46</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$208.40</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$191.38</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$174.37</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$157.47</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$125.31</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$7.93</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">0.95x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$168.14 &#xB7; R1=$165.29 &#xB7; PP=$161.15 &#xB7; S1=$158.30 &#xB7; S2=$154.16
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">Reddit, Inc.</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$31.29B</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">2,555</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NYQ</div></div>
+      </div>
+      <div class="fd-desc">Reddit, Inc. operates a digital community in the United States and internationally. The company's platform enables user to engage in conversations, explore passions, research new hobbies, exchange goods and services, create new communities and experiences, share laughs, and find belonging.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://redditinc.com" target="_blank" style="color:#00f3ff">https://redditinc.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-lo">24</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-hi">100</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-hi">68</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">75</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">62.52</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">19.96</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">14.21</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">10.68</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">62.98</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">1.31</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 13.09 &middot; P/FCF: 70.1</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v pos">+69.7%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v pos">+247.4%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v pos">+254.2%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$11.82</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">91.2%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v pos">31.9%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v pos">24.1%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v pos">20.9%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v pos">9.9%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">2.41</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm pos">11.56</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">0.8</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$23.21M</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$2.48B</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$446.45M</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$690.88M</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">0.00%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">N/A</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">N/A</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (30 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$125.00</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$240.00</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$300.00</div></div>
+        </div>
+        <div class="est-labels"><span>$125</span><span>Current $164</span><span>$300</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:22%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">BUY</span> &middot; Mean Target: $228.12</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-04-18 08:57 PM CST</div>
+</div>
+</body>
+</html>

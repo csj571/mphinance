@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMR Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for SMR.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/SMR/chart/" target="_blank">SMR</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Industrials &#xB7; Specialty Industrial Machinery &#xB7; 2026-04-18</div>
+  </div>
+  <div>
+    <div class="pr">$12.65</div>
+    <div class="ch pos">+10.87%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[SMR] Deep Dive: Reactor Reloading for a Nuclear Future</h2>
+<p><strong>Date:</strong> 2026-04-18</p>
+<p><strong>Price:</strong> ~$12.65 | <strong>Verdict:</strong> Strong Buy</p>
+
+<p>Alright, fellow retail insurgents, gather 'round. We're looking at SMR (NuScale Power), a ticker that’s been on a wild ride, now showing signs of firing up its core. Don't let the surface noise fool you; there’s power brewing beneath the volatility.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market sees SMR through a traditional lens: a company with disastrous revenue growth (-94.7%) and a non-existent profit margin (0%). This short-sighted view paints a picture of a failing enterprise, leading to the massive 52-week range ($8.85 - $46.40) as traders bail on headline numbers. Many are missing the critical nuance that NuScale isn't selling widgets; they're building the future of energy.</p>
+
+<p>The reality? SMR is a capital-intensive, development-stage company in the nascent nuclear Small Modular Reactor (SMR) space. Their revenue stream isn't based on steady product sales but on achieving massive, multi-year project milestones. A negative forward P/E of -29.79 isn't a death knell; it’s an expectation of future profitability after significant upfront investment, a common trajectory for disruptive technologies. The Street’s average analyst target of $20.42, a whopping 61.4% gap from current price, screams that the smart money sees the long game here. We’re witnessing a nuclear phoenix preparing to take flight, not a company in terminal decline.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<p>Let’s cut through the fluff and look at the hard data:</p>
+
+<ul>
+<li><strong>Market Cap:</strong> $4.10B – A serious player, not a penny stock.</li>
+</ul>
+<p><em>   <strong>Revenue Growth:</strong> -94.7% – </em>Context is key.* This isn't a sales slump; it's the nature of nuclear project development where revenue recognition is lumpy. Don't be scared by this number in isolation.</p>
+<ul>
+<li><strong>Profit Margin:</strong> 0% – Again, a development-stage reality. Future profitability is the bet.</li>
+<li><strong>P/E (Current):</strong> None | <strong>P/E (Forward):</strong> -29.79 – Confirms we're betting on future earnings, not current.</li>
+</ul>
+<p><em>   <strong>Beta:</strong> 2.28 – This stock moves. When it moves up, it </em>flies<em>. When it drops, it </em>plunges*. Handle with care, but also recognize the potential leverage.</p>
+<ul>
+<li><strong>52W Range:</strong> $8.85 - $46.40 – Extreme volatility is its middle name. This isn't for the faint of heart, but volatility equals opportunity.</li>
+<li><strong>Analyst Target:</strong> $20.42 – A massive 61.4% upside from current price. The pros see value.</li>
+<li><strong>Valuation:</strong> UNDERVALUED – Confirmed by the analyst target.</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Nuclear Renaissance & SMR Edge:</strong> The world is desperate for clean, reliable baseload power. SMR technology offers scalability and safety improvements over traditional reactors, positioning NuScale as a leader in a critical, burgeoning sector. Regulatory approvals and first-mover advantages are huge here.</li>
+<li><strong>Valuation Disconnect:</strong> With the stock currently sitting at $12.65 and an analyst target of $20.42, SMR is flagged as UNDERVALUED by 61.4%. This isn't just a slight discount; it's a significant mispricing by a market focused on yesterday's numbers.</li>
+<li><strong>Strong Technical Reversal:</strong> The chart is screaming "buy the momentum." A confirmed <strong>Golden Cross</strong> signals a major bullish trend reversal. With the price having surged 10.87% today on 2.26x average volume, the market is starting to wake up.</li>
+<li><strong>Trend Strength & Room to Run:</strong> The <strong>ADX at 41.82</strong> indicates a very strong trend, and the <strong>RSI(14) at 65.16</strong> shows robust buying pressure without being overbought. There's plenty of room for this bull to run before hitting exhaustion.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Project Delays & Cost Overruns:</strong> Nuclear power projects are notoriously expensive and often face significant delays. Any major hiccup in NuScale's development or deployment schedule could trigger sharp pullbacks.</li>
+<li><strong>Regulatory Hurdles & Public Perception:</strong> While NuScale has made progress, the path to widespread SMR adoption is still paved with regulatory complexities and potential public resistance, especially regarding nuclear energy.</li>
+<li><strong>Capital Intensive Nature:</strong> As a development-stage company, NuScale requires massive capital injections. Any difficulty securing future funding could severely impede progress and dilute existing shareholders.</li>
+<li><strong>Extreme Volatility:</strong> A Beta of 2.28 means SMR magnifies market moves. A broad market downturn or sector-specific bad news could see this stock plummet as fast as it rises.</li>
+</ul>
+
+<h3>📉 The Technicals</h3>
+<p>SMR just gapped up, now trading at $12.65, a healthy 10.87% gain for the day, backed by 2.26x relative volume – institutional money is flowing.</p>
+
+<p><em>   <strong>EMA Stack:</strong> Currently TANGLED (8-EMA: $11.0, 21-EMA: $10.97, 34-EMA: $11.62). The good news? The current price of $12.65 is </em>above* all these short-term EMAs, indicating recent bullish strength is separating them and aligning them upwards.</p>
+<ul>
+<li><strong>SMAs:</strong> The price is firmly above the <strong>SMA 50 ($12.31)</strong>. The absence of a SMA 200 suggests either a relatively new listing or a prolonged period below this average which has recently been overcome.</li>
+<li><strong>Trend:</strong> <strong>Bullish (Golden Cross)</strong> is confirmed. This is a powerful signal.</li>
+<li><strong>Momentum:</strong> <strong>RSI(14) at 65.16</strong> shows strong momentum, with plenty of room to run towards overbought territory (70+) before warranting caution. <strong>ADX at 41.82</strong> screams that this trend is not just established but exceptionally strong.</li>
+<li><strong>Pivots:</strong> Current price $12.65 is pushing towards <strong>R1 ($12.21)</strong> and <strong>R2 ($13.01)</strong>. Immediate support lies at the <strong>Pivot Point (PP) of $11.62</strong> and further down at <strong>S1 ($10.82)</strong>.</li>
+<li><strong>Volatility:</strong> <strong>ATR of 1.01</strong> indicates an average daily move of about $1.01, so be ready for swings.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>If SMR can convincingly break above <strong>R2 at $13.01</strong> on strong volume, it signals a powerful continuation of the upward trend. Target the analyst's $20.42 but trail with a tight stop-loss based on the ATR (e.g., 2x ATR from the breakout point). Confirmation of the Golden Cross and high ADX means this breakout could be explosive.</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>My preferred entry. Look for a retest of the <strong>PP ($11.62)</strong> or even <strong>S1 ($10.82)</strong> following this initial surge, especially if the broader market experiences a slight pullback. A bounce off these levels, particularly with low volume on the dip and a subsequent increase on the rebound, offers a high-conviction entry point, minimizing risk while capturing the underlying bullish trend. Set a stop-loss just below S2 ($10.23).</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>If SMR breaks below <strong>S2 ($10.23)</strong> with conviction, especially on higher volume, the bullish thesis is likely invalid in the short-term. This would suggest a loss of momentum, potentially negating the Golden Cross. Consider cutting losses or even initiating a small short position if market structure confirms further downside. Protect your capital.</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>SMR is a high-beta bet on the future of energy, now reloading its core and offering a compelling setup for traders and investors with an appetite for volatility. Price target: $20.42.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">110.9%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">84.9%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">6</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">TANGLED</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$10.62</div><div class="ma-d pos">+19.1%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$12.31</div><div class="ma-d pos">+2.8%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$15.41</div><div class="ma-d neg">-17.9%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">TANGLED</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$11.00</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$10.97</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$11.62</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">65</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">85/82</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm pos">+0.40</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">41.8</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$8.85</span><span>$12.65 (10%)</span><span>$46.4</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:10%"></div><div class="rng-dot" style="left:10%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$37.54</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$32.06</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$27.62</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$23.19</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$12.48</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$8.76</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$1.01</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">2.26x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$13.01 &#xB7; R1=$12.21 &#xB7; PP=$11.62 &#xB7; S1=$10.82 &#xB7; S2=$10.23
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">NuScale Power Corporation</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$4.10B</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">428</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NYQ</div></div>
+      </div>
+      <div class="fd-desc">NuScale Power Corporation provides small modular reactor technology solutions. It offers NuScale Power Module (NPM), a light water nuclear reactor that can generate 77 megawatts of electricity (MWe). The company also provides design and nuclear regulatory licensing basis information to construct and operate the power plant; and licensing, design, development, construction, operation, and maintenance of the power plant.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://www.nuscalepower.com" target="_blank" style="color:#00f3ff">https://www.nuscalepower.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-hi">65</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-lo">0</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-mid">43</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">75</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">N/A</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">-29.79</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">130.09</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">3.45</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">-15.03</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">N/A</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 86.43 &middot; P/FCF: 33.1</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v neg">-94.7%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v pos">+0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v pos">+0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$0.19</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">36.3%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v neg">-3337.8%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v pos">0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v neg">-84.8%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v neg">-11.6%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">2.28</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm pos">4.30</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">N/A</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$0</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$1.25B</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$123.53M</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$-459,609,984</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">0.00%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">N/A</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">N/A</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (13 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$8.00</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$20.00</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$52.00</div></div>
+        </div>
+        <div class="est-labels"><span>$8</span><span>Current $13</span><span>$52</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:11%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">BUY</span> &middot; Mean Target: $20.42</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-04-18 08:59 PM CST</div>
+</div>
+</body>
+</html>

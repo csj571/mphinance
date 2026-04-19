@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TJX Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for TJX.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/TJX/chart/" target="_blank">TJX</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Consumer Cyclical &#xB7; Apparel Retail &#xB7; 2026-04-18</div>
+  </div>
+  <div>
+    <div class="pr">$160.68</div>
+    <div class="ch pos">+2.03%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[TJX] Deep Dive: The Discount King at a King's Ransom?</h2>
+<p><strong>Date:</strong> 2026-04-18</p>
+<p><strong>Price:</strong> ~$160.68 | <strong>Verdict:</strong> Neutral, with a Bullish Bias on Dips</p>
+
+<p>TJX, the retail giant behind TJ Maxx and Marshalls, keeps the fashion-conscious bargain hunter happy, but is its current stock price offering <em>you</em> a discount, or are you about to overpay for quality? Let's peel back the layers.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market sees TJX as the undisputed champion of off-price retail, a defensive play with a beta of 0.73 that thrives even when the economy gets a bit… frayed. It's a consumer cyclical stalwart that magically turns economic headwinds into tailwinds as shoppers prioritize value. The narrative is compelling: robust brand power, impressive revenue growth, and a seemingly endless stream of designer goods at bargain prices. This vision has pushed the stock to a near 52-week high, with bullish technicals signaling more upside.</p>
+
+<p>However, Sam the Ghost doesn't just read the headlines; I haunt the spreadsheets. While the operational story is undeniably strong, the current valuation flashes a chilling red warning. With a P/E of 32.99 and a forward P/E of 28.36, TJX is trading at a significant premium. My models scream "OVERVALUED" with a stunning 49.2% gap and an intrinsic target of $81.64. This creates a tantalizing paradox: a fundamentally strong, technically bullish stock that is, by some metrics, priced for perfection... and then some. Can the market momentum ignore such a gaping fundamental chasm forever? Unlikely.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<p>TJX boasts some genuinely solid fundamentals. Their <strong>Revenue Growth of 8.5%</strong> is robust for a company of its size ($178.43B Market Cap) in a mature sector. The <strong>Profit Margin of 9.1%</strong> is healthy, reflecting efficient operations and strong brand leverage in the apparel retail industry. However, the <strong>P/E of 32.99</strong> and <strong>Forward P/E of 28.36</strong> are considerably stretched, especially when compared to its peers or its own historical averages. For perspective, our valuation target of $81.64 versus the current price of $160.68 suggests the market is pricing in nearly five years of flawless execution and growth <em>today</em>. This isn't just optimism; it's bordering on retail fantasy. The relatively low <strong>Beta of 0.73</strong> reinforces its defensive appeal, suggesting less volatility than the broader market, which is a plus for stability-seeking investors.</p>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Inflationary Advantage:</strong> In an environment where consumers are feeling the pinch, TJX's off-price model becomes incredibly attractive. Value-seeking shoppers flock to TJ Maxx, Marshalls, and HomeGoods, allowing TJX to gain market share even as competitors struggle.</li>
+<li><strong>Brand Dominance & Buying Power:</strong> With established household names and a global footprint, TJX possesses immense buying power. This allows them to secure desirable inventory at advantageous prices, maintaining high margins and a compelling product assortment that keeps customers coming back.</li>
+<li><strong>Resilient Consumer Demand:</strong> Despite economic jitters, discretionary spending hasn't collapsed. TJX caters to a broad segment of the population looking for quality without the full retail price tag, creating a built-in demand floor that's more robust than traditional full-price retailers.</li>
+<li><strong>Analyst Conviction & Technical Momentum:</strong> Despite my valuation concerns, the Street remains bullish, with an <strong>Analyst Target of $171.78</strong>. Coupled with the current "FULL BULLISH" EMA stack and a fresh Golden Cross, the immediate technical picture supports a move towards or even past this target.</li>
+</ol>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Extreme Valuation Discrepancy:</strong> This cannot be overstated. A valuation target of $81.64 against a price of $160.68 represents a <strong>-49.2% gap</strong>. While fundamentals are strong, a significant market correction or a whiff of bad news could see TJX re-rate dramatically as the "growth at any cost" premium evaporates.</li>
+<li><strong>Sustained Consumer Weakness:</strong> While TJX benefits from mild economic downturns, a severe, prolonged recession could impact even discretionary spending at discount prices. Job losses and tightening household budgets would eventually hurt traffic and average transaction values.</li>
+<li><strong>Rising Operating Costs:</strong> Wage inflation, increased supply chain costs, and freight expenses are persistent headwinds. While TJX has historically managed these well, sustained pressure could erode that healthy 9.1% profit margin, making the current premium even harder to justify.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+<p>Alright, let's talk charts. At $160.68, TJX is flashing a <strong>FULL BULLISH EMA stack</strong>, with the 8-period EMA at $160.02, 21-period at $159.38, and 34-period at $158.62 – all perfectly stacked and rising. The price is well above the <strong>SMA 50 at $157.85</strong>, and the recent <strong>Golden Cross</strong> confirms a strong, established bullish trend.</p>
+
+<p>Momentum is healthy but not overheated; the <strong>RSI(14) sits at 58.56</strong>, indicating there's room for upside without being immediately overbought. The <strong>ADX at 17.95</strong> suggests a developing trend, not yet extremely strong but gaining traction.</p>
+
+<p>Looking at our pivots, TJX has cleared <strong>R1 at $160.28</strong>. The next major resistance is <strong>R2 at $163.09</strong>, with the 52-week high lurking at $165.82. On the support side, the <strong>PP is $158.35</strong>, followed by strong support at <strong>S1 ($155.54)</strong> and <strong>S2 ($153.61)</strong>. The <strong>ATR of 3.6</strong> implies a decent daily range, and <strong>Relative Volume at 1.17x</strong> indicates higher-than-average interest, which is constructive for continuation.</p>
+
+<h3>📝 Trading Playbook</h3>
+
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>TJX has punched through R1. If it can decisively clear <strong>R2 at $163.09</strong> on volume above 1.17x, a move towards the 52-week high of $165.82 is likely. An aggressive target would be the analyst consensus of <strong>$171.78</strong>. Set a tight stop below R1 at <strong>$160.20</strong> to protect against a false breakout.</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Given the valuation concerns, waiting for a pullback offers a better risk/reward. A dip to the <strong>Pivot Point (PP) at $158.35</strong> or even the stronger support at <strong>S1 ($155.54)</strong> would be ideal. These levels align well with the rising EMAs and SMA 50, providing strong dynamic support. Look for a bounce confirmation (e.g., green candle close above the support level). Target the analyst consensus of <strong>$171.78</strong>. Place your stop just below <strong>S2 at $153.50</strong> to limit downside. This is my preferred entry given the current overvaluation.</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>A close below <strong>S2 ($153.61)</strong>, especially on heavy volume, would signal a potential trend reversal and confirm the market is finally acknowledging the overvaluation. A break below S2 could see TJX retesting lower levels, potentially towards the $150 psychological support or even initiating a longer correction. This would invalidate the bullish technicals. Short-term bearish traders could target the $150 area, with a stop above S1.</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>TJX is a fundamentally strong company with undeniable short-term technical momentum, but it's trading at a significant premium. While the market continues to reward its operational excellence, the valuation gap is too wide to ignore for long-term conviction. I remain Neutral, awaiting a better entry, with a strong preference for a dip-buy strategy around key support levels to target the Street's consensus of $171.78.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">27.5%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">22.3%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">2</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BULLISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$159.34</div><div class="ma-d pos">+0.8%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$157.85</div><div class="ma-d pos">+1.8%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$155.61</div><div class="ma-d pos">+3.3%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BULLISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$160.02</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$159.38</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$158.62</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">59</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">51/43</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm neg">-0.15</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">17.9</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$138.03</span><span>$160.68 (82%)</span><span>$165.82</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:82%"></div><div class="rng-dot" style="left:82%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$159.26</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$155.20</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$151.93</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$148.65</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$166.26</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$152.42</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$3.60</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">1.17x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$163.09 &#xB7; R1=$160.28 &#xB7; PP=$158.35 &#xB7; S1=$155.54 &#xB7; S2=$153.61
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">The TJX Companies, Inc.</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$178.43B</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">377,000</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NYQ</div></div>
+      </div>
+      <div class="fd-desc">The TJX Companies, Inc., together with its subsidiaries, operates as an off-price apparel and home fashions retailer worldwide. It operates through four segments: Marmaxx, HomeGoods, TJX Canada, and TJX International. The company provides family apparel comprising footwear; accessories, such as beauty and jewelry; home fashion products, including home basics, decorative accessories and giftware, as well as furniture, rugs, lighting, soft home, decorative accessories, tabletop, and cookware; pet and gourmet food; and other merchandise.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://www.tjx.com" target="_blank" style="color:#00f3ff">https://www.tjx.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-lo">22</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-hi">72</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-mid">54</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">90</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">32.99</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">28.36</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">2.96</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">17.46</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">21.97</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">3.29</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 3.07 &middot; P/FCF: 45.9</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v pos">+8.5%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v pos">+27.9%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v pos">+26.8%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$54.19</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">31.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v pos">13.3%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v pos">9.1%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v pos">59.1%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v pos">13.3%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">0.73</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm pos">1.14</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">132.4</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$13.49B</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$6.23B</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$3.89B</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$6.87B</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">1.19%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">$1.92</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">33.9%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">2026-05-14</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (18 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$100.00</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$175.00</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$193.00</div></div>
+        </div>
+        <div class="est-labels"><span>$100</span><span>Current $161</span><span>$193</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:65%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">STRONG_BUY</span> &middot; Mean Target: $171.78</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-04-18 09:02 PM CST</div>
+</div>
+</body>
+</html>
