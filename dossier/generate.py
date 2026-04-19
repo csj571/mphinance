@@ -196,7 +196,7 @@ def _update_index_page():
     reports = []
     if reports_dir.exists():
         for f in sorted(reports_dir.iterdir(), reverse=True):
-            if f.suffix == ".html" and f.stem != "latest":
+            if f.suffix == ".html" and f.stem != "latest" and ".sync-conflict" not in f.name:
                 reports.append({
                     "filename": f.name,
                     "date": f.stem.replace("_alpha_dossier", ""),
