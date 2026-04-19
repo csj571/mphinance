@@ -40,7 +40,7 @@ You could technically use a 3:2 weighting ratio (like 6% and 4%), where a 20% sw
 
 When evaluating these triggers, you have to respect the asymmetrical nature of losses. When a stock drops, it requires a significantly higher percentage gain just to get back to breakeven. 
 
-This is exactly why letting a core stock drSigop 30% is our critical threshold. Look at the math:
+This is exactly why letting a core stock drop 30% is our critical threshold. Look at the math:
 
 *   A **-10%** loss requires an **11.1%** recovery.
 *   A **-20%** loss requires a **25%** recovery.
