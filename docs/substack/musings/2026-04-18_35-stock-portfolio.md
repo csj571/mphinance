@@ -120,33 +120,33 @@ These are the 2% exploratory allocations. High-risk, high-reward.
 
 5. **WEC** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/WEC/deep_dive.html) : *WEC Energy Group, Inc., through its subsidiaries, provides regulated natural gas and electricity, and renewable and nonregulated renewable energy services in the United States.*
 
-6. **PL** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/PL/deep_dive.html) : *Planet Labs PBC engages in the design, construction, and launch of constellations of satellites with the intent of providing high-cadence geospatial data delivered to customers through an online platform in the United States and internationally.*
+6. **UEC** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/UEC/deep_dive.html) : *Uranium Energy Corp., together with its subsidiaries, engages in exploration, pre-extraction, extraction, and processing of uranium and titanium concentrates properties in the United States, Canada, and the Republic of Paraguay.*
 
-7. **AMPX** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/AMPX/deep_dive.html) : *Amprius Technologies, Inc.*
+7. **PL** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/PL/deep_dive.html) : *Planet Labs PBC engages in the design, construction, and launch of constellations of satellites with the intent of providing high-cadence geospatial data delivered to customers through an online platform in the United States and internationally.*
 
-8. **OUST** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/OUST/deep_dive.html) : *Ouster, Inc.*
+8. **AMPX** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/AMPX/deep_dive.html) : *Amprius Technologies, Inc.*
 
-9. **ACHR** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/ACHR/deep_dive.html) : *Archer Aviation Inc., together with its subsidiaries, designs and develops aircraft and related technologies and services for commercial and defense sectors in the United States and internationally.*
+9. **OUST** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/OUST/deep_dive.html) : *Ouster, Inc.*
 
-10. **CLS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/CLS/deep_dive.html) : *Celestica Inc., together with its subsidiaries, provides supply chain solutions in Asia, North America, and internationally.*
+10. **ACHR** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/ACHR/deep_dive.html) : *Archer Aviation Inc., together with its subsidiaries, designs and develops aircraft and related technologies and services for commercial and defense sectors in the United States and internationally.*
 
-11. **TJX** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/TJX/deep_dive.html) : *The TJX Companies, Inc., together with its subsidiaries, operates as an off-price apparel and home fashions retailer worldwide.*
+11. **CLS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/CLS/deep_dive.html) : *Celestica Inc., together with its subsidiaries, provides supply chain solutions in Asia, North America, and internationally.*
 
-12. **TSLA** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/TSLA/deep_dive.html) : *Tesla, Inc.*
+12. **TJX** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/TJX/deep_dive.html) : *The TJX Companies, Inc., together with its subsidiaries, operates as an off-price apparel and home fashions retailer worldwide.*
 
-13. **PTRN** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/PTRN/deep_dive.html) : *Pattern Group Inc.*
+13. **TSLA** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/TSLA/deep_dive.html) : *Tesla, Inc.*
 
-14. **HIMS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/HIMS/deep_dive.html) : *Hims & Hers Health, Inc.*
+14. **PTRN** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/PTRN/deep_dive.html) : *Pattern Group Inc.*
 
-15. **BRK-B** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/BRK-B/deep_dive.html) : *Berkshire Hathaway Inc. operates as a multinational conglomerate holding company.*
+15. **HIMS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/HIMS/deep_dive.html) : *Hims & Hers Health, Inc.*
 
-16. **MLI** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/MLI/deep_dive.html) : *Mueller Industries, Inc.*
+16. **BRK-B** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/BRK-B/deep_dive.html) : *Berkshire Hathaway Inc. operates as a multinational conglomerate holding company.*
 
-17. **WMT** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/WMT/deep_dive.html) : *Walmart Inc.*
+17. **MLI** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/MLI/deep_dive.html) : *Mueller Industries, Inc.*
 
-18. **KTOS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/KTOS/deep_dive.html) : *Kratos Defense & Security Solutions, Inc., a technology company, provides technology, hardware, products, system, and software for the defense, national security, and commercial markets in the United States, other North America, the Asia Pacific, the Middle East, Europe, and Internationally.*
+18. **WMT** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/WMT/deep_dive.html) : *Walmart Inc.*
 
-19. **UBER** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/UBER/deep_dive.html) : *Uber Technologies, Inc.*
+19. **KTOS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/KTOS/deep_dive.html) : *Kratos Defense & Security Solutions, Inc., a technology company, provides technology, hardware, products, system, and software for the defense, national security, and commercial markets in the United States, other North America, the Asia Pacific, the Middle East, Europe, and Internationally.*
 
-20. **LLY** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/LLY/deep_dive.html) : *Eli Lilly and Company discovers, develops, manufactures, and markets human pharmaceutical products in the United States, Europe, China, Japan, and internationally.*
+20. **UBER** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/UBER/deep_dive.html) : *Uber Technologies, Inc.*
 
