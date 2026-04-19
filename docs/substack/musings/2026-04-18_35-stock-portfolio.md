@@ -84,7 +84,7 @@ These are the 15 high-conviction anchors, weighted at 4% each. The bedrock of th
 
 7. **RDDT** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/RDDT/deep_dive.html) : *They essentially monopolized human, contextual internet discussions and are now licensing that high-quality training data directly to AI models for pure profit.*
 
-8. **BULL** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/BULL/deep_dive.html) : *A digital brokerage that is rapidly eating Robinhood's market share in active trading, with a much more sophisticated platform for serious retail flow.*
+8. **HIMS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/HIMS/deep_dive.html) : *They bypassed the entire insurance-industrial complex. By vertically integrating telehealth with direct-to-consumer generic compounding, they created a highly sticky subscription healthcare brand.*
 
 9. **COST** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/COST/deep_dive.html) : *It's not a grocery store; it's a subscription business model masquerading as a warehouse. They cap margins at 14% to ensure unshakeable customer loyalty.*
 
@@ -118,35 +118,35 @@ These are the 2% exploratory allocations. High-risk, high-reward.
 
 4. **BBAI** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/BBAI/deep_dive.html) : *They provide AI-powered decision intelligence directly to the US military and logistics sectors. It's Palantir-lite, operating in the shadows of complex government contracts.*
 
-5. **WEC** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/WEC/deep_dive.html) : *A highly regulated Midwestern utility. It generates reliable dividends, but lacks the explosive growth mechanics required for a satellite allocation designed to pop 40%.*
+5. **UEC** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/UEC/deep_dive.html) : *Unhedged uranium mining in North America. While others locked in low long-term contracts, UEC strategically sat on their resources, waiting for the spot price to explode.*
 
-6. **UEC** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/UEC/deep_dive.html) : *Unhedged uranium mining in North America. While others locked in low long-term contracts, UEC strategically sat on their resources, waiting for the spot price to explode.*
+6. **PL** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/PL/deep_dive.html) : *They image the entire landmass of the Earth every single day. The raw data is valuable, but the AI insights derived from those daily global changes are a goldmine.*
 
-7. **PL** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/PL/deep_dive.html) : *They image the entire landmass of the Earth every single day. The raw data is valuable, but the AI insights derived from those daily global changes are a goldmine.*
+7. **AMPX** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/AMPX/deep_dive.html) : *Next-generation silicon anode batteries. They provide twice the energy density of traditional lithium-ion, making them the holy grail for aviation and high-performance EVs.*
 
-8. **AMPX** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/AMPX/deep_dive.html) : *Next-generation silicon anode batteries. They provide twice the energy density of traditional lithium-ion, making them the holy grail for aviation and high-performance EVs.*
+8. **OUST** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/OUST/deep_dive.html) : *Digital LiDAR that operates like a camera sensor. While competitors chase autonomous cars, Ouster is quietly dominating the much larger robotics and smart infrastructure markets.*
 
-9. **OUST** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/OUST/deep_dive.html) : *Digital LiDAR that operates like a camera sensor. While competitors chase autonomous cars, Ouster is quietly dominating the much larger robotics and smart infrastructure markets.*
+9. **ACHR** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/ACHR/deep_dive.html) : *Backed by United Airlines and Stellantis, they are the closest to actually commercializing electric vertical takeoff and landing (eVTOL) aircraft for urban air mobility.*
 
-10. **ACHR** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/ACHR/deep_dive.html) : *Backed by United Airlines and Stellantis, they are the closest to actually commercializing electric vertical takeoff and landing (eVTOL) aircraft for urban air mobility.*
+10. **CLS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/CLS/deep_dive.html) : *The unsung hero of the AI hardware boom. Celestica is the contract manufacturer physically assembling the high-end server racks and networking gear that power the cloud.*
 
-11. **CLS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/CLS/deep_dive.html) : *The unsung hero of the AI hardware boom. Celestica is the contract manufacturer physically assembling the high-end server racks and networking gear that power the cloud.*
+11. **TJX** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/TJX/deep_dive.html) : *The ultimate economic cockroach. In a recession, people trade down to T.J. Maxx. In a boom, people hunt for deals. Their inventory sourcing model is completely Amazon-proof.*
 
-12. **TJX** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/TJX/deep_dive.html) : *The ultimate economic cockroach. In a recession, people trade down to T.J. Maxx. In a boom, people hunt for deals. Their inventory sourcing model is completely Amazon-proof.*
+12. **TSLA** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/TSLA/deep_dive.html) : *Stop pricing it as a car company. The real upside is in the Optimus humanoid robot and their Dojo supercomputer network. It's a robotics and energy company.*
 
-13. **TSLA** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/TSLA/deep_dive.html) : *Stop pricing it as a car company. The real upside is in the Optimus humanoid robot and their Dojo supercomputer network. It's a robotics and energy company.*
+13. **PTRN** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/PTRN/deep_dive.html) : *A massive pure-play renewable energy developer. They don't just build wind and solar; they own the high-voltage transmission lines required to actually move the power.*
 
-14. **PTRN** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/PTRN/deep_dive.html) : *A massive pure-play renewable energy developer. They don't just build wind and solar; they own the high-voltage transmission lines required to actually move the power.*
+14. **BULL** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/BULL/deep_dive.html) : *A digital brokerage that is rapidly eating Robinhood's market share in active trading, with a much more sophisticated platform for serious retail flow.*
 
-15. **HIMS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/HIMS/deep_dive.html) : *They bypassed the entire insurance-industrial complex. By vertically integrating telehealth with direct-to-consumer generic compounding, they created a highly sticky subscription healthcare brand.*
+15. **BRK-B** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/BRK-B/deep_dive.html) : *The ultimate fortress balance sheet. Buffett's cash pile is a structural advantage, allowing them to act as the lender of last resort during extreme market dislocations.*
 
-16. **BRK-B** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/BRK-B/deep_dive.html) : *The ultimate fortress balance sheet. Buffett's cash pile is a structural advantage, allowing them to act as the lender of last resort during extreme market dislocations.*
+16. **MLI** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/MLI/deep_dive.html) : *Boring, essential, and aggressively profitable. Mueller makes the copper tubes and brass forgings that literally hold the industrial and housing markets together.*
 
-17. **MLI** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/MLI/deep_dive.html) : *Boring, essential, and aggressively profitable. Mueller makes the copper tubes and brass forgings that literally hold the industrial and housing markets together.*
+17. **WMT** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/WMT/deep_dive.html) : *They are leveraging their unparalleled physical footprint to build an advertising and logistics network that rivals Amazon, all while acting as the default grocer for America.*
 
-18. **WMT** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/WMT/deep_dive.html) : *They are leveraging their unparalleled physical footprint to build an advertising and logistics network that rivals Amazon, all while acting as the default grocer for America.*
+18. **KTOS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/KTOS/deep_dive.html) : *They build the high-performance, low-cost tactical drones (like the Valkyrie) that the Air Force actually needs for modern, attritable swarm warfare.*
 
-19. **KTOS** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/KTOS/deep_dive.html) : *They build the high-performance, low-cost tactical drones (like the Valkyrie) that the Air Force actually needs for modern, attritable swarm warfare.*
+19. **UBER** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/UBER/deep_dive.html) : *They won the rideshare war of attrition. Now, their autonomous vehicle partnerships transition them from a labor-heavy service to a high-margin, global logistics network.*
 
-20. **UBER** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/UBER/deep_dive.html) : *They won the rideshare war of attrition. Now, their autonomous vehicle partnerships transition them from a labor-heavy service to a high-margin, global logistics network.*
+20. **LLY** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/LLY/deep_dive.html) : *GLP-1 drugs like Mounjaro aren't just for weight loss; they are structural changes to human consumption habits, poised to drastically alter the food, beverage, and healthcare sectors.*
 
