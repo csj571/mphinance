@@ -68,6 +68,8 @@ By locking in the +40% / -30% parameters, you give your winners the exact mathem
 
 These are the 15 high-conviction anchors, weighted at 4% each. The bedrock of the portfolio. 
 
+*A quick note for traditionalists looking at this list: You will see several highly volatile, small-cap names in this "Core" starting lineup (like ASTS, ONDS, UAMY, GLXY, NBIS). Why are they here instead of mega-caps like Berkshire? Because we don't just hold them; we aggressively farm them. We use that 4% allocation as collateral to execute the options wheel, consistently harvesting 2-5% weekly premiums. They earned their starting spot because their massive Implied Volatility literally pays the rent. You can't farm Berkshire.*
+
 *(Links point to the Ghost Alpha Deep Dive reports. Data is currently processing through the pipeline.)*
 
 1. **TER** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/TER/deep_dive.html) : *The silent arms dealer of the tech world. You can't build next-gen AI chips or robots without Teradyne's testing equipment validating the silicon.*
