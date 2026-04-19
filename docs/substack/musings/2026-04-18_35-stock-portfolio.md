@@ -156,3 +156,15 @@ These are the 2% exploratory allocations. High-risk, high-reward.
 
 20. **LLY** - [Deep Dive](https://mphinance.github.io/mphinance/docs/ticker/LLY/deep_dive.html) : *GLP-1 drugs like Mounjaro aren't just for weight loss; they are structural changes to human consumption habits, poised to drastically alter the food, beverage, and healthcare sectors. (Data: We're looking at Revenue Growth of 42.6%, which is nothing short of explosive for a company of this scale.)*
 
+
+---
+
+### The 35-Stock Blueprint
+
+Here is the complete roster layout. 15 Starters, 20 Benchers. Print it out, stick it on your monitor, and let the math work.
+
+![The 35-Stock Protocol](https://raw.githubusercontent.com/mphinance/mphinance/main/docs/substack/musings/35_stock_protocol_infographic.png)
+
+<br>
+
+***Disclaimer:** Not financial advice. PURE MOMENTUM MATH. I am a stranger on the internet who trades for a living. Do your own due diligence, consult a professional, and never risk capital you can't afford to lose.*
