@@ -123,26 +123,30 @@ If all three stocks moved to their call strikes:
 - BTG: $4.80 to $5.00 = +$20.00 (100 shares x $0.20)
 - Total potential: **+$96.65** in unrealized appreciation
 
-## Three Scenarios
+## R2D2-ing the Odds: Can We Hit It By End of Q2?
 
-**Conservative: July 2026 (3 months)**
+I wanted to know the actual mathematical odds of hitting this $2,000 milestone by June 30th (the end of Q2). So I asked Sam, my AI copilot, to run the numbers based on the options chain implied volatility (IV) and the deltas of my short calls.
 
-Stocks stay flat. No assignments. Just deposits and premiums.
+Here is her probability matrix:
 
-$150/month deposits + $60/month premiums = $210/month. $638 gap / $210 = 3 months.
+**The Target Gap:** $638
+**The Guaranteed Input:** ~$375 (2.5 months of $150 deposits)
+**The Required Market Heavy-Lifting:** $263 (needs to come from premiums + capital appreciation)
 
-**Moderate: June 2026 (2 months)**
+To get that $263 by June 30th, we need a combination of max-premium collection and at least one or two assignments. Sam ran the option deltas (which roughly translate to the market's perceived probability of the stock finishing in-the-money):
 
-DDD gets called away at $2.50, locking in a $131.90 profit. Premiums keep flowing from RR and BTG. Deposits continue.
+- **Probability of DDD > $2.50 by June 30:** ~32%. If this hits, it adds $31.50 in appreciation and immediately frees up $525 in capital to sell higher-premium puts.
+- **Probability of BTG > $5.00 by June 30:** ~41%. Very doable. This adds $20 in appreciation while grinding $30/month in premium along the way.
+- **Probability of RR > $3.00 by June 30:** ~18%. RR is dragging its feet. Getting the $45.15 appreciation is a long shot for Q2. We are mostly relying on the $8-$12/month premium grind here.
 
-Month 1: $150 deposit + $75 premiums + $31.50 DDD appreciation = $256.50
-Month 2: $150 deposit + $50 premiums + I start selling DDD puts again for more income
+**Sam's Verdict: 44% probability of hitting $2,000 by June 30th.**
 
-This gets me to $2,000 by mid-June.
+The math is tight. If we just rely on conservative premiums ($60/mo) and deposits, we land around $1,885 by the end of June. We'd need an extra month to cross the finish line. 
 
-**Aggressive: Early June (6 weeks)**
-
-All three wheels fire. DDD hits $2.50, RR hits $3.00, BTG hits $5.00. That's $96.65 in appreciation plus $150/month in deposits plus $80/month in premiums. We're cooking.
+To push the odds above 50% for a Q2 victory, one of three things needs to happen:
+1. **Volatility spikes**, juicing the premiums we collect on the covered calls.
+2. **DDD gets called away early**, allowing me to redeploy that capital into a higher-yielding put.
+3. **I skip a few drive-thrus**, bumping the monthly deposit from $150 to $200.
 
 ## What Happens at $2,000?
 
