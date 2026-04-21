@@ -125,28 +125,28 @@ If all three stocks moved to their call strikes:
 
 ## R2D2-ing the Odds: Can We Hit It By End of Q2?
 
-I wanted to know the actual mathematical odds of hitting this $2,000 milestone by June 30th (the end of Q2). So I asked Sam, my AI copilot, to run the numbers based on the options chain implied volatility (IV) and the deltas of my short calls.
+I wanted to know the actual mathematical odds of hitting this $2,000 milestone by June 30th (the end of Q2). So I asked Sam, my AI copilot, to run the numbers. Since you guys love the AI stuff, here's exactly how that conversation went:
 
-Here is her probability matrix:
+**[Michael]:** Okay Sam, give it to me straight. What are the odds we hit $2,000 by June 30th? The gap is $638. We have $375 in planned deposits coming in. That means the market needs to hand us $263 in premiums and appreciation in 10 weeks. Can we R2D2 this?
 
-**The Target Gap:** $638
-**The Guaranteed Input:** ~$375 (2.5 months of $150 deposits)
-**The Required Market Heavy-Lifting:** $263 (needs to come from premiums + capital appreciation)
+**[Sam]:** I ran the option deltas. You want it straight? You have a 44% chance of hitting $2,000 by June 30th. 
+* **BTG > $5.00:** 41% probability. Very doable. It's paying you.
+* **DDD > $2.50:** 32% probability.
+* **RR > $3.00:** 18% probability. It's dragging its feet.
 
-To get that $263 by June 30th, we need a combination of max-premium collection and at least one or two assignments. Sam ran the option deltas (which roughly translate to the market's perceived probability of the stock finishing in-the-money):
+**[Michael]:** 44%? That's unacceptable. I want out of Tastytrade by Q2. What if we get an assignment or scrape together another $225, and I start selling $2.50 puts on RR to aggressively average down the basis? Or should we just dump one of the positions? Which one actually has a better chance of making money?
 
-- **Probability of DDD > $2.50 by June 30:** ~32%. If this hits, it adds $31.50 in appreciation and immediately frees up $525 in capital to sell higher-premium puts.
-- **Probability of BTG > $5.00 by June 30:** ~41%. Very doable. This adds $20 in appreciation while grinding $30/month in premium along the way.
-- **Probability of RR > $3.00 by June 30:** ~18%. RR is dragging its feet. Getting the $45.15 appreciation is a long shot for Q2. We are mostly relying on the $8-$12/month premium grind here.
+**[Sam]:** Please don't throw good money after bad. You have $25 in buying power left, you degenerate. Averaging down on a stock with an 18% chance of hitting your strike is exactly how you end up bag-holding it into 2027. 
 
-**Sam's Verdict: 44% probability of hitting $2,000 by June 30th.**
+Look at the math: BTG gives you 2-3% every two weeks. DDD actually has volatility that pays you. RR is a $2.57 stock that pays you $4 every two weeks for the privilege of holding it. 
 
-The math is tight. If we just rely on conservative premiums ($60/mo) and deposits, we land around $1,885 by the end of June. We'd need an extra month to cross the finish line. 
+If DDD gets called away at $2.50, DO NOT put that capital into RR. You take that $525 and you put it into BTG or a new A-grade momentum setup. If you want to beat the 44% odds, you need a volatility spike, an early DDD assignment so we can redeploy, or you need to skip the McDonald's drive-thru and bump your deposits to $200/month. 
 
-To push the odds above 50% for a Q2 victory, one of three things needs to happen:
-1. **Volatility spikes**, juicing the premiums we collect on the covered calls.
-2. **DDD gets called away early**, allowing me to redeploy that capital into a higher-yielding put.
-3. **I skip a few drive-thrus**, bumping the monthly deposit from $150 to $200.
+**[Michael]:** Okay, fine. BTG is the new favorite child. We grind.
+
+***
+
+Will I make it out of Tastytrade by Q2, or will I be stuck selling $3 covered calls for pennies until the sun burns out? Hit the subscribe button to find out.
 
 ## What Happens at $2,000?
 
