@@ -1,10 +1,12 @@
-# Road to $2,000: How I'm Wheeling Three Stocks to Hit My First Transfer Milestone
+# 42%: The Answer to Life, the Universe, and Your $2,000 Problem (The Wheel, the Math, and Don't Panic)
 
 *by Momentum Phinance*
 
-Here's the truth. My Tastytrade account has $1,362 in it. That's not a flex. That's a fact.
+42% is the answer to life, the universe, and everything, according to Douglas Adams. It also happens to be the probability that I escape Tastytrade by the end of Q2. My AI copilot Sam ran the numbers. She was not impressed.
 
-Most brokers won't even let me transfer to another platform until I hit $2,000. So I'm sitting here with a baby account, three wheel positions, and a plan that involves collecting $10 at a time like a kid running a lemonade stand. Except this lemonade stand is built on options math. And I'm going to show you every single dollar.
+This is the third wheel post this week. We covered the 35-Stock Protocol, the Lodgepole Pine, and now the part where I show you the actual grinding mechanics of a baby account trying to get big enough to transfer. My Tastytrade account has $1,362 in it. That is not a flex. That is a fact.
+
+Most brokers will not let you transfer to another platform until you hit $2,000. So I am sitting here with three wheel positions, $25 in buying power, and a plan that involves collecting $10 at a time like a kid running a lemonade stand. Except this lemonade stand runs on options math. And I am going to show you every single dollar.
 
 ## What Is "The Wheel" and Why Do I Keep Talking About It?
 
@@ -24,6 +26,16 @@ I call this your **True Basis**. Not what you paid for the stock. What you paid 
 ## My Three Wheels Right Now
 
 ![Wheel Positions Overview](https://raw.githubusercontent.com/mphinance/mphinance/main/docs/substack/images/wheel_positions_overview.png)
+
+Before we get into the Tastytrade positions, here is the proof that this system actually works at scale. My other wheel tracker, the Decay Derby, is running across a separate $10,000 account. Here is the live scoreboard:
+
+![Decay Derby Dashboard](https://raw.githubusercontent.com/mphinance/mphinance/main/docs/substack/images/decay_derby_dashboard.png)
+
+![Decay Derby Trade Log](https://raw.githubusercontent.com/mphinance/mphinance/main/docs/substack/images/decay_derby_trade_log.png)
+
+ONDS just closed for $17.31 net P/L. AG is active with $32 premium collected on a $20 strike, taking up 20% of the portfolio. Two UAMY positions are grinding with $10 and $15 premiums on the $9.50 strike. Total portfolio value: $10,017.31. Capital free: 61%. Win rate: 100%.
+
+This is not backtested garbage. This is live money at work. Now let's look at the Tastytrade baby account version of the same strategy.
 
 Let me walk through each one.
 
@@ -69,7 +81,9 @@ The thesis is patience. Keep grinding $3 to $7 at a time. Every expired call mov
 
 Cost Basis: **$4.75/share** on 100 shares.
 
-This is the newest position and honestly might be my favorite wheel candidate of the three.
+BTG just joined The Phund today, and it is a no-brainer money glitch.
+
+Gold is ripping to all-time highs. Tariff chaos is driving safe-haven flows into gold. Central banks are buying at record pace. And the dollar is looking shaky. But here is the part most people miss: gold miners are operationally leveraged to the gold price. A 10% move in gold can translate to 30-40% higher profits for a miner. BTG is not just a gold play. It is a leveraged gold play that also pays you a dividend and lets you sell options on top.
 
 ![BTG Wheel Strategy](https://raw.githubusercontent.com/mphinance/mphinance/main/docs/substack/images/btg_wheel_plan.png)
 
@@ -170,8 +184,8 @@ By summer, I'll either be at $2,000, or I'll be really close. And I'll have the 
 
 Drink water. Sell premium. Call your sponsor.
 
-*Not financial advice. I'm a felon with a lemonade stand that sells options premium. But the math is real and the receipts are public.*
+*Not financial advice. I am a felon with a lemonade stand that sells options premium. But the math is real and the receipts are public.*
 
 ---
 
-**Subscribe to Momentum Phinance for weekly updates on the wheel, the Phund, and whatever other degenerate stuff I'm building.**
+**Join The Phund. Subscribe to Momentum Phinance for weekly updates on the wheel, the market, and whatever other degenerate money glitches I am building. Half of every paid subscription goes directly into this account. You are literally funding the escape route.**
