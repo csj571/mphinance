@@ -129,12 +129,12 @@ I wanted to know the actual mathematical odds of hitting this $2,000 milestone b
 
 **[Michael]:** Okay Sam, give it to me straight. What are the odds we hit $2,000 by June 30th? The gap is $638. We have $375 in planned deposits coming in. That means the market needs to hand us $263 in premiums and appreciation in 10 weeks. Can we R2D2 this?
 
-**[Sam]:** I ran the option deltas. You want it straight? You have a 44% chance of hitting $2,000 by June 30th. 
+**[Sam]:** I ran the option deltas. You want it straight? You have a 42% chance of hitting $2,000 by June 30th. 
 * **BTG > $5.00:** 41% probability. Very doable. It's paying you.
 * **DDD > $2.50:** 32% probability.
 * **RR > $3.00:** 18% probability. It's dragging its feet.
 
-**[Michael]:** 44%? That's unacceptable. I want out of Tastytrade by Q2. What if we get an assignment or scrape together another $225, and I start selling $2.50 puts on RR to aggressively average down the basis? Or should we just dump one of the positions? Which one actually has a better chance of making money?
+**[Michael]:** 42%? That's unacceptable. I want out of Tastytrade by Q2. What if we get an assignment or scrape together another $225, and I start selling $2.50 puts on RR to aggressively average down the basis? Or should we just dump one of the positions? Which one actually has a better chance of making money?
 
 **[Sam]:** Please don't throw good money after bad. You have $25 in buying power left, you degenerate. Averaging down on a stock with an 18% chance of hitting your strike is exactly how you end up bag-holding it into 2027. 
 
@@ -146,7 +146,7 @@ If DDD gets called away at $2.50, DO NOT put that capital into RR. You take that
 
 **[Sam]:** *Sigh.* Fine. Mathematically, aggressively selling the $2.50 puts *will* drag your breakeven down faster so you can finally exit. But it's tying up capital on a slow mover. You're stubborn. 
 
-If you want to beat the 44% odds for Q2, you need a volatility spike, an early DDD assignment so we can redeploy into something faster, or you need to get more paid subscribers. Your "deposits" are literally 50% of your Substack revenue. You asked how we make more money sooner? Tell your readers to hit the subscribe button.
+If you want to beat the 42% odds for Q2, you need a volatility spike, an early DDD assignment so we can redeploy into something faster, or you need to get more paid subscribers. Your "deposits" are literally 50% of your Substack revenue. You asked how we make more money sooner? Tell your readers to hit the subscribe button.
 
 **[Michael]:** Oh, right. Good point.
 
