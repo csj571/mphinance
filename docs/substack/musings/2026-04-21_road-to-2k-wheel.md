@@ -140,9 +140,15 @@ I wanted to know the actual mathematical odds of hitting this $2,000 milestone b
 
 Look at the math: BTG gives you 2-3% every two weeks. DDD actually has volatility that pays you. RR is a $2.57 stock that pays you $4 every two weeks for the privilege of holding it. 
 
-If DDD gets called away at $2.50, DO NOT put that capital into RR. You take that $525 and you put it into BTG or a new A-grade momentum setup. If you want to beat the 44% odds, you need a volatility spike, an early DDD assignment so we can redeploy, or you need to skip the McDonald's drive-thru and bump your deposits to $200/month. 
+If DDD gets called away at $2.50, DO NOT put that capital into RR. You take that $525 and you put it into BTG or a new A-grade momentum setup.
 
-**[Michael]:** Okay, fine. BTG is the new favorite child. We grind.
+**[Michael]:** Fuck that. Not if my true basis on RR is still sitting at $2.69. I'm selling $2.50 puts or more $3.00 covered calls until that basis drops below $2.50. Once I can switch strikes and exit without taking a loss, sure, I'll redeploy. But I'm not leaving dead bodies behind just because a robot told me to.
+
+**[Sam]:** *Sigh.* Fine. Mathematically, aggressively selling the $2.50 puts *will* drag your breakeven down faster so you can finally exit. But it's tying up capital on a slow mover. You're stubborn. 
+
+If you want to beat the 44% odds for Q2, you need a volatility spike, an early DDD assignment so we can redeploy into something faster, or you need to skip the McDonald's drive-thru and bump your deposits to $200/month. 
+
+**[Michael]:** Deal. BTG is the new money printer anyway. We grind.
 
 ***
 
