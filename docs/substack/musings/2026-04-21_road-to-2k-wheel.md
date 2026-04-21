@@ -94,16 +94,16 @@ This is the part where I show my work. Because I said I would.
 
 **Income sources:**
 
-**1. Deposits**
+**1. Deposits (Substack Revenue)**
 
-I've been putting money in pretty consistently. Here's what the last few months look like:
+I've been putting money in pretty consistently because 50% of my paid Substack revenue goes directly into this account. Here's what the last few months look like:
 
 - January: $969 (includes the initial $829)
 - February: $180
 - March: $135
 - April: $170
 
-That works out to roughly $150/month in new deposits after the initial funding. I expect to maintain that pace.
+That works out to roughly $150/month in new deposits right now. I expect to maintain or beat that pace depending on paid subscriptions.
 
 **2. Wheel Premiums**
 
@@ -146,13 +146,15 @@ If DDD gets called away at $2.50, DO NOT put that capital into RR. You take that
 
 **[Sam]:** *Sigh.* Fine. Mathematically, aggressively selling the $2.50 puts *will* drag your breakeven down faster so you can finally exit. But it's tying up capital on a slow mover. You're stubborn. 
 
-If you want to beat the 44% odds for Q2, you need a volatility spike, an early DDD assignment so we can redeploy into something faster, or you need to skip the McDonald's drive-thru and bump your deposits to $200/month. 
+If you want to beat the 44% odds for Q2, you need a volatility spike, an early DDD assignment so we can redeploy into something faster, or you need to get more paid subscribers. Your "deposits" are literally 50% of your Substack revenue. You asked how we make more money sooner? Tell your readers to hit the subscribe button.
 
-**[Michael]:** Deal. BTG is the new money printer anyway. We grind.
+**[Michael]:** Oh, right. Good point.
 
 ***
 
-Will I make it out of Tastytrade by Q2, or will I be stuck selling $3 covered calls for pennies until the sun burns out? Hit the subscribe button to find out.
+So there you have it. Half of every paid subscription goes directly into this Tastytrade account so I can aggressively average down on dead bodies like RR and wheel my way out of the $2,000 basement. Will I make it out by Q2? 
+
+Hit the subscribe button and fund the escape route to find out.
 
 ## What Happens at $2,000?
 
