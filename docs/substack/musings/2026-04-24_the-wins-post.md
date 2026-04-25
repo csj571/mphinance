@@ -6,6 +6,8 @@
 
 ---
 
+![The Momentum Phinance Scorecard: 14 for 14](/home/mph/Antigravity/mphinance/docs/substack/images/full_scorecard_14.png)
+
 **I'm a terrible marketer.**
 
 I'm so obsessed with finding the next pick, building the next tool, and writing the next line of code that I forget the most basic rule of this game: you have to show the goddamn receipts.
@@ -17,16 +19,6 @@ No cherry‑picking. No survivorship bias. Just the cold, hard numbers from the 
 **14 picks. 14 winners at peak. An average of 50% returns.**
 
 Let's run the tape.
-
-No cherry-picking. No "well if you bought at the exact low." These are the prices on the day the ink hit your inbox.
-
-14 deep dives. 14 peak winners. Here's every single one.
-
----
-
-## 📊 THE FULL SCORECARD
-
-![The Momentum Phinance Scorecard: 14 for 14](/home/mph/Antigravity/mphinance/docs/substack/images/full_scorecard_14.png)
 
 ---
 
