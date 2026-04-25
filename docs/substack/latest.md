@@ -26,6 +26,10 @@ That was every single screener in the Ghost Alpha pipeline. Four of them. Runnin
 
 Last month I gutted all four and upgraded them from simple boolean filters into multi-factor scoring models. This is what changed.
 
+*(Note: This is a post about the process: how the code actually got written. I have a lot to share about actual money, broker changes for the momentum phund, and the overhaul of the Decay Derby wheel tracker, but I am saving that for the next post. One thing at a time.)*
+
+> **[Substack Image Prompt]:** *A futuristic, minimalist data visualization showing four interconnected data streams merging into a glowing neon core. Dark mode, synthwave aesthetic, high contrast.*
+
 ---
 
 **The Leveraged ETF Screener**
@@ -76,6 +80,8 @@ The thing that surprised me was how often they disagreed. And how those disagree
 
 OpenRouter made this workflow frictionless. One API, 355 models as of this morning, switching between GPT-4o, Claude, Gemini, DeepSeek, Llama 4 like changing a setting in a dropdown. I am not going to tell you it is the cheapest option. Some runs hit a few cents. But the ability to run a logic question through five different reasoning engines in under a minute is not something I am giving up.
 
+> **[Substack Image Prompt]:** *A sleek, dark-mode terminal window with syntax-highlighted code showing an AI prompt. Neon green and blue accents on a dark charcoal background. High contrast, technical, cyberpunk aesthetic.*
+
 ---
 
 **What this means for the dossier**
@@ -95,16 +101,6 @@ The rest of the report got significantly shorter. The Persistence Tracker now sh
 If you have been subscribing and opening the report on your phone and feeling overwhelmed: I heard you. I just did not act on it until now. Sorry about that.
 
 The dossier is at [mphinance.github.io/mphinance/reports/latest.html](https://mphinance.github.io/mphinance/reports/latest.html) and it runs every morning at 5AM CST.
-
----
-
-**Regulatory Heads Up: The PDT Rule is Dead (Kind Of)**
-
-Before we get to the paid section, a quick public service announcement for anyone running an active strategy or trading 0DTEs. FINRA just [adopted new intraday margin requirements](https://www.finra.org/investors/insights/intraday-margin-requirements) effective June 4, 2026. 
-
-The old $25,000 "Pattern Day Trader" rule is gone. Instead, brokers will now monitor your account intraday to ensure you maintain adequate maintenance margin (25% of the market value of your long equity positions) *throughout the entire trading day*. If you get an intraday margin deficit, you have to satisfy it promptly or face a 90-day restriction. 
-
-It gives us more flexibility (no more counting day trades to avoid the PDT flag), but it means your broker's risk engine is now watching your intraday drawdowns in real-time. If you trade with high leverage or run automated active strategies, tighten up your risk parameters.
 
 ---
 
