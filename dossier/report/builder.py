@@ -31,6 +31,7 @@ def build_report(
     market_regime: dict = None,
     leveraged_top_pick: dict = None,
     gamma_warnings: list = None,
+    daily_cuts: dict = None,
 ) -> str:
     """Render the daily Alpha Dossier report as HTML. Returns path to HTML file."""
     env = Environment(
@@ -48,6 +49,15 @@ def build_report(
     pdf_filename = f"{date}_alpha_dossier.pdf"
     md_filename = f"{date}_alpha_dossier.md"
 
+    # ── Convert Markdown to HTML for the AI Narrative ──
+    # The template renders it as raw HTML, so we need to convert markdown tags.
+    import re
+    if ai_narrative:
+        ai_html = re.sub(r'\*\*(.*?)\*\*', r'<strong class="text-white">\1</strong>', ai_narrative)
+        ai_html = ai_html.replace('\n', '<br>')
+    else:
+        ai_html = ""
+
     content = template.render(
         title=REPORT_TITLE,
         author=AUTHOR,
@@ -59,7 +69,7 @@ def build_report(
         scanner_signals=scanner_signals,
         persistence=persistence,
         dossiers=dossiers,
-        ai_narrative=ai_narrative,
+        ai_narrative=ai_html,  # Pass the HTML-converted version to the template
         technical_setups=technical_setups or [],
         csp_setups=csp_setups or [],
         ghost_log=ghost_log,
@@ -68,6 +78,7 @@ def build_report(
         market_regime=market_regime or {},
         leveraged_top_pick=leveraged_top_pick,
         gamma_warnings=gamma_warnings or [],
+        daily_cuts=daily_cuts or {},
         disclaimer=DISCLAIMER,
         pdf_filename=pdf_filename,
         md_filename=md_filename,

@@ -876,6 +876,16 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
     except Exception as e:
         print(f"  [WARN] Leveraged screener failed: {e}")
 
+    # ── Stage 8f: Daily Cuts (Substack/Report streamlined cuts) ──
+    print("\n[11c/16] DAILY CUTS (Prime/Choice/Select)")
+    daily_cuts = {}
+    try:
+        from dossier.daily_cuts import build_daily_cuts
+        daily_cuts = build_daily_cuts(daily_setups_data, leveraged_top_pick)
+        print(f"  ✓ Daily Cuts generated ({len(daily_cuts)} setups)")
+    except Exception as e:
+        print(f"  [WARN] Daily Cuts failed: {e}")
+
     # ── Stage 8c: Chart Generation ──
     print("\n[12/16] CHART GENERATION")
     try:
@@ -978,6 +988,7 @@ def run_pipeline(date: str, dry_run: bool = False, generate_pdf: bool = True):
         market_regime=market_regime,
         leveraged_top_pick=leveraged_top_pick,
         gamma_warnings=gamma_warnings,
+        daily_cuts=daily_cuts,
     )
 
     pdf_path = None

@@ -1,6 +1,6 @@
 ---
-title: "I Rebuilt Every Screener From Scratch. Here's What Changed."
-subtitle: "Four tools. Four rewrites. A small army of AI models. And a daily report that no longer takes 10 minutes to scroll."
+title: "I Upgraded Every Screener to a Scoring Model. Here's What Changed."
+subtitle: "Four tools. A small army of AI models. And a daily report that no longer takes 10 minutes to scroll."
 date: 2026-04-25
 author: Michael (Momentum Phinance)
 tags: [screeners, quant, AI, dossier, daily-cuts, recovery]
@@ -12,21 +12,19 @@ status: draft
 
 In recovery they tell you something that sounds too simple to be useful. Every day, it gets a little easier. But you gotta do it every day. That is the hard part.
 
-I have been sober long enough to know they are right. And I have been building trading systems long enough to know it applies there too. You do not wake up one morning with a working pipeline. You show up. You find what is broken. You fix it. You go to sleep. You do it again.
+I have been sober long enough to know they are right. And I have been building trading systems long enough to know it applies there too. You do not wake up one morning with a working pipeline. You show up. You find what is holding you back. You refine it. You go to sleep. You do it again.
 
-Last month I looked at the four screeners that run every morning inside the Ghost Alpha pipeline and realized something uncomfortable. They were broken. Not in the way that crashes. In the way that feels like it is working because the output looks reasonable. The quiet kind of broken. The kind you do not catch until you are honest enough to look.
+Last month I looked at the four screeners that run every morning inside the Ghost Alpha pipeline and realized something uncomfortable. They were working, but they were lazy. They were simple pass/fail filters. 
 
 If you have ever done a fourth step you know what I am talking about. That moment where you stop telling yourself the story you want to hear and start writing down what actually happened.
 
 So I did that with my code.
 
-There is a bug that lives in every screener I have ever built. It does not crash. It does not throw an error. It just stops looking the moment it finds something.
+There is a limitation that lives in almost every basic screener. It stops looking the moment it finds something. You build a filter. Stock passes. Done. You never ask if there was something better three rows down. You never ask if the pass was barely passing or crushing it. You just take the first yes and move on.
 
-You build a filter. Stock passes. Done. You never ask if there was something better three rows down. You never ask if the pass was barely passing or crushing it. You just take the first yes and move on.
+That was every single screener in the Ghost Alpha pipeline. Four of them. Running since January. They were picking decent setups, but they lacked nuance. They settled for "good enough" instead of hunting for the absolute best.
 
-That was every single screener in the Ghost Alpha pipeline. Four of them. Running since January. I thought they were working because the picks were decent. Turns out they were working *despite* this problem, not because of anything smart.
-
-Last month I gutted all four and rebuilt them. This is what changed.
+Last month I gutted all four and upgraded them from simple boolean filters into multi-factor scoring models. This is what changed.
 
 ---
 
