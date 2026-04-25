@@ -100,6 +100,16 @@ The dossier is at [mphinance.github.io/mphinance/reports/latest.html](https://mp
 
 ---
 
+**Regulatory Heads Up: The PDT Rule is Dead (Kind Of)**
+
+Before we get to the paid section, a quick public service announcement for anyone running an active strategy or trading 0DTEs. FINRA just [adopted new intraday margin requirements](https://www.finra.org/investors/insights/intraday-margin-requirements) effective June 4, 2026. 
+
+The old $25,000 "Pattern Day Trader" rule is gone. Instead, brokers will now monitor your account intraday to ensure you maintain adequate maintenance margin (25% of the market value of your long equity positions) *throughout the entire trading day*. If you get an intraday margin deficit, you have to satisfy it promptly or face a 90-day restriction. 
+
+It gives us more flexibility (no more counting day trades to avoid the PDT flag), but it means your broker's risk engine is now watching your intraday drawdowns in real-time. If you trade with high leverage or run automated active strategies, tighten up your risk parameters.
+
+---
+
 **What the smart money is actually buying right now**
 
 One more thing before you go. This part is for paid subscribers.
