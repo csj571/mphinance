@@ -6,7 +6,7 @@
 
 ---
 
-![The Momentum Phinance Scorecard: 14 for 14](/home/mph/Antigravity/mphinance/docs/substack/images/full_scorecard_14.png)
+![The Momentum Phinance Scorecard: 14 for 14](../images/full_scorecard_14.png)
 
 **I'm a terrible marketer.**
 
@@ -24,7 +24,7 @@ Let's run the tape.
 
 ## 📈 THE PEAK RETURNS
 
-![Peak Returns: Every Deep Dive Since Launch](/home/mph/Antigravity/mphinance/docs/substack/images/full_peak_returns.png)
+![Peak Returns: Every Deep Dive Since Launch](../images/full_peak_returns.png)
 
 **Average peak return across all 14 picks: ~50%**
 
@@ -198,7 +198,7 @@ I'm not showing you this to flex. I'm showing you this because the work is real.
 - **Metaphor 1 (Janitorial):** This publication has become a *Clorox‑scented janitor’s closet* in a world of perfume counters. It’s not for everyone, and that’s the point.
 - **Metaphor 2 (Tupperware):** I’m not a celebrity chef putting on a show. I’m the guy who designed the *Tupperware*: the system that holds the value. Some people want the show, but the ones who stick around want the system.
 
-![Honest Question For My Readers](/home/mph/Antigravity/mphinance/docs/substack/images/engagement_question.png)
+![Honest Question For My Readers](../images/engagement_question.png)
 
 Here's something I've noticed. My engagement has been dropping. Fewer likes. Fewer comments. And I've been sitting with it the way I sit with a 4th step, trying to figure out what my part in it is.
 
