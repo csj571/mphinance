@@ -2,79 +2,31 @@
 
 ## What Just Shipped (This Session)
 
-### Dossier Template Major Simplification
-**Commit:** `8632bb8`
+### Daily Cuts Pipeline & Template Overhaul
+- **Built `dossier/daily_cuts.py`**: A new extraction engine that runs all screeners and isolates the single best Momentum trade, CSP setup, and Leveraged ETF play, assigning them Prime/Choice/Select conviction tiers.
+- **Wired into `generate.py`**: Injected as Stage 8f in the pipeline, seamlessly passing the new payload down to the template builder.
+- **Template Gutted & Upgraded (`template.html`)**: Removed the massive legacy data grids (Daily Momentum Picks, Leveraged ETF Play, Scanner Signals Matrix, Technical Setups, and CSP Setups). The report is now sleek and punchy.
+- **Paywall Positioning**: Inserted the new 3-card `DAILY CUTS` section **immediately below the paywall**, ensuring the most actionable, high-conviction trades are gated for premium subscribers. 
 
-The daily report was 13,000px tall. It's now a fraction of that. Here's what changed in `dossier/report/template.html` (1,320 → 1,100 lines):
+### Substack Post Polished & Pushed
+- Fixed the GitHub Pages deployment bug by stripping out symlinks (`latest.md` and `latest_hero.png`) and replacing them with physical file copies of the post and hero image, ensuring the permalink resolves correctly.
+- Pipeline pushed the post to the Substack drafts via API successfully.
 
-- **Removed:** Ghost Dev Log and Sam's Roadmap sections from the daily report. These were showing internal dev notes to paid subs. They still run in the blog pipeline, just not user-facing.
-- **Compacted:** Persistence Tracker went from listing 90+ tickers vertically (~2,500px) to pill-style chips showing top 10 Lifers + top 10 High Conviction with an overflow count.
-- **Removed:** Full Technical Setups (Tao of Trading) section — the data lives at individual ticker pages, doesn't need to be in the daily.
-- **Replaced:** 8 full ticker deep-dive cards (~5,000px with EMA matrices, pivot tables, Fibonacci, oscillator bars, news) with 3 compact cards showing grade + tech/fund score + price + RSI + verdict + "View Deep Dive →" link to the ticker page.
-- **Fixed:** Orphaned old ticker card HTML was surgically removed after the initial replacement left it stranded.
-- Template validates clean with Jinja2.
-
-**Also still broken in the report (known issues to fix next session):**
-- TickerTrace Institutional Signals section is empty — "As of: unknown" — the TickerTrace scraper hasn't run since March 6. Michael is going to fix TickerTrace now.
-- Scanner Signal Matrix still shows (it wasn't removed this session) — 15 tickers all showing "CHOP 90-100%" which isn't very actionable. Consider removing or raising the score threshold.
-- Market Regime section was rendering a raw Python dict dump previously. The template itself handles it correctly — the issue is in how `market_regime` data flows from `generate.py`. Verify the dict keys match what the template expects.
-
-### New Substack Post Draft
-**File:** `docs/substack/musings/2026-04-25_quant-upgrade-post.md`
-
-Post covers:
-1. The "stop-at-first-yes" bug present in all 4 old screeners
-2. Specific logic changes to each screener: Leveraged (6-factor EdgeScore), CSP (5-factor with conviction tiers), Momentum (Bounce 2.0 pullback detection), LEAPS (combined fundamental + technical score)
-3. Multi-model AI code review workflow — running the same quant logic through multiple AI providers simultaneously via OpenRouter, using disagreements between models as a signal
-4. Introduction of the Daily Cuts concept (Prime/Choice/Select tiers)
-5. Announcement that the dossier got shorter
-
-**Status:** Draft. Needs: hero image, review for voice, then push to Substack via the draft API.
-
-### OpenRouter Models Cached
-**File:** `.gemini_scratch/openrouter_models.json`
-
-355 live models as of 2026-04-25 08:10 AM CST. Fetched fresh so future constellation queries use current model IDs instead of deprecated ones. Key current models to use:
-- `openai/gpt-4o-mini` — cheap, fast, good for routing/ideas
-- `anthropic/claude-3-5-haiku` — Claude's fast tier
-- `google/gemini-2.5-flash` — Gemini's current fast model (not 1.5 — deprecated)
-- `meta-llama/llama-4-scout` — 327k context, $0.08/1M tokens
-- `google/gemini-2.5-pro` — 1M context, $1.25/1M tokens for heavy lifting
-- `deepseek/deepseek-r1-0528` — strong reasoning, $0.50/1M tokens
-
-Constellation query scripts:
-- `.gemini_scratch/constellation_query.py` — original 3-lane
-- `.gemini_scratch/constellation_v2.py` — updated with current models, 4-lane
-
-### Credential Note
-- OpenRouter key lives in `/home/mph/Antigravity/tradier/momentum-terminal/.env`
-- VaultGuard `OPENROUTER_API_KEY` entry may need updating with this key
+### Pipeline Validated & Deployed
+- Ran a full execution of the Alpha Dossier pipeline (`python -m dossier.generate --no-pdf`).
+- It successfully pulled 192 signals, finalized the cuts (Gold: PNC, Silver: ACGL, Bronze: HIG), generated the streamlined HTML, and pushed all updates to GitHub Pages.
 
 ---
 
 ## What's Next (When Michael Returns)
 
 ### Priority 1 — TickerTrace Revival
-Michael went to fix the TickerTrace scraper. It hasn't run since March 6. Once it's back:
-- Re-wire the TickerTrace → dossier pipeline so Institutional Signals section shows real data
-- The dossier template already handles it correctly — it just needs actual data flowing in
+Michael is fixing the TickerTrace scraper. It hasn't run since March 6. In the latest pipeline run, TickerTrace retried 3 times for each ticker and timed out (which gracefully falls back but adds 2-3 minutes to the pipeline execution).
+- Once it's back online, the dossier pipeline will automatically start pulling Institutional Signals again. No pipeline changes needed.
 
-### Priority 2 — Daily Cuts Pipeline
-The Substack post announces Daily Cuts but the actual code doesn't exist yet. Need to build:
-- `dossier/daily_cuts.py` — new module that runs all three screeners and outputs Prime/Choice/Select tiers
-- `docs/api/daily-cuts.json` — API endpoint for the cuts
-- Wire into `generate.py` as a new stage after momentum_picks
-- Add the Daily Cuts HTML section to the template (the 3-column Prime/Choice/Select card block)
-
-### Priority 3 — Substack Post to Production
-- Add a hero image (or generate one)
-- Final voice check
-- Push via Substack draft API
-
-### Priority 4 — Scanner Signal Matrix
-Currently shows 15 tickers all at "CHOP 90-100%". Either:
-- Remove from daily report entirely
-- Or raise the minimum score threshold so only real signals show
+### Priority 2 — Scanner Matrix & Status Check
+- Keep an eye on the `docs/reports/latest.html` layout on mobile to make sure the new Daily Cuts cards wrap cleanly. 
+- You may want to review if any other legacy metrics need stripping out from the individual ticker pages now that the daily report has been condensed.
 
 ---
 
