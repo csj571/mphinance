@@ -7,17 +7,21 @@
 **Regime check:** VIX at 18.
 
 
-## 🥇 Gold Pick: KGC
+## 🥇 Gold Pick: PNC
 
 | Metric | Value |
 |--------|-------|
-| **Score** | 32/100 (A) |
+| **Score** | 77/100 (A) |
 | **Entry** | $0.00 |
 | **Target** | $0.00 (0.0% upside) |
 | **Stop** | $0.00 |
 
 *This is the highest-scoring setup from today's 16-stage analysis pipeline.*
 
+
+### Runners Up
+- 🥈 **ACGL** — Score: 76/100
+- 🥉 **HIG** — Score: 75/100
 
 
 ## 📊 Today's Numbers
