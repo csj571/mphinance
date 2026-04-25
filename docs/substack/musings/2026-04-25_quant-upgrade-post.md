@@ -3,13 +3,24 @@ title: "I Rebuilt Every Screener From Scratch. Here's What Changed."
 subtitle: "Four tools. Four rewrites. A small army of AI models. And a daily report that no longer takes 10 minutes to scroll."
 date: 2026-04-25
 author: Michael (Momentum Phinance)
-tags: [screeners, quant, AI, dossier, daily-cuts]
+tags: [screeners, quant, AI, dossier, daily-cuts, recovery]
+hero_image: 2026-04-25_hero.png
 status: draft
 ---
 
-There is a bug that lives in every screener I have ever built.
+![2026-04-25_hero.png](2026-04-25_hero.png)
 
-It does not crash. It does not throw an error. It just stops looking the moment it finds something.
+In recovery they tell you something that sounds too simple to be useful. Every day, it gets a little easier. But you gotta do it every day. That is the hard part.
+
+I have been sober long enough to know they are right. And I have been building trading systems long enough to know it applies there too. You do not wake up one morning with a working pipeline. You show up. You find what is broken. You fix it. You go to sleep. You do it again.
+
+Last month I looked at the four screeners that run every morning inside the Ghost Alpha pipeline and realized something uncomfortable. They were broken. Not in the way that crashes. In the way that feels like it is working because the output looks reasonable. The quiet kind of broken. The kind you do not catch until you are honest enough to look.
+
+If you have ever done a fourth step you know what I am talking about. That moment where you stop telling yourself the story you want to hear and start writing down what actually happened.
+
+So I did that with my code.
+
+There is a bug that lives in every screener I have ever built. It does not crash. It does not throw an error. It just stops looking the moment it finds something.
 
 You build a filter. Stock passes. Done. You never ask if there was something better three rows down. You never ask if the pass was barely passing or crushing it. You just take the first yes and move on.
 
@@ -86,6 +97,34 @@ The rest of the report got significantly shorter. The Persistence Tracker now sh
 If you have been subscribing and opening the report on your phone and feeling overwhelmed: I heard you. I just did not act on it until now. Sorry about that.
 
 The dossier is at [mphinance.github.io/mphinance/reports/latest.html](https://mphinance.github.io/mphinance/reports/latest.html) and it runs every morning at 5AM CST.
+
+---
+
+**What the smart money is actually buying right now**
+
+One more thing before you go. This part is for paid subscribers.
+
+I run a tool called TickerTrace that scrapes the daily holdings of 40+ ETFs, including Avantis AVUV. Avantis does not rebalance quarterly like most funds. They adjust holdings daily. Which means if you track them every single day for seven weeks, you get a real-time map of where a $9B small-cap value fund is putting money.
+
+I ranked every position change from March 7 through April 25 by net portfolio weight added. Not share count, because a million shares of a $3 stock is not the same conviction as a million shares of a $30 stock. Weight tells you how much of the fund they are willing to bet on this name.
+
+Here are the top three.
+
+**1. ViaSat (VSAT). +2.14% portfolio weight added.**
+
+Bought on 12 separate days. Sold on only 2. Current weight is 1.16% of the fund, up from basically nothing seven weeks ago. This is a satellite communications company trading around $14 after spending most of 2024 above $25. Avantis is building a full position here while nobody is watching. The thesis is straightforward. They merged with Inmarsat, the debt load spooked everyone, and now the market is pricing this like the integration will fail. Avantis is betting it will not.
+
+**2. SM Energy (SM). +1.79% portfolio weight added.**
+
+Bought on 8 days, sold on 3. Now sitting at 0.89% of the fund. SM is a Permian Basin E&P trading around a $4B market cap. Avantis has been accumulating energy names across the board this cycle, but SM stands out because the weight change is almost entirely net buying. Not rebalancing. Not trimming other positions to stay neutral. They are actively adding to this name while crude sits in the mid-60s. That tells you something about where they think oil is going.
+
+**3. Matson (MATX). +1.76% portfolio weight added. Zero sells.**
+
+This is the cleanest signal of the three. Bought on 30 out of 32 trading days. Never sold a single share. Matson runs container shipping between the US mainland, Hawaii, Alaska, Guam, and the South Pacific. It is not a growth story. It is a moat story. Those routes have limited competition, the Jones Act protects domestic carriers, and Matson just posted their highest annual revenue in company history. Avantis apparently agrees.
+
+Three names. Seven weeks of daily data. You will not find this breakdown anywhere else because nobody else is scraping daily holdings and ranking by weight delta.
+
+The full TickerTrace dashboard with all 40+ ETFs is at [tickertrace.pro](https://www.tickertrace.pro).
 
 ---
 

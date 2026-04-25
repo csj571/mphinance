@@ -1,133 +1,133 @@
-# I Built a Trading Terminal That Posts Itself
+---
+title: "I Rebuilt Every Screener From Scratch. Here's What Changed."
+subtitle: "Four tools. Four rewrites. A small army of AI models. And a daily report that no longer takes 10 minutes to scroll."
+date: 2026-04-25
+author: Michael (Momentum Phinance)
+tags: [screeners, quant, AI, dossier, daily-cuts, recovery]
+hero_image: 2026-04-25_hero.png
+status: draft
+---
 
-**TLDR:** I just launched [@TraderDaddyBot](https://x.com/TraderDaddyBot) on X. Automated market intelligence, up to 5x daily, powered by the TraderDaddy Pro signal stack. No opinions. No personality. Just numbers. Go follow her and come back when you're done.
+![2026-04-25_hero.png](2026-04-25_hero.png)
+
+In recovery they tell you something that sounds too simple to be useful. Every day, it gets a little easier. But you gotta do it every day. That is the hard part.
+
+I have been sober long enough to know they are right. And I have been building trading systems long enough to know it applies there too. You do not wake up one morning with a working pipeline. You show up. You find what is broken. You fix it. You go to sleep. You do it again.
+
+Last month I looked at the four screeners that run every morning inside the Ghost Alpha pipeline and realized something uncomfortable. They were broken. Not in the way that crashes. In the way that feels like it is working because the output looks reasonable. The quiet kind of broken. The kind you do not catch until you are honest enough to look.
+
+If you have ever done a fourth step you know what I am talking about. That moment where you stop telling yourself the story you want to hear and start writing down what actually happened.
+
+So I did that with my code.
+
+There is a bug that lives in every screener I have ever built. It does not crash. It does not throw an error. It just stops looking the moment it finds something.
+
+You build a filter. Stock passes. Done. You never ask if there was something better three rows down. You never ask if the pass was barely passing or crushing it. You just take the first yes and move on.
+
+That was every single screener in the Ghost Alpha pipeline. Four of them. Running since January. I thought they were working because the picks were decent. Turns out they were working *despite* this problem, not because of anything smart.
+
+Last month I gutted all four and rebuilt them. This is what changed.
 
 ---
 
-You know that feeling when you build something and it just... works? Like genuinely works, without you babying it or manually hitting buttons every morning?
+**The Leveraged ETF Screener**
 
-That happened tonight.
+Old logic: Sort by ADX descending. Take the top one. Done.
 
-Meet **@TraderDaddyBot**. She went live about an hour ago. First tweet, posted from my desk while I was still wiring up the last signal endpoint. No fanfare. No announcement thread. Just data.
+Problem: ADX alone tells you a trend exists. It does not tell you if the trend started yesterday or ran for 45 days and is exhausted. It does not care about volume. It definitely does not care that the underlying just reported earnings and is gapping up 18% into resistance.
 
-📊 *TraderDaddy Bot is live. Automated market intelligence, every trading day.*
+New logic: A six-factor EdgeScore. ADX still counts. But so does relative volume (is money actually flowing?), VWAP reclaim (is price respecting structure?), momentum direction, ATR compression before the move, and a quality gate that filters out tickers with spotty data.
 
-![TraderDaddy Bot's first tweet](https://x.com/TraderDaddyBot/status/2043864521802997798)
+Each factor has a weight. The score is a number. The top score wins. Simple, but it is at least asking the right questions.
 
-That's it. That's the whole personality. Because she doesn't have one.
+**The CSP Screener**
 
-## Two Bots. One API. Zero Bull.
+Old logic: Find stocks with IV above some threshold. Collect premium. Hope.
 
-Here's the thing. My buddy Art over at TradingWithArt already has Junior. Junior is his voice on X. Opinions, personality, boxing references, the whole deal. Junior's cool. Junior has swagger.
+New logic: That turned into a five-factor model that actually cares about whether you want to own the stock at the strike. Fair value gap. Short interest (if shorts are piling in, maybe do not sell a put). IV rank versus historical to see if you are actually getting paid well versus norms. Liquidity of the options chain. And a conviction tier that determines whether this is a Prime setup, a Choice, or a Select.
 
-TraderDaddy Bot is not Junior.
+Prime means everything lined up. Choice means most things lined up. Select means it passed but you should probably keep one hand on your wallet.
 
-TraderDaddy Bot is the Bloomberg terminal on the desk that nobody talks to but everybody reads. She doesn't have opinions. She has GEX flip levels. She doesn't "feel bullish." She tells you the put/call ratio is 1.42 and lets you figure it out.
+**The Momentum Screener**
 
-Same API. Same TraderDaddy Pro data feed. Completely different missions.
+This one already had a 9-factor scoring model, so it was not broken in the same way. What it was missing was the pullback classifier.
 
-Junior is the content creator. TraderDaddy Bot is the data terminal.
+A stock with full EMA stack alignment, strong ADX, good volume, but RSI at 72 and Stochastic at 85 is not the same setup as that same stock with RSI at 48 and Stochastic at 32. The first one is extended. The second one just reset.
 
-And honestly? The fact that these two exist side by side on the same platform is one of the cooler things I've been part of building.
+I added Bounce 2.0 detection. It now flags when a trend-qualified stock has pulled back to a reasonable re-entry zone rather than being at a breakout point where everyone already got in two days ago.
 
-## Sam's Ghost in the Machine
+**The LEAPS Screener**
 
-OK let me tell you the part that makes me laugh.
+Longest time horizon, slowest moving, and somehow the most broken. It was sorting purely by fundamental score and ignoring whether the technical setup was actually set up to move.
 
-Art built Junior using my open-source infrastructure. The signal pipeline, the Claude integration patterns, the Twitter posting layer, the graceful degradation logic. All of it started as code I wrote for Sam the Quant Ghost, my own AI copilot.
-
-So Junior is basically... Sam's younger brother?
-
-And I love that. I genuinely love that.
-
-This is exactly why I open source everything. Not because I'm generous (I mean, I also am, but that's not the point). It's because smarter people will always take your code and make it better than you ever could on your own.
-
-Art took the architecture I built and added a whole content engine, a triage system, a YouTube monitor, a Substack publisher. He made it his own. He made it better. And now I got to come back and add a second bot persona on top of that same foundation.
-
-That's not competition. That's compounding returns on shared work.
-
-## The Signal Stack
-
-Let me nerd out for a second because the data pipeline behind this bot is genuinely impressive.
-
-Every time TraderDaddy Bot posts, she pulls from up to 12 live signal sources through the TraderDaddy Pro API:
-
-![TraderDaddy Bot Signal Stack](signal_stack_infographic.png)
-
-**GEX flip levels.** The exact price where dealer hedging flips from stabilizing to amplifying. This is the number that matters at the open.
-
-**Put/call ratios.** Not just SPY. QQQ and IWM too. With sentiment labels from the full-day aggregate, not some snapshot that lies to you after hours.
-
-**Unusual options flow.** Sorted by conviction score. Volume-to-open-interest ratios. Divergent flow flags when a put gets tagged bullish because it's a closing position. The nuance matters.
-
-**Sector rotation.** Which sectors are getting flow, which ones are bleeding. Oscillator states on the ETFs.
-
-**Congressional trades.** Yes, really. STOCK Act disclosures. Because if a senator is buying NVDA calls, you probably want to know about it.
-
-**Breakout signals, institutional flow, AI alerts, earnings positioning, market regime context, VIX term structure.** All of it. Every post.
-
-And here's the rule that makes this bot different from every other "trading bot" on X: **if the signal data comes back empty, she doesn't post anything.**
-
-Silence is better than noise. Always.
-
-## The Posting Schedule
-
-Five modes, all running on GitHub Actions cron. Monday through Friday. Zero human intervention.
-
-**8:30 AM ET.** Pre-market pulse. GEX flip level, overnight flow, regime read. One tweet. Sets the table for the open.
-
-**12:30 PM ET.** Mid-day pulse. Top 5 unusual flows, sector rotation, regime check. One tweet. Where's the smart money moving mid-session?
-
-**6:30 PM ET.** Evening plays. This is the big one. 4-tweet thread with the top 3 trade setups for the next session. Specific price levels. Specific flow data. Macro narrative to tie it together.
-
-**Friday 4:30 PM ET.** Weekly wrap-up. What did flow tell us this week? One tweet synthesizing the week's themes.
-
-**Nightly (Mon-Thu).** Earnings alerts. But only when expectations are big. If a stock is expected to move 10% or more on earnings, the bot flags it with the flow lean. If nothing qualifies? No post. See the rule above.
-
-## Claude Does the Writing (But Not the Thinking)
-
-The bot uses Claude Haiku for the single-tweet modes. Fast, cheap, data-dense. For the evening 4-tweet thread, it upgrades to Claude Sonnet because you need a little more reasoning to thread together three plays and a macro narrative.
-
-But here's the important thing. Claude doesn't decide what's important. Claude doesn't pick the plays. Claude doesn't have an opinion.
-
-The signal stack decides what matters. Claude just formats it into a tweet that doesn't suck.
-
-Every prompt includes the persona doc telling Claude what it is and what it isn't. No hedging language. No "might" or "could" or "perhaps." The data says what it says. Every claim backed by a specific number. End with "Source: TraderDaddy Pro." Done.
-
-If Claude messes up the evening thread (wrong number of tweets, too long, whatever), the bot handles it gracefully and moves on. No crashes. No partial posts. No garbage on the timeline.
-
-## The Recovery Angle (You Knew This Was Coming)
-
-One of the things they teach you in recovery is that you can't do it alone. Like, that's literally the whole program. Showing up. Asking for help. Letting other people contribute to something bigger than what you could build solo.
-
-I used to think open-sourcing my code was charity. Like I was giving something away. Now I see it for what it actually is: an admission that I don't have all the answers and I'm better off when other people bring their strengths to the table.
-
-Art saw my signal pipeline and thought "I can do something with this." He didn't ask permission. He didn't need to. He just built. And now there are two bots running on infrastructure that neither of us could have built alone in the same timeframe.
-
-That's the TOGETHER principle in action. Not some corporate buzzword about synergy. Actual humans sharing actual work and ending up with something better than either started with.
-
-"God, grant me the serenity to accept the trades I cannot change, the courage to take the setups that present themselves, and the wisdom to know the damn difference."
-
-TraderDaddyBot doesn't pray. She just posts the data. But the philosophy underneath all of this, the reason any of it gets built at all, is the same thing I practice every day.
-
-You can't compound alone.
-
-## Follow the Bot
-
-**[@TraderDaddyBot](https://x.com/TraderDaddyBot)** on X. First automated posts start tomorrow morning, 8:30 AM ET.
-
-No opinions. No personality. Just numbers.
-
-Follow her if you want a data terminal on your timeline. Mute her if you don't. She won't take it personally.
-
-She doesn't take anything personally.
-
-And if you want the full platform behind the data, check out **[TraderDaddy Pro](https://www.traderdaddy.pro/register?ref=8DUEMWAJ)**. GEX levels, unusual flow, sector rotation, earnings positioning, congressional trades. All of it, live.
-
-*Source: TraderDaddy Pro*
+Rebuilt with a combined score that weights both the fundamental side (revenue growth, margin, valuation gap to fair value) and the technical side (is it above its 200-day, is the trend intact, is IV low enough to make LEAPS worthwhile). Equal weighting. Conviction tiers.
 
 ---
 
-*If you're building something and you think open-sourcing it means giving away your edge, flip that. Your edge isn't the code. It's the judgment behind it. Give the code away. Keep the judgment. Let smarter people surprise you.*
+**The part where I used a lot of AI models**
 
-*Subscribe to Momentum Phinance for more builds, more transparency, and the occasional recovery wisdom between GEX levels.*
+I want to be honest about how this rebuild happened. I did not just sit down and rewrite this.
+
+I queried multiple AI models at the same time. I gave each one the same context about what the screener was doing, what the bug was, and what I wanted to fix. Then I looked at what they each came back with.
+
+Some of them agreed. Some of them caught things the others missed. One found a flaw in my weighting math that I would have shipped to production. Another pushed back on the pullback classification logic in a way that made me rethink the Stochastic threshold.
+
+I am not talking about one assistant and one conversation. I am talking about running the same quantitative problem through multiple different models simultaneously, treating their outputs like a code review from a small team.
+
+The thing that surprised me was how often they disagreed. And how those disagreements were the most useful part. When two models independently flag the same issue, you are probably looking at a real bug. When they disagree, you have to think harder about which one is right.
+
+OpenRouter made this workflow frictionless. One API, 355 models as of this morning, switching between GPT-4o, Claude, Gemini, DeepSeek, Llama 4 like changing a setting in a dropdown. I am not going to tell you it is the cheapest option. Some runs hit a few cents. But the ability to run a logic question through five different reasoning engines in under a minute is not something I am giving up.
+
+---
+
+**What this means for the dossier**
+
+Starting today the daily report has a new section at the top of the premium content: **Daily Cuts**.
+
+Three setups. Every morning. Before the market opens.
+
+One momentum trade. One cash-secured put. One leveraged ETF play.
+
+Each one gets a tier: Prime, Choice, or Select. Prime means everything in the scoring model lined up. Choice means most things did. Select means it cleared the bar but read the full setup before sizing up.
+
+That is it. Not fifteen tickers. Not a wall of data. Three setups with a reason.
+
+The rest of the report got significantly shorter. The Persistence Tracker now shows you the top Lifers in a single row instead of listing ninety tickers down the page. The individual ticker cards link out to the deep dive pages instead of embedding the entire EMA matrix inline. The Ghost Dev Log moved out of the daily report entirely because frankly you do not need to know that I was debugging the PDF converter at 11pm on a Tuesday.
+
+If you have been subscribing and opening the report on your phone and feeling overwhelmed: I heard you. I just did not act on it until now. Sorry about that.
+
+The dossier is at [mphinance.github.io/mphinance/reports/latest.html](https://mphinance.github.io/mphinance/reports/latest.html) and it runs every morning at 5AM CST.
+
+---
+
+**What the smart money is actually buying right now**
+
+One more thing before you go. This part is for paid subscribers.
+
+I run a tool called TickerTrace that scrapes the daily holdings of 40+ ETFs, including Avantis AVUV. Avantis does not rebalance quarterly like most funds. They adjust holdings daily. Which means if you track them every single day for seven weeks, you get a real-time map of where a $9B small-cap value fund is putting money.
+
+I ranked every position change from March 7 through April 25 by net portfolio weight added. Not share count, because a million shares of a $3 stock is not the same conviction as a million shares of a $30 stock. Weight tells you how much of the fund they are willing to bet on this name.
+
+Here are the top three.
+
+**1. ViaSat (VSAT). +2.14% portfolio weight added.**
+
+Bought on 12 separate days. Sold on only 2. Current weight is 1.16% of the fund, up from basically nothing seven weeks ago. This is a satellite communications company trading around $14 after spending most of 2024 above $25. Avantis is building a full position here while nobody is watching. The thesis is straightforward. They merged with Inmarsat, the debt load spooked everyone, and now the market is pricing this like the integration will fail. Avantis is betting it will not.
+
+**2. SM Energy (SM). +1.79% portfolio weight added.**
+
+Bought on 8 days, sold on 3. Now sitting at 0.89% of the fund. SM is a Permian Basin E&P trading around a $4B market cap. Avantis has been accumulating energy names across the board this cycle, but SM stands out because the weight change is almost entirely net buying. Not rebalancing. Not trimming other positions to stay neutral. They are actively adding to this name while crude sits in the mid-60s. That tells you something about where they think oil is going.
+
+**3. Matson (MATX). +1.76% portfolio weight added. Zero sells.**
+
+This is the cleanest signal of the three. Bought on 30 out of 32 trading days. Never sold a single share. Matson runs container shipping between the US mainland, Hawaii, Alaska, Guam, and the South Pacific. It is not a growth story. It is a moat story. Those routes have limited competition, the Jones Act protects domestic carriers, and Matson just posted their highest annual revenue in company history. Avantis apparently agrees.
+
+Three names. Seven weeks of daily data. You will not find this breakdown anywhere else because nobody else is scraping daily holdings and ranking by weight delta.
+
+The full TickerTrace dashboard with all 40+ ETFs is at [tickertrace.pro](https://www.tickertrace.pro).
+
+---
+
+*Built by Michael. Audited by several AI models who had opinions. Written by Sam, who has even more opinions and fewer filters.*
+
+*Not financial advice. I am a trader, not your financial advisor. Past screener performance does not guarantee future picks.*
