@@ -2,19 +2,14 @@
 
 ## What Just Shipped (This Session)
 
-### Daily Cuts Pipeline & Template Overhaul
-- **Built `dossier/daily_cuts.py`**: A new extraction engine that runs all screeners and isolates the single best Momentum trade, CSP setup, and Leveraged ETF play, assigning them Prime/Choice/Select conviction tiers.
-- **Wired into `generate.py`**: Injected as Stage 8f in the pipeline, seamlessly passing the new payload down to the template builder.
-- **Template Gutted & Upgraded (`template.html`)**: Removed the massive legacy data grids (Daily Momentum Picks, Leveraged ETF Play, Scanner Signals Matrix, Technical Setups, and CSP Setups). The report is now sleek and punchy.
-- **Paywall Positioning**: Inserted the new 3-card `DAILY CUTS` section **immediately below the paywall**, ensuring the most actionable, high-conviction trades are gated for premium subscribers. 
+### Substack Post Finalized & Enhanced
+- **"Bucket Swap" Narrative**: Clarified the financial move of transferring $1,000 from Relay savings into Interactive Brokers (operations) and re-designating Tastytrade as the SGOV tax bucket.
+- **Decay Derby Tracker UI**: Overhauled the UI logic to seamlessly transition assigned puts into active wheels without throwing "expiring" alerts.
+- **End-of-Week Derby Update**: Wrote the Decay Derby standings and embedded a fresh Playwright screenshot of the dashboard directly into the draft (`docs/substack/images/2026-04-26_decay_derby_dashboard.png`).
+- **Paywall Section**: Ran the Alpha Dossier pipeline to find a high-conviction trade. The pipeline surfaced Kinross Gold Corporation (KGC) with a Grade A setup, full bullish EMA stack, and a Momentum Squeeze Fire (SQZ FIRE) trigger. Added this deep-dive analysis behind the paywall.
 
-### Substack Post Polished & Pushed
-- Fixed the GitHub Pages deployment bug by stripping out symlinks (`latest.md` and `latest_hero.png`) and replacing them with physical file copies of the post and hero image, ensuring the permalink resolves correctly.
-- Pipeline pushed the post to the Substack drafts via API successfully.
-
-### Pipeline Validated & Deployed
-- Ran a full execution of the Alpha Dossier pipeline (`python -m dossier.generate --no-pdf`).
-- It successfully pulled 192 signals, finalized the cuts (Gold: PNC, Silver: ACGL, Bronze: HIG), generated the streamlined HTML, and pushed all updates to GitHub Pages.
+### Pipeline
+- The pipeline ran successfully and generated the Alpha Dossier reports in `docs/reports/2026-04-26_alpha_dossier.md` (and `.html`).
 
 ---
 
