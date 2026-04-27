@@ -7,6 +7,8 @@ tags: [ai, discord, traderdaddy, sam, options, screener, tools]
 status: draft
 ---
 
+> 🖼️ **IMAGE PROMPT (Hero):** "A dark, cinematic trading terminal interface at night. Multiple glowing green monitor screens show live stock charts, options flow heatmaps, and a blinking AI chat window. Floating above the screens is a translucent ghost figure made of data and light, reading from a stack of books. Neon green and deep navy color palette. Hyper-detailed, dramatic lighting. Photorealistic digital art."
+
 📣 *This post is specifically for paid subscribers in the TraderDaddy Discord. If you are not in there yet, the link is at the bottom. This is what you have been missing.*
 
 ---
@@ -103,6 +105,8 @@ That is a three-step research workflow that used to take 30 minutes. Sam does it
 
 ---
 
+> 🖼️ **IMAGE PROMPT (Mid-Post):** "A sleek dark-mode Discord chat window showing a conversation between a user and an AI named Sam. The user asks about unusual options flow in semiconductors. Sam responds with a clean structured breakdown including ticker symbols, delta values, and a verdict. Neon green text on deep dark background. Futuristic, minimal, Bloomberg terminal aesthetic."
+
 Here is the truth. I did not build Sam to be a gimmick. I built her because I was tired of the information being locked behind expensive terminals and insider networks. The tools exist. The data exists. The books exist. I just wired everything together and gave it a personality.
 
 She is live in the TraderDaddy Discord right now. If you are a paid subscriber, you already have access. Jump in and start asking questions.
@@ -110,6 +114,8 @@ She is live in the TraderDaddy Discord right now. If you are a paid subscriber, 
 If you are not a paid subscriber yet, that is what the next section is for.
 
 ---
+
+> 🖼️ **IMAGE PROMPT (Paywall):** "A glowing dark-mode dashboard labeled 'Ghost Alpha Daily Report' with a timestamp of 5:00 AM. Shows a ranked list of stock picks graded A through D with green and amber indicators, momentum scores, and a small AI-generated analysis blurb for the top pick. Deep black background, neon green accent colors, minimal typography. Cinematic and premium."
 
 🔒 **Paid Subscribers: The Full Ghost Alpha Feed**
 
