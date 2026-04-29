@@ -8,13 +8,7 @@ ChatGPT. Claude. Gemini. You type, a plate shows up. Tastes good. You have absol
 
 I spent the last six months learning how to own the kitchen. Here is what matters.
 
----
 
-![The AI Stack as a Restaurant — Momentum Phinance Infographic](ai-stack-restaurant-infographic.png)
-
-*The full map. Everything below is just the explanation.*
-
----
 
 ## The Chefs
 
@@ -157,6 +151,12 @@ None of this required a computer science degree. It required understanding the r
 You've been eating here your whole life.
 
 Time to learn how the kitchen works.
+
+---
+
+![The AI Stack as a Restaurant — Momentum Phinance Infographic](ai-stack-restaurant-infographic.png)
+
+*The full map.*
 
 ---
 
