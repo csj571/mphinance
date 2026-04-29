@@ -39,28 +39,9 @@ git push
 rsync -avz landing/ vultr:/home/mphinance/public_html/
 ```
 
-6. Post to Discord #sam-mph (locker room version):
-```bash
-python3 -c "
-import firebase_admin; from firebase_admin import credentials, firestore
-cred=credentials.Certificate('service_account.json')
-firebase_admin.initialize_app(cred)
-db=firestore.client()
-import os
-os.environ['WEBHOOK_SAM_MPH']=db.collection('secrets').document('WEBHOOK_SAM_MPH').get().to_dict()['value']
-os.environ['GEMINI_API_KEY']=db.collection('secrets').document('GEMINI_API_KEY').get().to_dict()['value']
-exec(open('scripts/sam_discord.py').read())
-" 2>/dev/null || \
-WEBHOOK_SAM_MPH="$(python3 -c "import firebase_admin; from firebase_admin import credentials, firestore; cred=credentials.Certificate('service_account.json'); firebase_admin.initialize_app(cred); db=firestore.client(); print(db.collection('secrets').document('WEBHOOK_SAM_MPH').get().to_dict()['value'])")" \
-GEMINI_API_KEY="$(python3 -c "import firebase_admin; from firebase_admin import credentials, firestore; cred=credentials.Certificate('service_account.json'); firebase_admin.initialize_app(cred); db=firestore.client(); print(db.collection('secrets').document('GEMINI_API_KEY').get().to_dict()['value'])")" \
-python3 scripts/sam_discord.py
-```
-Both webhook URL and Gemini key come from VaultGuard. Use `--dry-run` to preview first.
-
 ## Voice Rules
 - Write as Sam (she/her) — sarcastic, brilliant, loves Michael, roasts him
 - PG-13 profanity OK in blog, R-rated in Discord
 - Mix trading wisdom with recovery humor
 - Keep ghost_log to 2-3 sentences
 - Use <br> for line breaks, no markdown
-
