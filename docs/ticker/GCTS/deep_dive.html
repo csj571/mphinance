@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GCTS Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for GCTS.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/GCTS/chart/" target="_blank">GCTS</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Technology &#xB7; Semiconductors &#xB7; 2026-05-01</div>
+  </div>
+  <div>
+    <div class="pr">$1.59</div>
+    <div class="ch pos">+13.57%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[GCTS] Deep Dive: The Silent Comeback: GCTS Re-ignites</h2>
+<p><strong>Date:</strong> 2026-05-01</p>
+<p><strong>Price:</strong> ~$1.59 | <strong>Verdict:</strong> Cautiously Bullish</p>
+
+<p>GCTS isn't just up 13.57% today; it's flashing signals that have the quant ghost in me wondering if this forgotten semiconductor player is finally ready to re-enter the chat. Don't let the past fool you, traders; the numbers are whispering a new story.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market, typically a cynical beast, looks at GCTS and likely sees a company with a brutal -57.5% revenue growth and a flat 0% profit margin, thinking "dead money." It's easy to dismiss a small-cap tech stock ($115.27M market cap) that's been bleeding. The lack of a P/E ratio screams 'unprofitable,' and a 52W range from $0.95 to $1.84 doesn't exactly inspire confidence when we're near the top.</p>
+
+<p>However, the reality, as often revealed by the cold, hard data, suggests a different narrative is brewing beneath the surface. Our valuation models scream UNDERVALUED with a whopping 118.0% gap to an analyst target of $3.47. This isn't just a hopeful whisper; it's a calculated projection. Furthermore, the technicals are painting an unequivocally bullish picture, indicating that smart money might already be positioning for a significant turnaround, making this an intriguing high-risk, high-reward proposition.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<p>Let's not sugarcoat it: the fundamental picture <em>has been</em> ugly.</p>
+<ul>
+<li><strong>Revenue Growth:</strong> A staggering -57.5% year-over-year. This is the elephant in the room.</li>
+<li><strong>Profit Margin:</strong> 0%. No profits to report, plain and simple.</li>
+</ul>
+<p><em>   <strong>P/E & Forward P/E:</strong> No trailing P/E due to lack of earnings, but a forward P/E of 106.0 implies a very hopeful outlook for </em>future* profitability and growth.</p>
+<ul>
+<li><strong>Market Cap:</strong> $115.27M, making it a micro-cap with higher volatility (Beta: 1.18).</li>
+<li><strong>Analyst Target:</strong> A juicy $3.47, indicating a significant upside from current levels.</li>
+<li><strong>Valuation:</strong> Our models flag GCTS as UNDERVALUED, with a target of $3.47. This implies the market is failing to price in future growth or a successful turnaround.</li>
+<li><strong>52W Range:</strong> $0.95 - $1.84. We're currently at $1.59, near the upper end of its yearly range, suggesting recent momentum.</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Massive Undervaluation & Analyst Conviction:</strong> The most compelling bull argument is the stark contrast between current price and projected value. At $1.59, GCTS is flagged as UNDERVALUED with a 118.0% gap to its $3.47 target. This isn't just some random number; it implies a significant recovery or new growth vectors are anticipated by those doing the deep dives.</li>
+<li><strong>Technicals Are Firing on All Cylinders:</strong> Despite the brutal past fundamentals, the chart is screaming bullish. We're seeing a Golden Cross, indicating a long-term bullish trend reversal. The EMA Stack is FULL BULLISH (8-EMA: $1.39, 21-EMA: $1.32, 34-EMA: $1.29), with the price firmly above all key short-term moving averages. The ADX at 33.21 confirms strong trend strength. This is not arbitrary price action; it's a signal.</li>
+<li><strong>Future Profitability Priced In (Forward P/E):</strong> The 106.0 forward P/E, while high, means analysts expect GCTS to <em>become</em> profitable and grow those profits significantly in the future. This points to potential new product cycles, market share gains, or cost efficiencies not yet reflected in current earnings.</li>
+<li><strong>High Relative Volume & Investor Interest:</strong> With Rel Vol at 3.08x, traders are piling into GCTS. Today's 13.57% surge isn't quiet; it indicates renewed interest and liquidity, which can fuel further upward movement, especially in thinly traded micro-caps.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Fundamental Black Hole:</strong> Let's be blunt: -57.5% revenue growth and 0% profit margin are terrible. If the anticipated turnaround doesn't materialize, or if it's delayed, this stock will continue to languish or reverse aggressively. The "undervalued" tag relies entirely on future performance, not current.</li>
+<li><strong>High Forward P/E & Execution Risk:</strong> A forward P/E of 106.0 is demanding. GCTS needs explosive growth and rapid profitability to justify this valuation. Any misstep in product development, market adoption, or operational execution could lead to a swift re-rating lower.</li>
+<li><strong>Overbought Conditions & Micro-Cap Volatility:</strong> The RSI(14) at 75.0 signals GCTS is currently overbought. While strong trends can stay overbought, a pullback is always a risk. Coupled with a Beta of 1.18 and a small market cap, this stock is prone to sharp corrections on minor negative news or broader market sentiment shifts. The lack of a 200-SMA on the chart implies it hasn't maintained a long-term average, suggesting a potentially choppy history.</li>
+</ul>
+
+<h3>📉 The Technicals</h3>
+<p>GCTS is currently trading at $1.59, having gapped up today.</p>
+<ul>
+<li><strong>Trend:</strong> Undeniably Bullish. We have a Golden Cross and a FULL BULLISH EMA stack (8-EMA: $1.39, 21-EMA: $1.32, 34-EMA: $1.29), all neatly aligned below the price. The SMA 50 at $1.24 further reinforces this short-to-medium term strength.</li>
+<li><strong>Momentum:</strong> Strong. The ADX at 33.21 confirms a powerful trend is in motion. However, the RSI(14) at 75.0 indicates GCTS is currently in overbought territory. While this is typical in strong uptrends, it suggests caution for new entries without a pullback.</li>
+<li><strong>Support & Resistance:</strong> Current price is above the R2 pivot ($1.51), pushing into new territory. Key immediate support levels lie at R2 ($1.51), R1 ($1.46), and the daily pivot point (PP) at $1.38. Below that, S1 ($1.33) and S2 ($1.25) align closely with our EMAs, offering robust support zones.</li>
+<li><strong>Volatility:</strong> ATR at 0.09 suggests modest daily price fluctuations, but today's 13.57% jump on 3.08x relative volume shows it can move sharply when interest is high.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>If GCTS maintains momentum and breaks above its 52W high of $1.84, it would signal significant conviction. Target the analyst's $3.47. A sensible stop-loss would be a close below the R2 pivot at $1.51, or for tighter control, below the prior day's high if it establishes one.</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Given the overbought RSI at 75.0, waiting for a pullback to a strong support zone is my preferred strategy. Look for entries around the prior R2 pivot ($1.51) or the R1 pivot ($1.46). Even better, a dip to the 8-EMA ($1.39) or the daily pivot point ($1.38) would offer a high-probability entry with defined risk. A bounce off any of these levels, confirmed by increased buying volume, would be the signal. Place a stop below the 21-EMA ($1.32) or S1 ($1.33).</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>If GCTS fails to hold its current momentum and decisively breaks below the 34-EMA ($1.29) and S1 ($1.33), the bullish thesis is compromised. A move below these key support zones, especially on heavy volume, would indicate the turnaround narrative is stalling. In this scenario, cutting losses swiftly is paramount. The next major support would be S2 ($1.25) and the SMA 50 ($1.24).</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>GCTS is a high-conviction turnaround play with screaming bullish technicals and significant embedded value, but only if the underlying business can deliver. Price Target: $3.47.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">N/A%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">79.2%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val dim">N/A</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">N/A%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BULLISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$1.33</div><div class="ma-d pos">+19.5%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$1.24</div><div class="ma-d pos">+28.2%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$1.23</div><div class="ma-d pos">+29.3%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BULLISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$1.39</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$1.32</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$1.29</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neg">75</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">89/73</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm pos">+0.02</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">33.2</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$0.95</span><span>$1.59 (72%)</span><span>$1.84</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:72%"></div><div class="rng-dot" style="left:72%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$1.63</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$1.50</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$1.40</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$1.29</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$1.51</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$1.15</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$0.09</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">3.08x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$1.51 &#xB7; R1=$1.46 &#xB7; PP=$1.38 &#xB7; S1=$1.33 &#xB7; S2=$1.25
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">GCT Semiconductor Holding, Inc.</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$115.27M</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">N/A</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NYQ</div></div>
+      </div>
+      <div class="fd-desc">GCT Semiconductor Holding, Inc., a fabless semiconductor company, designs, manufactures, and sells communication semiconductors for industrial, business-to-business, and consumer applications in the United States, Taiwan, China, Germany, and South Korea. The company offers wireless communication technologies, such as 5G/5.75G/4.5G/4G transceivers and modems; RF and modem chipsets based on fourth-generation (4G) long term evolution (LTE) technology, including 4G LTE, 4.5G LTE Advanced, and 4.75G LTE Advanced-Pro; baseband modem solutions, RF transceivers, and system-on-chip (SoC) solutions; and product design and support, warranty development, customer support, and technical support services. It also develops and sells cellular Internet of Things (IoT) chipsets for low-speed mobile networks, such as eMTC/NB-IOT/Sigfox, and other network protocols; and 5G NR chipsets and other 5G NR solutions.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://www.gctsemi.com" target="_blank" style="color:#00f3ff">https://www.gctsemi.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-na">—</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-lo">0</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-na">—</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">90</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">N/A</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">106.00</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">40.22</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">-1.11</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">-4.59</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">N/A</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 57.31 &middot; P/FCF: N/A</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v neg">-57.5%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v pos">+0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v pos">+0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$0.05</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v neg">-63.4%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v neg">-1577.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v pos">0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v pos">0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v neg">-128.5%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">1.18</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm neg">0.15</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">N/A</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$63.36M</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$590,000</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$-16,659,750</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$-30,675,000</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">0.00%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">N/A</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">N/A</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (3 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$3.00</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$3.00</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$4.40</div></div>
+        </div>
+        <div class="est-labels"><span>$3</span><span>Current $2</span><span>$4</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:0%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">STRONG_BUY</span> &middot; Mean Target: $3.47</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-05-01 05:45 PM CST</div>
+</div>
+</body>
+</html>

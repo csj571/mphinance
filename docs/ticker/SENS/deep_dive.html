@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SENS Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for SENS.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/SENS/chart/" target="_blank">SENS</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Healthcare &#xB7; Medical Devices &#xB7; 2026-05-01</div>
+  </div>
+  <div>
+    <div class="pr">$5.1</div>
+    <div class="ch neg">-22.84%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[SENS] Deep Dive: Blood, Sweat, and Sensors – The CGM Sleeper Play?</h2>
+<p><strong>Date:</strong> 2026-05-01</p>
+<p><strong>Price:</strong> ~$5.1 | <strong>Verdict:</strong> Speculative Accumulate</p>
+
+<p>SENS just took a gut punch, down over 22% in a single session, leaving a crimson trail on the charts. But for the sharp-eyed quant, beneath this immediate pain lies a story of innovation, severe undervaluation, and the tantalizing scent of a potential comeback in the high-growth continuous glucose monitoring (CGM) space.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market, in its infinite wisdom, sees SENS right now as a burning pile of cash, exemplified by its staggering -196.0% profit margin and a terrifying -22.84% single-day plunge. It's a small-cap ($213.20M) medical device company with a beta of 1.05, meaning it moves with the market, but with an extra kick in volatility. For many, it's a "no-touch" due to unprofitability and a brutal downtrend that has taken it from a 52-week high of $8.75 to barely above its $4.96 low.</p>
+
+<p>However, the quant ghost whispers of a different reality. Amidst the chaos, SENS clocked an eye-popping 71.8% revenue growth. This isn't a company struggling to sell its product; it's a growth beast investing heavily to capture market share in a critical healthcare segment. The market might be focusing on the red ink, but I'm looking at the green shoots of adoption. Furthermore, the consensus analyst target sits at a whopping $18.92, indicating a "270.9% UNDERVALUED" gap from current levels. This signals a profound disconnect between short-term market panic and long-term intrinsic value perception. SENS isn't dead; it's just really, really bruised and priced for failure.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<p>Let's peel back the layers of this medical device beast:</p>
+<ul>
+<li><strong>Price:</strong> $5.1, currently trading on fumes, down a painful <strong>-22.84%</strong> today. Ouch.</li>
+<li><strong>Market Cap:</strong> A lean <strong>$213.20M</strong>, making it prone to wild swings.</li>
+<li><strong>Revenue Growth:</strong> A blistering <strong>71.8%</strong>. This is the core thesis driver – people are buying their tech.</li>
+<li><strong>Profit Margin:</strong> A nightmare-inducing <strong>-196.0%</strong>. Yes, you read that right. They're burning cash faster than a ghost chasing a pizza.</li>
+</ul>
+<p><em>   <strong>P/E & Forward P/E:</strong> None & <strong>-1.94</strong>. Confirms deep unprofitability, but a negative forward P/E suggests analysts expect </em>less* severe losses relative to sales in the future, if it turns positive.</p>
+<ul>
+<li><strong>Valuation:</strong> The big kicker. Officially <strong>UNDERVALUED</strong> with a jaw-dropping <strong>270.9% gap</strong> to the analyst target of <strong>$18.92</strong>.</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Disruptive CGM Technology & Market Share:</strong> Senseonics' Eversense E3 offers a unique, long-lasting (6-month) implantable CGM system. In a rapidly expanding diabetes management market, differentiation is key. Strong product adoption, evidenced by <strong>71.8% revenue growth</strong>, suggests they're carving out a niche with this innovative tech. This isn't just another device; it's a paradigm shift for some patients.</li>
+<li><strong>Massive Undervaluation & Analyst Conviction:</strong> The stock is trading at $5.1, hovering precariously close to its 52-week low of $4.96, yet analysts peg its fair value at <strong>$18.92</strong>. This isn't just a slight discount; it's a Grand Canyon-sized gap of <strong>270.9%</strong>. This indicates a belief in the long-term potential and future profitability of the business despite current headwinds.</li>
+<li><strong>Untapped Growth Potential & Scaling:</strong> With such high revenue growth, SENS is demonstrating its ability to scale its operations and penetrate the market. As the company optimizes its manufacturing, distribution, and commercialization efforts, the high fixed costs associated with medical device development should start to spread, eventually improving that dreadful profit margin.</li>
+<li><strong>Long-Term Trend Still Bullish (Technical Undercurrent):</strong> Despite the immediate technical carnage, the longer-term "Golden Cross" signal (SMA 50 crossing above SMA 200, though SMA 200 data is "None") suggests an underlying bullish structural trend is attempting to form. This offers a glimmer of hope for patient investors looking beyond the daily bloodbath.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Profitability & Cash Burn:</strong> A <strong>-196.0% profit margin</strong> is not just bad; it's a siren screaming "cash incinerator." SENS is bleeding money at an alarming rate. This raises significant concerns about future dilution, debt, or its ability to sustain operations long enough to reach profitability without additional capital raises.</li>
+<li><strong>Intense Competition & Market Penetration Challenges:</strong> The CGM market is a battlefield dominated by giants like Dexcom and Abbott. While SENS has a differentiated product, convincing payers, physicians, and patients to switch from established players is an uphill battle. Market share gains might slow down or become more expensive.</li>
+<li><strong>Regulatory & Reimbursement Hurdles:</strong> The medical device sector is notoriously complex due to regulatory approvals and reimbursement policies. Any delays in product enhancements or unfavorable changes in insurance coverage could severely impact SENS's growth trajectory and pathway to profitability.</li>
+</ul>
+
+<h3>📉 The Technicals</h3>
+<p>Right now, SENS's chart looks like a horror movie.</p>
+<ul>
+<li><strong>Current Price:</strong> <strong>$5.1</strong>, sitting precariously just above its <strong>52-week low of $4.96</strong>. It's a knife-catcher's dream or nightmare.</li>
+<li><strong>EMA Stack:</strong> <strong>FULL BEARISH</strong>. The price is trading significantly below all short-term moving averages (8 EMA: $6.44, 21 EMA: $6.65, 34 EMA: $6.71). This tells you the sellers are firmly in control.</li>
+<li><strong>SMAs:</strong> Below the SMA 50 ($6.78). Curiously, the SMA 200 is "None," which makes the stated "Trend: Bullish (Golden Cross)" a bit enigmatic, perhaps indicating a historical event or an underlying fundamental trend rather than current price action. For now, short-term price action rules.</li>
+<li><strong>RSI(14):</strong> A screaming <strong>27.69</strong>. Deeply oversold, indicating that a bounce is statistically probable, but not guaranteed. Capitulation might be in the air.</li>
+<li><strong>ADX:</strong> <strong>20.09</strong>. Trend strength is relatively weak, which can sometimes precede a reversal if volume picks up on the other side.</li>
+<li><strong>Pivots:</strong> Current price $5.1 is well below all support pivots. S2 is $6.04, S1 is $6.32. The primary pivot point (PP) is $6.49. Reclaiming these levels would be the first sign of life.</li>
+<li><strong>Relative Volume:</strong> A staggering <strong>10.58x</strong>. This confirms extreme panic selling and high participation today. ATR is $0.42, so expect continued volatility.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+
+<p><strong>Scenario A — The Breakout (Bullish):</strong> This scenario requires a significant shift in sentiment and buying pressure.</p>
+<ul>
+<li><strong>Entry:</strong> Wait for a confirmed reclaim of S2 at <strong>$6.04</strong> on strong volume.</li>
+<li><strong>Confirmation:</strong> A move above S1 ($6.32) and the EMAs (starting with 8 EMA at $6.44) would signal strength.</li>
+<li><strong>Targets:</strong> Initial target is the PP at <strong>$6.49</strong>, followed by the SMA 50 at <strong>$6.78</strong>, and then R1 at <strong>$6.77</strong>.</li>
+<li><strong>Stop Loss:</strong> A clear break back below <strong>$5.90</strong> (just below S2).</li>
+</ul>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong> Given the oversold RSI and proximity to 52-week lows, this is my preferred speculative entry.</p>
+<ul>
+<li><strong>Entry:</strong> Accumulate near <strong>$5.00 - $5.10</strong>, looking for signs of stabilization or a hammer candle on lower timeframes. Price is right at current levels, so this is an immediate opportunity for risk-takers.</li>
+<li><strong>Conviction:</strong> This relies on the "UNDERVALUED" thesis and a mean-reversion bounce from oversold conditions.</li>
+<li><strong>Targets:</strong> Aim for a bounce to S2 at <strong>$6.04</strong>, then S1 at <strong>$6.32</strong> for initial profit-taking.</li>
+<li><strong>Stop Loss:</strong> A tight stop below the 52-week low of <strong>$4.96</strong>. If that breaks, the floor is gone.</li>
+</ul>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong> The nightmare scenario where the technical floor collapses.</p>
+<ul>
+<li><strong>Signal:</strong> A decisive break and close below <strong>$4.96</strong> (the 52-week low).</li>
+<li><strong>Action:</strong> If long, exit positions immediately. This would imply the market believes the fundamental story has deteriorated further than currently priced, or that continued dilution is imminent. There's no clear technical support below $4.96.</li>
+</ul>
+
+<h3>🏁 Final Verdict</h3>
+<p>SENS is a high-conviction speculative growth play, severely undervalued despite its short-term pain, targeting <strong>$18.92</strong> long-term as it claws its way to profitability. This one requires diamond hands and a strong stomach.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">217.9%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">91.4%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">41</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BEARISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$6.73</div><div class="ma-d neg">-24.2%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$6.78</div><div class="ma-d neg">-24.8%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$6.86</div><div class="ma-d neg">-25.7%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BEARISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$6.44</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$6.65</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$6.71</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val pos">28</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">6/15</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm neg">-0.12</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">20.1</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$4.96</span><span>$5.1 (4%)</span><span>$8.75</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:4%"></div><div class="rng-dot" style="left:4%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$7.86</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$7.30</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$6.86</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$6.41</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$7.49</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$5.97</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$0.42</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">10.58x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$6.94 &#xB7; R1=$6.77 &#xB7; PP=$6.49 &#xB7; S1=$6.32 &#xB7; S2=$6.04
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">Senseonics Holdings, Inc.</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$213.20M</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">130</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NMS</div></div>
+      </div>
+      <div class="fd-desc">Senseonics Holdings, Inc., a commercial-stage medical technology company, focuses on development and manufacturing of continuous glucose monitoring (CGM) systems for people with diabetes in the United States and internationally. Its products include Eversense, Eversense XL, Eversense E3, and Eversense 365, which are implantable CGM systems to measure glucose levels in people with diabetes through an under-the-skin sensor, a removable and rechargeable smart transmitter, and an app for real-time diabetes monitoring and management. The company serves healthcare providers and patients through a network of distributors and strategic fulfillment partners.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://www.senseonics.com" target="_blank" style="color:#00f3ff">https://www.senseonics.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-hi">65</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-hi">100</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-mid">53</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">75</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">N/A</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">-1.94</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">6.05</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">3.45</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">-3.34</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">N/A</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 6.34 &middot; P/FCF: N/A</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v pos">+71.8%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v pos">+0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v pos">+0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$0.84</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">44.7%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v neg">-146.8%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v neg">-196.0%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v neg">-168.3%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v neg">-37.7%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">1.05</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm pos">4.83</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">67.8</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$41.37M</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$94.03M</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$-46,501,000</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$-59,129,000</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">0.00%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">N/A</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">N/A</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (6 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$9.00</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$19.25</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$31.00</div></div>
+        </div>
+        <div class="est-labels"><span>$9</span><span>Current $5</span><span>$31</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:0%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">BUY</span> &middot; Mean Target: $18.92</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-05-01 05:44 PM CST</div>
+</div>
+</body>
+</html>

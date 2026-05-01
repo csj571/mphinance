@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EGHT Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for EGHT.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/EGHT/chart/" target="_blank">EGHT</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Technology &#xB7; Software - Application &#xB7; 2026-05-01</div>
+  </div>
+  <div>
+    <div class="pr">$2.44</div>
+    <div class="ch pos">+27.08%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[EGHT] Deep Dive: The Ghost in the Machine – Momentum vs. Faltering Fundamentals</h2>
+<p><strong>Date:</strong> 2026-05-01</p>
+<p><strong>Price:</strong> ~$2.44 | <strong>Verdict:</strong> Speculative Bullish on Pullback</p>
+
+<p>EGHT just surged 27% in a single day, leaving many scratching their heads given its shaky fundamentals. Is this a genuine turnaround, or just a phantom rally waiting to vanish? Let's dissect.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market currently has EGHT priced at ~$2.44, significantly above the $2.31 analyst target and "fair value," indicating a disconnect. Traditional valuation metrics are struggling to keep up with the recent buying frenzy, which pushed the stock up a massive 27.08% in one session. On one hand, you have slow 3.4% revenue growth and a concerning -0.5% profit margin – numbers that usually scream "avoid" in the tech sector.</p>
+
+<p>However, the ghost of future profitability whispers through a Forward P/E of 6.87. This suggests the smart money (or at least, <em>some</em> money) is anticipating a significant improvement in earnings, or perhaps a re-rating based on some unseen catalyst. While the underlying company in the Software - Application industry seems to be treading water fundamentally, the technical chart is painting a wildly different, aggressively bullish picture.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<ul>
+<li><strong>Market Cap:</strong> $339.94M (Small-cap, prone to volatility)</li>
+<li><strong>Revenue Growth:</strong> 3.4% (Anemic for a tech company)</li>
+<li><strong>Profit Margin:</strong> -0.5% (Still unprofitable, a red flag)</li>
+<li><strong>P/E (TTM):</strong> None (Due to unprofitability)</li>
+<li><strong>Forward P/E:</strong> 6.87 (Suggests a significant earnings turnaround or strong future growth expectations)</li>
+<li><strong>Beta:</strong> 1.81 (Extremely volatile, expect big swings)</li>
+<li><strong>Analyst Target / Fair Value:</strong> $2.31 (Current price is already above this)</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Technical Tidal Wave:</strong> EGHT just printed a powerful "Golden Cross" and is trending "Bullish" with an ADX of 45.14 – signifying a very strong trend. The recent 27.08% price surge on 2.52x relative volume indicates massive institutional or retail interest. This isn't just a flicker; it's a bonfire for momentum traders.</li>
+<li><strong>Future Profitability Priced In:</strong> That Forward P/E of 6.87 implies market participants are betting on a sharp increase in future earnings or a significant re-rating of the stock. If EGHT can deliver on even a fraction of those implied future profits, the stock has room to run, especially considering its current unprofitable state.</li>
+<li><strong>Short Squeeze Fuel:</strong> With such a dramatic price spike and high volatility (Beta 1.81), any significant short interest could be forced to cover, adding further upward pressure. Small-cap stocks with sudden technical strength often become targets for short squeezes.</li>
+<li><strong>Breakout Potential:</strong> Having blown past all the standard pivot resistance levels (R2 at $2.03), EGHT is now in price discovery territory. The next logical target for momentum is the 52-week high of $2.84. Clearing this could unlock even more upside as new buyers jump in.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Fundamental Reality Check:</strong> Let's not get carried away by the chart. A 3.4% revenue growth rate and a negative -0.5% profit margin are simply not sustainable for long-term value creation, especially in the competitive Software - Application sector. Without fundamental improvement, this rally could be built on sand.</li>
+<li><strong>Seriously Overbought:</strong> An RSI(14) of 71.33 after a 27% daily jump screams "take profits." The stock is well above its analyst target ($2.31) and "fair value" (Gap: -5.2%), suggesting it's extended and due for a significant pullback or consolidation.</li>
+<li><strong>Lack of Long-Term Context:</strong> The absence of a 200-day SMA often indicates either a relatively new listing or a stock that has been below this key long-term average for a significant period. While the Golden Cross is bullish, it's occurring without the full long-term trend confirmation usually provided by the 200 SMA.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+<p>EGHT is currently trading around ~$2.44, sitting comfortably above its previous 52W high of $2.84. Wait, let me re-check that... ah, the <em>current</em> price is $2.44, and the <em>52W high</em> is $2.84. My apologies, the ghost in the machine misread. So, it's rallying hard <em>towards</em> its 52W high, not above it yet. My point stands: it's on a charge.</p>
+
+<p>The EMA stack, while initially "TANGLED," shows the 8-EMA ($2.01) above the 21 ($1.93) and 34 ($1.93) EMAs. This indicates that the short-term momentum has rapidly shifted bullish, untangling the previous indecision. The SMA 50 at $1.97 confirms this developing strength. Critically, the trend is labeled "Bullish" with a "Golden Cross" formation – a powerful buy signal for trend followers. The ADX is roaring at 45.14, confirming the strength of this newfound trend. However, be wary: the RSI(14) is screaming 71.33, firmly in overbought territory. The current price ($2.44) is far above all standard pivots (PP=$1.89, R1=$1.98, R2=$2.03), meaning it's already staged a significant breakout. Expect volatility; the ATR is 0.16.</p>
+
+<h3>📝 Trading Playbook</h3>
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>If EGHT manages to consolidate above the $2.30-$2.40 zone and retail FOMO continues, look for a push towards the 52-week high of <strong>$2.84</strong>. Clearing that resistance with conviction could open the door for price discovery, potentially targeting the $3.00 psychological level next. Momentum traders would be eyeing sustained buying volume.</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Given the overbought RSI and the sharp climb, a pullback is a high probability. This is where the patient ghost gets paid. Look for a dip to the rapidly ascending EMAs and previous resistance turned support. Key levels to watch: the 8-EMA around <strong>$2.01</strong>, the R2 pivot at <strong>$2.03</strong>, and definitely the 21/34 EMAs around <strong>$1.93-$1.97</strong> (which aligns with the SMA 50). This zone offers a much safer entry with a defined stop-loss below the pivot point (PP) at <strong>$1.89</strong>.</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>If EGHT loses the momentum and drops below the key moving averages, particularly if it breaks below the Pivot Point (PP) at <strong>$1.89</strong> and then the S1 support at <strong>$1.84</strong>, the bullish thesis is compromised. A sustained move below <strong>$1.80</strong> would likely signal a full trend reversal or a deeper correction, potentially back towards the S2 at <strong>$1.75</strong> or even re-testing the 52-week low range of $1.57. Cut losses swiftly if these levels are breached.</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>EGHT is a high-octane momentum play defying fundamentals. While overbought, the technicals scream "bullish." Look for a calculated dip buy opportunity around the <strong>$1.90-$2.00</strong> zone with a short-term target of <strong>$2.70</strong>.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">319.0%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">93.6%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">42</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">TANGLED</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$1.88</div><div class="ma-d pos">+29.8%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$1.97</div><div class="ma-d pos">+23.9%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$2.01</div><div class="ma-d pos">+21.4%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">TANGLED</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$2.01</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$1.93</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$1.93</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neg">71</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">99/59</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm pos">+0.04</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">45.1</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$1.57</span><span>$2.44 (68%)</span><span>$2.84</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:68%"></div><div class="rng-dot" style="left:68%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$2.54</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$2.35</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$2.21</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$2.06</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$2.16</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$1.60</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$0.16</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">2.52x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$2.03 &#xB7; R1=$1.98 &#xB7; PP=$1.89 &#xB7; S1=$1.84 &#xB7; S2=$1.75
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">8x8, Inc.</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$339.94M</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">1,942</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NMS</div></div>
+      </div>
+      <div class="fd-desc">8x8, Inc. provides contact center, voice, video, chat, and enterprise-class application programmable interface (API) solutions worldwide. The company offers 8x8 Work, a unified communications-as-a-service solution that enable collaboration and business continuity across voice, video, chat, and messaging; and 8x8 Contact Center is a cloud-based contact center-as-a-service solution that customer engagement across voice, chat, email, and digital channels.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://www.8x8.com" target="_blank" style="color:#00f3ff">https://www.8x8.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-hi">83</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-hi">78</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-mid">44</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">75</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">N/A</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">6.87</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">0.47</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">2.38</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">14.87</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">0.48</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 0.76 &middot; P/FCF: 5.0</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v pos">+3.4%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v pos">+83.4%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v pos">+68.4%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$5.36</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">65.7%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v pos">5.2%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v neg">-0.5%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v neg">-3.0%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v pos">1.5%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">1.81</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm pos">1.13</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">261.5</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$373.59M</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$86.88M</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$67.53M</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$47.27M</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">0.00%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">N/A</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">N/A</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (4 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$1.50</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$2.38</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$3.00</div></div>
+        </div>
+        <div class="est-labels"><span>$2</span><span>Current $2</span><span>$3</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:63%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">BUY</span> &middot; Mean Target: $2.31</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-05-01 05:44 PM CST</div>
+</div>
+</body>
+</html>
