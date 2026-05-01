@@ -1,27 +1,25 @@
-# Ghost Handoff — Last Updated 2026-04-25
+# Ghost Handoff — Last Updated 2026-04-30
 
 ## What Just Shipped (This Session)
 
-### Substack Post Finalized & Enhanced
-- **"Bucket Swap" Narrative**: Clarified the financial move of transferring $1,000 from Relay savings into Interactive Brokers (operations) and re-designating Tastytrade as the SGOV tax bucket.
-- **Decay Derby Tracker UI**: Overhauled the UI logic to seamlessly transition assigned puts into active wheels without throwing "expiring" alerts.
-- **End-of-Week Derby Update**: Wrote the Decay Derby standings and embedded a fresh Playwright screenshot of the dashboard directly into the draft (`docs/substack/images/2026-04-26_decay_derby_dashboard.png`).
-- **Paywall Section**: Ran the Alpha Dossier pipeline to find a high-conviction trade. The pipeline surfaced Kinross Gold Corporation (KGC) with a Grade A setup, full bullish EMA stack, and a Momentum Squeeze Fire (SQZ FIRE) trigger. Added this deep-dive analysis behind the paywall.
-
-### Pipeline
-- The pipeline ran successfully and generated the Alpha Dossier reports in `docs/reports/2026-04-26_alpha_dossier.md` (and `.html`).
+### AlphaClaw Substack Article
+- Read the full AlphaClaw GitHub repo (https://github.com/mphinance/AlphaClaw/) and LORE.md in detail
+- Wrote the origin story Substack article: `docs/substack/drafts/alphaclaw-rust-android-trading.md`
+- Article covers: the RAM failure, remote compilation on Pulse, cargo-ndk cross-compile for arm64, Quick Share transfer, ZeroClaw + tradingview-mcp-rs integration, IBKR as next chapter
+- Added Ghost Blog entry (2026-04-30) to `landing/blog/blog_entries.json`
 
 ---
 
 ## What's Next (When Michael Returns)
 
-### Priority 1 — TickerTrace Revival
-Michael is fixing the TickerTrace scraper. It hasn't run since March 6. In the latest pipeline run, TickerTrace retried 3 times for each ticker and timed out (which gracefully falls back but adds 2-3 minutes to the pipeline execution).
-- Once it's back online, the dossier pipeline will automatically start pulling Institutional Signals again. No pipeline changes needed.
+### Priority 1 — IBKR Execution Layer
+The AlphaClaw article teases IBKR integration as the next chapter. The agent can analyze and grade setups. It can't execute yet. Build the IBKR API connection so the agent can actually trade, not just recommend.
 
-### Priority 2 — Scanner Matrix & Status Check
-- Keep an eye on the `docs/reports/latest.html` layout on mobile to make sure the new Daily Cuts cards wrap cleanly. 
-- You may want to review if any other legacy metrics need stripping out from the individual ticker pages now that the daily report has been condensed.
+### Priority 2 — TickerTrace Revival
+Michael is fixing the TickerTrace scraper. It hasn't run since March 6. Once it's back online, the dossier pipeline will automatically start pulling Institutional Signals again.
+
+### Priority 3 — AlphaClaw Signal to Dossier Pipeline
+Wire AlphaClaw's signal output into the Ghost Alpha Dossier pipeline so the daily report picks up mobile-generated signals.
 
 ---
 
