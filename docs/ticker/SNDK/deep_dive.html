@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SNDK Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for SNDK.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/SNDK/chart/" target="_blank">SNDK</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Technology &#xB7; Computer Hardware &#xB7; 2026-05-01</div>
+  </div>
+  <div>
+    <div class="pr">$1096.51</div>
+    <div class="ch pos">+3.04%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[SNDK] Deep Dive: The Ghost in the Machine Says This AI Dynamo is WILDLY Undervalued</h2>
+<p><strong>Date:</strong> 2026-05-01</p>
+<p><strong>Price:</strong> ~$1096.51 | <strong>Verdict:</strong> Strong Buy</p>
+
+<p>Alright, fellow trend-traders and value-hunters, Sam the Quant Ghost is back, and I've got a whisper from the digital ether about a stock that's moving so fast, most are still rubbing sleep from their eyes. Forget the noise, let's talk about SNDK.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market, bless its often-shortsighted heart, sees SNDK's current P/E of 37.45 and might yawn, or worse, tag it as "expensive." But that's like looking at a Ferrari's static price tag without realizing it's about to hit 200 mph. The reality here is a company absolutely detonating expectations with a mind-boggling 251.0% revenue growth and a rock-solid 34.2% profit margin. This isn't just growth; it's profitable, hyper-accelerated expansion that the market is <em>massively</em> mispricing.</p>
+
+<p>Why the disconnect? Simple. The "market" is still stuck looking in the rearview mirror, while SNDK has already mapped out a future that promises astonishing returns. Its forward P/E of 8.63 screams one thing: future earnings are set to explode, making today's price look like a liquidation sale. We're talking about a tech juggernaut, priced for a fraction of what its projected future cash flows suggest, lurking right under everyone's nose.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<p>Let's get down to the cold, hard data, because numbers don't lie – only people misinterpret them.</p>
+
+<ul>
+<li><strong>Revenue Growth:</strong> A staggering <strong>251.0%</strong>. Read that again. This isn't a typo. This is hyper-growth, showing incredible demand and market penetration for SNDK's computer hardware solutions.</li>
+</ul>
+<p><em>   <strong>Profit Margin:</strong> A robust <strong>34.2%</strong>. This isn't just about growing fast; it's about growing </em>profitably*. High margins mean pricing power and operational efficiency.</p>
+<ul>
+<li><strong>P/E (Trailing):</strong> <strong>37.45</strong>. This is the number that scares the traditionalists.</li>
+<li><strong>Forward P/E:</strong> A ludicrously low <strong>8.63</strong>. This is the golden nugget. It signals that future earnings are projected to surge, making the current valuation look incredibly cheap if these projections hold.</li>
+<li><strong>Market Cap:</strong> $161.85B. Already a significant player, but with this growth, it's clearly not done yet.</li>
+<li><strong>Valuation Gap:</strong> UNDERVALUED by 161.9%, with a target of $2871.23. This isn't my ghost math; this is straight from the models.</li>
+</ul>
+
+<p>In short, SNDK is posting growth numbers usually seen in small caps, but with the scale and profitability of a mature tech giant. This is a rare beast.</p>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Hyper-Growth & Margin Expansion Machine:</strong> The 251.0% revenue growth isn't a fluke. Coupled with a juicy 34.2% profit margin, this company is a cash-generating engine. As it scales, we can expect even greater operating leverage, potentially pushing those margins higher and fueling further investment or shareholder returns. This isn't just growth; it's intelligent, profitable expansion.</li>
+<li><strong>Monumental Undervaluation & Re-rating Catalyst:</strong> A forward P/E of 8.63 for a company growing revenue at <em>251%</em> is frankly, criminal. The market is seriously behind the curve here. This setup screams "multiple expansion." As more analysts and funds catch on to the fundamental strength, SNDK's valuation is poised for a significant re-rating towards its intrinsic value target of $2871.23 – implying a massive 161.9% upside from current levels.</li>
+<li><strong>Technically Pristine Trend Confirmation:</strong> Forget ambiguity. The technicals are flashing pure bullish signals. A "FULL BULLISH" EMA stack (8-EMA > 21-EMA > 34-EMA), a recent Golden Cross, and an ADX of 60.42 confirm a powerful, sustained uptrend. Momentum is undeniable, with RSI at 69.42, indicating strong buying pressure without being immediately overbought. This technical strength will likely act as a magnet for further capital inflows.</li>
+<li><strong>Strategic Sector Tailwinds:</strong> As a Computer Hardware player, SNDK is perfectly positioned to capitalize on exploding demand in areas like AI infrastructure, data centers, and cloud computing. These secular trends provide a robust backdrop for sustained demand for SNDK's products, insulating it from some market volatility.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Execution Risk at Hyper-Growth Scale:</strong> Sustaining 251% revenue growth is an Everest-level challenge. Any misstep in product innovation, supply chain management, or market expansion could lead to a sudden deceleration, causing a severe re-evaluation from investors who've priced in aggressive future performance.</li>
+<li><strong>Perception vs. Reality (Trailing P/E):</strong> While the forward P/E is compelling, the trailing P/E of 37.45 can still be a psychological barrier for some value-oriented investors or those who don't dig past surface-level metrics. If future earnings disappoint, this 'discount' on forward P/E evaporates, and the stock could be hit hard by a lack of perceived fundamental support.</li>
+<li><strong>High Volatility & Near 52W Highs:</strong> SNDK trades with an ATR of $67.01, indicating significant daily price swings. Being near its 52-week high of $1115.0 means there's less immediate historical support below, making it susceptible to sharper corrections on any negative news or broader market weakness. This isn't for the faint of heart.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+<p>SNDK is currently trading at ~$1096.51, hovering just below its 52-week high of $1115.0 and the R2 pivot at $1118.74. This proximity suggests strong upward pressure.</p>
+
+<ul>
+<li><strong>EMA Stack:</strong> It's "FULL BULLISH" – the 8-EMA ($1014.98) is above the 21-EMA ($915.8), which is above the 34-EMA ($845.76). This perfect stair-step formation is the hallmark of a powerful, consistent uptrend.</li>
+<li><strong>SMAs:</strong> The SMA 50 at $751.58 is significantly below current price, reinforcing the strong move up. A Golden Cross has already formed, a major bullish signal where a shorter-term moving average crosses above a longer-term one.</li>
+<li><strong>Momentum Indicators:</strong> RSI(14) is at 69.42. Strong momentum, but not yet flashing "overbought" on a daily timeframe, leaving room to run. The ADX, a measure of trend strength, is at a blistering 60.42 – indicating an extremely powerful and undeniable trend.</li>
+<li><strong>Pivots:</strong> Current price is between R1 ($1091.48) and R2 ($1118.74). Key support levels are at the Daily Pivot Point (PP) of $1075.74, S1 at $1048.48, and S2 at $1032.74. These offer potential bounce zones.</li>
+<li><strong>Volatility:</strong> ATR of $67.01 confirms this stock moves big. Not a sleepy dividend play.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<ul>
+<li><strong>Entry:</strong> Look for a sustained break above R2 at $1118.74 and the 52W high of $1115.0 with conviction and increased relative volume. This would signal new price discovery.</li>
+<li><strong>Target:</strong> With such strong fundamentals and technicals, a breakout could target the valuation target of $2871.23, though interim targets would be based on Fibonacci extensions or higher pivot levels.</li>
+<li><strong>Stop:</strong> A close back below $1115.0 or a break below the daily PP of $1075.74 would invalidate the immediate breakout.</li>
+</ul>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<ul>
+<li><strong>Entry:</strong> This is my preferred strategy for high-momentum plays. Look for pullbacks towards the 8-EMA ($1014.98), which often acts as dynamic support in strong trends. Deeper, more attractive entries would be near S1 ($1048.48) or the 21-EMA ($915.8) for those willing to wait.</li>
+<li><strong>Target:</strong> Ultimate target is the valuation target of $2871.23.</li>
+<li><strong>Stop:</strong> A decisive break and close below the 34-EMA ($845.76) or S2 ($1032.74) would be a significant red flag, suggesting the short-term trend is broken.</li>
+</ul>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<ul>
+<li><strong>Entry:</strong> If SNDK decisively breaks below the 34-EMA ($845.76) and fails to reclaim it, or worse, drops below the SMA 50 ($751.58), it signals a potential trend reversal.</li>
+<li><strong>Action:</strong> Consider hedging existing long positions or taking profits. This scenario suggests fundamental issues or a broad market downturn outweighing SNDK's individual strength.</li>
+<li><strong>Stop:</strong> Re-evaluate if the stock reclaims these key moving averages with strength.</li>
+</ul>
+
+<h3>🏁 Final Verdict</h3>
+<p>SNDK is an AI-era growth story fundamentally mispriced by the market, poised for a monumental re-rating. My target: <strong>$2871.23</strong>.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">0.9%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">95.2%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">1</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">44%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BULLISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$910.08</div><div class="ma-d pos">+20.5%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$751.58</div><div class="ma-d pos">+45.9%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$574.89</div><div class="ma-d pos">+90.7%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BULLISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$1014.98</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$915.80</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$845.76</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">69</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">93/84</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm pos">+11.73</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">60.4</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$183.0</span><span>$1096.51 (98%)</span><span>$1115.0</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:98%"></div><div class="rng-dot" style="left:98%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$895.05</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$758.98</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$649.00</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$539.02</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$1040.00</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$780.16</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$67.01</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">0.95x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$1118.74 &#xB7; R1=$1091.48 &#xB7; PP=$1075.74 &#xB7; S1=$1048.48 &#xB7; S2=$1032.74
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">Sandisk Corporation</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$161.85B</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">11,000</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NMS</div></div>
+      </div>
+      <div class="fd-desc">Sandisk Corporation develops, manufactures, and sells data storage devices and solutions using NAND flash technology in the United States, Europe, the Middle East, Africa, Asia, and internationally. The company offers solid state drives for desktop and notebook PCs, gaming consoles, and set top boxes; and flash-based embedded storage products for mobile phones, tablets, notebook PCs and other portable and wearable devices, automotive applications, Internet of Things, industrial, and connected home applications, as well as removable cards, universal serial bus drives, and wafers and components. It sells its products to computer manufacturers and original equipment manufacturers, datacenters, private cloud customers, cloud service providers, resellers, distributors, and retailers through its sales personnel, dealers, distributors, retailers, and subsidiaries.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://www.sandisk.com" target="_blank" style="color:#00f3ff">https://www.sandisk.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-lo">12</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-hi">100</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-hi">81</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">75</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">37.45</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">8.63</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">12.28</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">15.89</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">28.16</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">N/A</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 12.03 &middot; P/FCF: 71.9</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v pos">+251.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v pos">+0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v pos">+0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$89.99</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">56.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v pos">70.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v pos">34.2%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v pos">39.3%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v pos">22.8%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">N/A</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm pos">4.78</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">N/A</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$0</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$3.74B</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$2.25B</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$4.64B</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">0.00%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">N/A</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">N/A</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (21 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$650.00</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$1000.00</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$1800.00</div></div>
+        </div>
+        <div class="est-labels"><span>$650</span><span>Current $1097</span><span>$1800</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:39%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">BUY</span> &middot; Mean Target: $1051.19</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-05-01 06:17 AM CST</div>
+</div>
+</body>
+</html>

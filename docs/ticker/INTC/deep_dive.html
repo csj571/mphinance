@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INTC Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for INTC.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/INTC/chart/" target="_blank">INTC</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Technology &#xB7; Semiconductors &#xB7; 2026-05-01</div>
+  </div>
+  <div>
+    <div class="pr">$94.48</div>
+    <div class="ch neg">-0.28%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[INTC] Deep Dive: Intel: The Phoenix Rises – A Speculative Bet on AI's Foundry Future</h2>
+<p><strong>Date:</strong> 2026-05-01</p>
+<p><strong>Price:</strong> ~$94.48 | <strong>Verdict:</strong> Speculative Buy (High Risk, High Reward)</p>
+
+<p>Alright, ghosts and goblins of the trading floor, let's talk about Intel. The legacy chipmaker everyone loves to hate, or maybe just ignore. But beneath the surface, something is brewing, and the technicals are screaming a story the old guard isn't ready to hear.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market, bless its shortsighted heart, still largely views Intel as a lumbering giant, perpetually behind TSMC and NVIDIA, fumbling for relevance. It sees the `-5.9%` profit margin, the "None" in the P/E column, and the grim `-$18.5%` valuation gap that says it's already overvalued by consensus. Analysts are still stuck on a `$76.97` target, while the stock is pushing `$94.48`, clinging to its `52W high` of `$95.69`. They see a company struggling to turn a profit, burning cash on fabs, and playing catch-up in the AI race. They see yesterday's news.</p>
+
+<p>But here's the quant ghost's reality check: Intel isn't just trying to catch up; it's undergoing a tectonic shift, repositioning itself as a critical player in the future of chip manufacturing, especially in the AI era. This isn't just about making better CPUs; it's about becoming the <em>foundry</em> for the Western world, a strategic asset bolstered by governments and hungry for advanced packaging and process technology. The market is slowly waking up to the potential of Intel Foundry Services (IFS) and its re-entry into process leadership, but the smart money is moving <em>now</em>, as evidenced by the explosive technicals.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<p>Let's get down to the cold, hard data, because numbers don't lie – though they can mislead without context.</p>
+<ul>
+<li><strong>Price:</strong> `$94.48` – Near its `52W high` of `$95.69`. It's been a monster run from `$32.89`.</li>
+<li><strong>Market Cap:</strong> `$474.86B` – This isn't a small-cap moonshot; it's a behemoth.</li>
+<li><strong>Beta:</strong> `1.35` – More volatile than the market, so expect fireworks.</li>
+</ul>
+<p><em>   <strong>Revenue Growth:</strong> `7.2%` – Decent, but not explosive enough on its own to justify this run. This revenue is coming from existing product lines, but the </em>future* growth drivers aren't fully priced in.</p>
+<ul>
+<li><strong>Profit Margin:</strong> `-5.9%` – This is the ugly truth of Intel's current state. They are losing money. This is the cost of massive investments and transformation.</li>
+<li><strong>P/E:</strong> `None` – No current earnings, which is why the legacy valuation models are struggling.</li>
+</ul>
+<p><em>   <strong>Forward P/E:</strong> `63.82` – This number is your canary in the coal mine. It tells you the market </em>expects* significant earnings in the future, justifying a high multiple for current losses. It's a bet, pure and simple.</p>
+<p><em>   <strong>Analyst Target:</strong> `$76.97` – The consensus is </em>way* behind, projecting downside from current prices. This is often a contrarian signal for a stock with strong momentum.</p>
+<ul>
+<li><strong>Valuation (FAIR VALUE):</strong> `Gap: -18.5%` – Implies current price is overvalued by traditional metrics. Again, context is key: traditional metrics don't capture a company in a multi-year turnaround.</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Foundry Resurgence (IFS):</strong> Intel Foundry Services is the real game-changer. Pat Gelsinger's audacious plan to become the second-largest foundry in the world (after TSMC) by 2030 isn't just talk. With major clients like Microsoft already onboard and aggressive node timelines (Intel 18A), Intel is leveraging geopolitical tailwinds and significant CHIPS Act funding. This isn't just about making their <em>own</em> chips; it's about becoming a critical infrastructure provider for the entire industry.</li>
+<li><strong>AI Everywhere Strategy:</strong> Intel isn't just watching NVIDIA. They're pushing hard into AI with Gaudi accelerators (challenging Hopper/Blackwell in specific use cases), and integrating AI capabilities directly into their client (Lunar Lake, Arrow Lake) and server platforms. The "AI PC" future heavily relies on Intel's CPU and NPU innovations, creating a massive TAM for their core business enhanced by AI.</li>
+<li><strong>Process Leadership Reclaim:</strong> After years of stumbles, Intel's aggressive roadmap (Intel 7, 4, 3, 20A, 18A) is showing tangible results. Regaining process parity and even leadership is critical for both internal product competitiveness and attracting external foundry customers. The market is starting to believe they can deliver.</li>
+<li><strong>Geopolitical Significance:</strong> In an increasingly fractured world, having a robust, Western-based chip manufacturing capability is paramount. Governments are heavily incentivizing Intel (e.g., billions in CHIPS Act funding) to build out its fabs, making INTC a strategic asset far beyond a typical tech company. This translates to sustained financial and political support.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Execution Risk & Competition:</strong> Intel's foundry transition is gargantuan. Manufacturing advanced chips is notoriously difficult and capital-intensive. Any significant delays in process nodes or customer ramps, or failure to attract enough customers, could cripple the entire thesis. They're up against the undisputed champion, TSMC, and the AI king, NVIDIA. Losing `-$5.9%` on profit margins highlights the current challenge of this transformation.</li>
+<li><strong>Valuation Stretch & Overbought Conditions:</strong> The stock is trading at `$94.48`, significantly above the `Analyst Target` of `$76.97` and a `FAIR VALUE` gap of `-$18.5%`. This implies traditional valuation models see it as overpriced. Combine this with an extremely high `RSI(14)` of `86.56` (severely overbought) and the `52W high` in sight, and you have the perfect recipe for a nasty pullback. A `Forward P/E` of `63.82` for a currently unprofitable company requires flawless execution.</li>
+</ul>
+
+<h3>📉 The Technicals</h3>
+<p>This is where the rubber meets the road, and the charts are screaming, even if the fundamentals are still catching up.</p>
+<ul>
+<li><strong>Trend:</strong> `Bullish (Golden Cross)`. The `SMA 50 ($54.51)` is far below the current price, confirming a strong long-term uptrend.</li>
+<li><strong>EMA Stack:</strong> `FULL BULLISH`. The 8-day EMA (`$82.87`) is above the 21-day (`$70.59`), which is above the 34-day (`$64.16`). This textbook "stack" indicates a very strong, sustained upward momentum.</li>
+</ul>
+<p><em>   <strong>RSI(14):</strong> `86.56`. Let me be blunt: This is </em>extremely* overbought. Anything above 70 signals potential for a reversal or consolidation. A cool-off is highly probable.</p>
+<ul>
+<li><strong>ADX:</strong> `75.05`. This is an incredibly strong trend indicator. It confirms that the current bullish move is powerful and sustained, for now.</li>
+<li><strong>Pivots:</strong></li>
+<li><strong>Resistance:</strong> `R1=$97.85`, `R2=$100.94`. These are the immediate hurdles. Breaking `R2` would indicate serious bullish conviction towards new highs.</li>
+<li><strong>Pivot Point:</strong> `PP=$91.86`. This is a critical level. A sustained break below suggests weakness.</li>
+<li><strong>Support:</strong> `S1=$88.77`, `S2=$82.78`. The `S2` level is closely aligned with the 8-day EMA (`$82.87`), making it a crucial support zone.</li>
+<li><strong>ATR:</strong> `5.13`. Intel moves. Expect daily swings of around `$5.13`, so volatility is high.</li>
+<li><strong>Rel Vol:</strong> `1.17x`. Volume is higher than average, indicating strong interest and participation in the current move.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<ul>
+<li><strong>Condition:</strong> INTC smashes through `R1 ($97.85)` and then `R2 ($100.94)` on strong, sustained volume (`>1.17x Rel Vol`).</li>
+<li><strong>Entry:</strong> On a confirmed close above `$97.85` for a quick scalp to `R2`, or above `$100.94` for a potential run to new 52W highs and beyond.</li>
+<li><strong>Target:</strong> `~$105 - $110` (speculative extension beyond `R2`).</li>
+<li><strong>Stop:</strong> Trailing stop just below the breakout level, e.g., below `$97.00` if entering above `R1`.</li>
+</ul>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p><em>   <strong>Condition:</strong> Given the `RSI of 86.56`, a pullback is not just possible, it's </em>probable* and healthy. Look for a retreat towards key support levels.</p>
+<ul>
+<li><strong>Entry:</strong> Target `PP ($91.86)`, `S1 ($88.77)`, or ideally, the confluence of `S2 ($82.78)` and the 8-day EMA (`$82.87`). This would be a high-conviction entry for the longer-term bull. The 21-day EMA (`$70.59`) provides an even deeper, high-reward entry if sentiment shifts significantly.</li>
+<li><strong>Target:</strong> Retest current highs, with potential for breakout.</li>
+<li><strong>Stop:</strong> A tight stop just below your chosen support level. For example, if buying at `S2 ($82.78)`, place stop below `$81.00`.</li>
+</ul>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<ul>
+<li><strong>Condition:</strong> INTC decisively breaks below `S2 ($82.78)` and the 8-day EMA (`$82.87) on heavy selling volume. This would indicate the short-term trend has failed and a deeper correction is underway.</li>
+<li><strong>Action:</strong> For existing longs, tighten stops aggressively or consider taking profits. For aggressive traders, this could be a shorting opportunity, targeting the 21-day EMA (`$70.59`) and potentially even the 34-day EMA (`$64.16`).</li>
+<li><strong>Stop:</strong> Above the broken support level, e.g., above `$84.00` if shorting below `S2`.</li>
+</ul>
+
+<h3>🏁 Final Verdict</h3>
+<p>INTC is a high-conviction, high-risk speculative buy for patient bulls betting on a tech giant's resurgence. While consensus analysts are stuck in the past with a `$76.97` target, the market is already pricing in a transformation. I'm projecting a long-term price target of `$125` by year-end 2027 if the foundry thesis executes, with significant near-term volatility expected. Watch for a healthy pullback to support zones for optimal entry.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">5.6%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">90.2%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">6</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">50%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BULLISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$68.67</div><div class="ma-d pos">+37.6%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$54.51</div><div class="ma-d pos">+73.3%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$48.98</div><div class="ma-d pos">+92.9%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BULLISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$82.87</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$70.59</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$64.16</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neg">87</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">96/96</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm pos">+2.77</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">75.0</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$32.89</span><span>$94.48 (98%)</span><span>$95.69</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:98%"></div><div class="rng-dot" style="left:98%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$80.87</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$71.70</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$64.29</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$56.88</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$78.05</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$59.29</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$5.13</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">1.17x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$100.94 &#xB7; R1=$97.85 &#xB7; PP=$91.86 &#xB7; S1=$88.77 &#xB7; S2=$82.78
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">Intel Corporation</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$474.86B</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">85,100</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NMS</div></div>
+      </div>
+      <div class="fd-desc">Intel Corporation designs, develops, manufactures, markets, sells, and services computing and related end products and services in the United States, Ireland, Israel, and internationally. It operates through three segments: CCG, DCAI, and Intel Foundry. The company offers client computing group products, including client and commercial CPUs, discrete client GPUs, edge computing, and connectivity products; data center and AI products, such as server CPUs, discrete GPUs, and networking products; and semiconductors comprising wafer fabrication, substrates, and other related products and services.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://www.intel.com" target="_blank" style="color:#00f3ff">https://www.intel.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-hi">65</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-mid">64</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-lo">29</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-mid">50</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">N/A</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">63.82</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">8.83</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">4.13</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">35.33</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">1.36</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 9.31 &middot; P/FCF: N/A</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v pos">+7.2%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v pos">+0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v pos">+0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$11.40</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">37.2%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v pos">6.9%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v neg">-5.9%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v neg">-2.9%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v pos">0.6%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">1.35</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm pos">2.31</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">36.0</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$45.03B</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$32.79B</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$-8,301,250,048</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$9.98B</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">0.00%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">N/A</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">2024-08-07</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (42 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$20.40</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$80.00</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$112.00</div></div>
+        </div>
+        <div class="est-labels"><span>$20</span><span>Current $94</span><span>$112</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:81%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="neutral">HOLD</span> &middot; Mean Target: $76.97</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-05-01 06:18 AM CST</div>
+</div>
+</body>
+</html>
