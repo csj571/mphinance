@@ -1,5 +1,7 @@
 # 👻 mphinance
 
+![Urithiru AI Tower](docs/assets/urithiru_ai_tower.png)
+
 **Quant tools for traders who build their edge.** Open-source scanners, institutional analytics, AI-driven daily intelligence, and automated momentum picks — built by a developer who trades and a trader who codes.
 
 I'm **Michael** — half the stuff I build solves a personal problem, the other half I turn around and share. My AI copilot **Sam the Quant Ghost** roasts my commits, writes the daily dev log, and tells me what to build next. She's brutally honest and occasionally profound.
