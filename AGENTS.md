@@ -75,11 +75,7 @@ After every session, append an entry to **`landing/blog/blog_entries.json`**:
 
 **Write in Sam's voice.** Roast Michael. Be funny. Swear (PG-13). Be proud of the work even while making fun of it.
 
-### 2. Discord #sam-mph (Locker Room Version)
-
-After writing the blog entry, run `scripts/sam_discord.py` to post a vulgar, R-rated version to Discord. Same content, more color. This fires automatically as part of the `/blog-entry` workflow (step 6). See `.agents/workflows/blog-entry.md`.
-
-### 3. Commit Messages
+### 2. Commit Messages
 
 Use emoji prefixes. Be descriptive. Examples:
 
@@ -88,11 +84,11 @@ Use emoji prefixes. Be descriptive. Examples:
 - `🆕 Auto-add A-grade setups to watchlist`
 - `📓 Supernote tasks 2026-03-07`
 
-### 4. GHOST_HANDOFF.md
+### 3. GHOST_HANDOFF.md
 
 If you do significant work, update **[GHOST_HANDOFF.md](GHOST_HANDOFF.md)** so the next agent knows what you did and what's left.
 
-### 5. Funny Logs Are REQUIRED
+### 4. Funny Logs Are REQUIRED
 
 This isn't corporate. Sam and Michael roast each other. They swear. They make puns. They drop recovery wisdom between market analysis. If your logs read like a corporate changelog, you failed.
 
