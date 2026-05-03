@@ -1,18 +1,16 @@
 # I Plagiarized 7 of My Friends With AI, and Honestly, They Should Be Flattered
 
-I've been thinking about something lately that has nothing to do with charts or earnings or your portfolio.
+Ruben Hassid dropped a piece this week called ["I Can Be You"](https://ruben.substack.com/p/youre-just-a-text-file) and it rattled me in the best possible way.
 
-I've been thinking about voice.
+His thesis is simple and brutal: you're just a text file. Give an AI two hours of honest answers about how you think, write, and see the world, and it can sound exactly like you. Not "sort of" like you. *Exactly* like you. He lays out the whole process, the 100-question voice interview, the compression into a compact .md file, the moment you realize your entire creative identity fits inside 4,000 tokens.
 
-Not your literal voice. Your *writing* voice. The thing that makes you stop scrolling. The thing that makes you trust one person's take on NVDA over another person's identical take on NVDA. The thing nobody teaches you to build, but everybody recognizes when it's missing.
+And I sat there reading it thinking... yeah. He's right. I already *have* one of those files. I call it Voice.md. My AI copilot Sam reads it at the top of every session. It's how she knows to roast me, swear at PG-13 levels, and never use an em dash.
 
-So here's what we're going to do today. I wrote one paragraph. Just a simple thought about information overload. Then I went and studied seven Substacks I actually read, fed their writing into my AI copilot Sam, and rewrote that same paragraph in each of their voices.
+But here's what Ruben's piece made me want to prove: voice isn't just *your* voice. It's what makes every writer on this platform different from the one next to them. Same information, same tickers, same market, same macro backdrop. Completely different experience when you read their work.
 
-Same idea. Seven completely different deliveries. Seven completely different feelings when you read it.
+So I did something a little unhinged. I took one paragraph, fed it through the collected voices of seven Substack writers I actually read, and let the AI rewrite it in each of their styles.
 
-Is it plagiarism? Technically no. Is it flattery? Absolutely. Should they all have way more subscribers? Without question.
-
-This is what voice does. This is why it matters. And these are seven people you should be following if you aren't already.
+Is it plagiarism? Technically no. Is it a love letter? Absolutely.
 
 Here's the original paragraph:
 
@@ -48,7 +46,7 @@ Have thoughts on this? I'd love to hear from you in the comments!
 
 ---
 
-## 3. Tiger Capital Research — [Tiger Capital Research](https://substack.com/@tigercapitalresearch)
+## 3. Tiger Capital Research — [Tiger Capital Research](https://princetonchen.substack.com/)
 
 🐯 A Princetonian alpha trading team that compresses 24 hours of market signal into 5 minutes. Daily alpha ideas, regime reads, key moves across equities and crypto, weekly portfolio updates and research papers. They don't write newsletters. They built a system. Information → Interpretation → Positioning → Execution. If you want institutional-grade signal without the institutional-grade price tag, Tiger is the stack.
 
@@ -159,20 +157,23 @@ Vitalii gave you the levels and told you to cut the noise. Ryan walked you throu
 
 None of them are wrong. All of them are memorable. That's what voice does.
 
+Ruben said it best: you're just a text file. He's right. But here's the thing he proved without meaning to. *Everyone's* text file is different. And that difference? That's the whole game.
+
 Voice is the reason you subscribe to one person over another when they're covering the same damn ticker. It's the reason some posts get shared and others get scrolled past. It's not *what* you know. It's how you make people *feel* what you know.
 
 If you're building your own Substack, your own brand, your own anything, stop trying to sound like everybody else. The information is identical. The delivery is everything.
 
-**Go follow these seven. You'll thank me later.**
+If you want to learn how to build your own voice file, go read Ruben's piece. And if you want to see what happens when seven completely different voice files hit the same paragraph, well, you just did.
 
-- 📈 [Price Action Playbook — Vitalii Nechyporenko](https://priceactionplaybook.substack.com/)
-- 📚 [LP Options Academy — Ryan LePiane](https://ryanlepiane.substack.com/)
-- 🐯 [Tiger Capital Research](https://substack.com/@tigercapitalresearch)
-- 🌍 [Emerging Value — Olivier](https://emergingvalue.substack.com/)
+**Go follow these seven. And go read Ruben. You'll thank me later.**
+
+- 📈 [Price Action Playbook, Vitalii Nechyporenko](https://priceactionplaybook.substack.com/)
+- 📚 [LP Options Academy, Ryan LePiane](https://ryanlepiane.substack.com/)
+- 🐯 [Tiger Capital Research](https://princetonchen.substack.com/)
+- 🌍 [Emerging Value, Olivier](https://emergingvalue.substack.com/)
 - 🔮 [OROLO Capital](https://orolo.substack.com/)
 - 👑 [The VIX Queen](https://vixqueen.substack.com/)
 - 🌊 [The Seaspiracy Observer](https://seaspiracy.substack.com/)
-
-And if you want to see what *my* voice sounds like on a daily basis, you already know where to find me.
+- ✍️ [How to AI, Ruben Hassid](https://ruben.substack.com/) (the piece that started this whole thing)
 
 *Subscribe to Momentum Phinance. We build our own tools, we show our own P&L, and we never pretend to be perfect.*
