@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+    <script>window.dataLayer = window.dataLayer || []; function gtag() { dataLayer.push(arguments); } gtag('js', new Date()); gtag('config', 'G-KTHVTFX699');</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KLAC | ALPHA.HUD | Deep Dive</title>
+    <meta name="description"
+        content="Full technical deep-dive for KLAC — KLA Corporation. EMA stack, pivots, options flow, institutional signals, AI synthesis.">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'mono': ['"JetBrains Mono"', 'monospace'],
+                        'tech': ['"Share Tech Mono"', 'monospace'],
+                    },
+                    colors: {
+                        'neon-green': '#00ff41',
+                        'neon-red': '#ff3e3e',
+                        'neon-blue': '#00f3ff',
+                        'neon-amber': '#ffb000',
+                        'hud-black': '#0a0a0a',
+                        'hud-panel': '#111111',
+                        'hud-border': '#333333',
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'blink': 'blink 1s step-end infinite',
+                    },
+                    keyframes: {
+                        blink: { '0%, 100%': { opacity: '1' }, '50%': { opacity: '0' } }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #050505;
+            color: #e0e0e0;
+            font-family: 'JetBrains Mono', monospace;
+            background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+        }
+
+        .hud-panel {
+            background: rgba(10, 10, 10, 0.8);
+            border: 1px solid #333;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .hud-header {
+            border-bottom: 2px solid #333;
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .hud-title {
+            font-family: 'Share Tech Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #888;
+            font-size: 0.75rem;
+        }
+
+        .text-glow-green {
+            text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+        }
+
+        .text-glow-red {
+            text-shadow: 0 0 5px rgba(255, 62, 62, 0.5);
+        }
+
+        .text-glow-blue {
+            text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #111;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+
+        .grid-bg {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(50, 50, 50, 0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(50, 50, 50, 0.1) 1px, transparent 1px);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen p-4 grid-bg selection:bg-neon-green selection:text-black">
+
+    <!-- TOP CONTROL BAR -->
+    <div
+        class="fixed top-0 left-0 w-full bg-hud-black/90 border-b border-hud-border z-50 px-4 py-2 flex justify-between items-center backdrop-blur-md">
+        <div class="flex items-center space-x-4">
+            <a href="../index.html"
+                class="font-tech text-neon-green text-xl tracking-widest font-bold hover:text-white transition-colors">ALPHA://HUD</a>
+            <span class="text-xs text-gray-500 font-mono border-l border-gray-700 pl-4">DEEP.DIVE</span>
+            <div id="logo-container"
+                class="w-8 h-8 ml-4 rounded bg-gray-800 border border-gray-700 flex items-center justify-center overflow-hidden relative">
+                <img src="https://logo.clearbit.com/www.kla.com" class="w-full h-full object-contain p-1 bg-white" alt="KLAC"
+                    onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';">
+                <div id="logo-fallback" class="absolute inset-0 flex items-center justify-center bg-gray-800 hidden">
+                    <span class="text-[10px] font-bold text-gray-400">K</span>
+                </div>
+            </div>
+            <button onclick="openModal()"
+                class="px-2 py-1 bg-gray-800 text-[10px] text-gray-400 border border-gray-700 hover:text-white hover:border-gray-500 transition-colors uppercase font-mono ml-2">SOURCE
+                :: JSON</button>
+        </div>
+        <div class="flex items-center space-x-6">
+            <div class="text-right">
+                <div class="text-[10px] text-gray-500 uppercase">Target Asset</div>
+                <div class="text-2xl font-bold font-tech tracking-wider text-white">
+                    <a href="https://www.tradingview.com/symbols/KLAC/chart/" target="_blank"
+                        class="hover:text-neon-blue transition-colors">KLAC</a>
+                </div>
+            </div>
+            <div class="text-right border-l border-gray-700 pl-4">
+                <div class="text-[10px] text-gray-500 uppercase">Last Price</div>
+                <div class="text-2xl font-bold font-mono tracking-tight text-white">$1713.32</div>
+            </div>
+            <div class="text-right border-l border-gray-700 pl-4">
+                <div class="text-[10px] text-gray-500 uppercase">Change</div>
+                <div
+                    class="text-lg font-bold font-mono text-neon-red">
+                    -0.75%
+                </div>
+            </div>
+            <div class="text-right border-l border-gray-700 pl-4 pr-2">
+                <div class="text-[10px] text-gray-500 uppercase">Generated</div>
+                <div class="text-xs font-mono text-neon-amber">2026-05-05 06:17 AM CST</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN GRID CONTAINER -->
+    <div class="grid grid-cols-12 gap-4 mt-20 max-w-[1920px] mx-auto pb-8">
+
+        <!-- COLUMN 1: LEFT SIDEBAR -->
+        <div class="col-span-12 lg:col-span-3 space-y-4">
+
+            <!-- CORE PROFILE -->
+            <div class="hud-panel p-4 rounded-sm border-l-4 border-neon-blue">
+                <div class="hud-header">
+                    <span class="hud-title text-neon-blue">ASSET.PROFILE</span>
+                    <span class="text-[10px] bg-neon-blue/10 text-neon-blue px-1">SEC.01</span>
+                </div>
+                <div class="space-y-3">
+                    <div class="text-xs text-gray-300 leading-relaxed font-mono">
+                        KLA Corporation // Technology [Semiconductor Equipment & Materials]. Mkt Cap: $223.81B. Rev Growth: 11.5%. PM: 35.7%.
+                    </div>
+                    <div class="h-px bg-gray-800 w-full"></div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div><span class="text-gray-500 block text-[9px]">MARKET CAP</span><span
+                                class="text-white font-bold">$223.81B</span></div>
+                        <div><span class="text-gray-500 block text-[9px]">BETA</span><span class="text-white">1.5</span></div>
+                        <div><span class="text-gray-500 block text-[9px]">ANALYST TARGET</span><span
+                                class="text-white">$1814.28</span></div>
+                        <div><span class="text-gray-500 block text-[9px]">52W RANGE</span><span
+                                class="text-white text-[10px]">1070.57 - 1939.36</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI ANALYSIS & SCORING -->
+            <div class="hud-panel p-4 rounded-sm border-l-4 border-neon-amber">
+                <div class="hud-header">
+                    <span class="hud-title text-neon-amber">AI.SYNTHESIS <span class="animate-blink">_</span></span>
+                    <span class="text-[10px] bg-neon-amber/10 text-neon-amber px-1">GRADE: A</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <div class="bg-gray-900/50 p-2 rounded border border-gray-800 text-center">
+                        <div class="text-[9px] text-gray-500 uppercase">TECH.SCORE</div>
+                        <div
+                            class="text-xl font-bold font-mono text-neon-green">
+                            95</div>
+                    </div>
+                    <div class="bg-gray-900/50 p-2 rounded border border-gray-800 text-center">
+                        <div class="text-[9px] text-gray-500 uppercase">FUND.SCORE</div>
+                        <div
+                            class="text-xl font-bold font-mono text-neon-green">
+                            80</div>
+                    </div>
+                </div>
+                <div
+                    class="text-xs text-gray-300 font-mono leading-relaxed p-2 bg-black/40 border border-gray-800 rounded h-40 overflow-y-auto">
+                    <span class='text-neon-blue font-bold'>AI.SYNTHESIS // </span><br>Asset demonstrates a <span class='text-neon-green'>STRONG</span> technical posture (Score: 95/100) within a wider Bullish trend. Asset appears overvalued — exercise caution. <br><br><span class='text-gray-400 font-bold'>RISK.PROFILE // </span>Implied volatility exceeds historical norms, expecting turbulence. <br><br><span class='text-neon-amber font-bold'>VERDICT // </span>WAIT for validation
+                </div>
+            </div>
+
+            <!-- VALUATION MODEL -->
+            <div class="hud-panel p-4 text-center rounded-sm border-t-2 border-gray-700">
+                
+                <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-1">VALUATION (BLENDED (Graham+Lynch+Analyst))</div>
+                <div class="text-xl font-black font-tech text-neon-red tracking-widest">OVERVALUED</div>
+                <div class="grid grid-cols-2 gap-1 mt-2 text-[9px] font-mono">
+                    <div class="text-gray-400">TARGET: <span class="text-gray-200">$800.68</span></div>
+                    <div class="text-neon-red">GAP: -53.3%</div>
+                </div>
+            </div>
+
+            <!-- RISK METRICS -->
+            <div class="hud-panel p-4 rounded-sm">
+                <div class="hud-header"><span class="hud-title text-gray-400">RISK.METRICS</span></div>
+                <div class="text-xs font-mono text-gray-400 space-y-2">
+                    Beta: 1.5. Range(52W): 1070.57 - 1939.36. Analyst Tgt: 1814.28.
+                </div>
+            </div>
+
+        </div>
+
+        <!-- COLUMN 2: CENTER STAGE -->
+        <div class="col-span-12 lg:col-span-6 space-y-4">
+
+            <!-- MAIN SIGNAL BOXES -->
+            <div class="grid grid-cols-4 gap-3">
+                <!-- Trend -->
+                <div class="hud-panel p-4 text-center rounded-sm relative overflow-hidden">
+                    <div
+                        class="absolute top-0 left-0 w-1 h-full bg-neon-green">
+                    </div>
+                    <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-1">TREND</div>
+                    <div
+                        class="text-xl font-black font-tech text-neon-green text-glow-green">
+                        Bullish
+                    </div>
+                    <div class="text-[9px] mt-2 text-gray-400 font-mono">Golden Cross</div>
+                </div>
+
+                <!-- RSI -->
+                <div class="hud-panel p-4 text-center rounded-sm">
+                    <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-1">RSI (14)</div>
+                    <div class="text-2xl font-bold font-mono text-white">42.31
+                    </div>
+                    <div class="w-full bg-gray-800 h-1 mt-2 rounded-full overflow-hidden">
+                        
+                        <div class="h-full bg-gray-500"
+                            style="width: 42.31%"></div>
+                    </div>
+                </div>
+
+                <!-- IV -->
+                <div class="hud-panel p-4 text-center rounded-sm">
+                    <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-1">IMPLIED VOL</div>
+                    <div class="text-2xl font-bold font-mono text-neon-blue">54.54%</div>
+                    <div class="text-[9px] mt-2 text-gray-400">HV: 51.12%</div>
+                </div>
+
+                <!-- EMA Stack -->
+                <div class="hud-panel p-4 text-center rounded-sm">
+                    <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-1">EMA STACK</div>
+                    
+                    <div class="text-sm font-black font-tech text-neon-green text-glow-green mt-1">FULL<br>BULLISH</div>
+                    
+                </div>
+            </div>
+
+            <!-- TREND ARROWS -->
+            <div class="hud-panel p-3 rounded-sm">
+                <div class="flex justify-between items-center">
+                    <div class="text-[10px] text-gray-500 uppercase tracking-widest">TREND.STATUS</div>
+                    <div class="flex gap-8">
+                        <div class="text-center">
+                            <div
+                                class="text-2xl text-neon-red">
+                                ↓</div>
+                            <div class="text-[9px] text-gray-500">SHORT</div>
+                            <div
+                                class="text-[10px] text-neon-red font-bold">
+                                Weak</div>
+                        </div>
+                        <div class="text-center">
+                            <div
+                                class="text-2xl text-neon-green">
+                                ↑</div>
+                            <div class="text-[9px] text-gray-500">MED-TERM</div>
+                            <div
+                                class="text-[10px] text-neon-green font-bold">
+                                Strong</div>
+                        </div>
+                        <div class="text-center">
+                            <div
+                                class="text-2xl text-neon-green">
+                                ↑</div>
+                            <div class="text-[9px] text-gray-500">LONG-TERM</div>
+                            <div
+                                class="text-[10px] text-neon-green font-bold">
+                                Strong</div>
+                        </div>
+                    </div>
+                    <div class="text-center px-4 py-2 bg-gray-900 border border-gray-800 rounded">
+                        <div class="text-[9px] text-gray-500">LAST PRICE</div>
+                        <div class="text-lg font-bold text-white">$1713.32</div>
+                        <div
+                            class="text-xs text-neon-red">
+                            -0.75%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INTERACTIVE CHART -->
+            <div class="hud-panel p-2 rounded-sm border-b-2 border-neon-blue relative">
+                <div
+                    class="absolute top-2 left-2 z-10 text-[10px] bg-black/50 px-1 text-gray-500 font-mono border border-gray-800 flex items-center space-x-2">
+                    <span>INTERACTIVE.CHART // OHLC + EMA OVERLAYS</span>
+                    <button onclick="resetChart()"
+                        class="text-neon-blue hover:text-white transition-colors border-l border-gray-800 pl-2">RESET.VIEW</button>
+                </div>
+                <div id="plotly-chart" class="w-full h-[400px]"></div>
+            </div>
+
+            <!-- TECHNICALS GRID -->
+            <div class="hud-panel p-0 rounded-sm overflow-hidden">
+                <div class="bg-gray-900 border-b border-gray-800 p-2 px-4 flex justify-between items-center">
+                    <span class="text-xs font-bold text-gray-400">TECHNICAL.MATRIX</span>
+                    <span class="text-[10px] font-mono text-gray-600">AUTO-CALC</span>
+                </div>
+                <div class="grid grid-cols-2 divide-x divide-gray-800 border-b border-gray-800">
+                    <!-- Moving Averages -->
+                    <div class="p-4">
+                        <h4 class="text-[10px] text-neon-blue mb-3 uppercase tracking-wider font-bold">Moving Averages
+                        </h4>
+                        <div class="space-y-1.5">
+                            
+                            <div class="flex justify-between text-xs">
+                                <span class="text-gray-500">EMA 8</span>
+                                <span
+                                    class="font-mono text-neon-red">$1772.72</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-xs">
+                                <span class="text-gray-500">EMA 21</span>
+                                <span
+                                    class="font-mono text-neon-red">$1737.62</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-xs">
+                                <span class="text-gray-500">EMA 34</span>
+                                <span
+                                    class="font-mono text-neon-green">$1684.59</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-xs">
+                                <span class="text-gray-500">EMA 55</span>
+                                <span
+                                    class="font-mono text-neon-green">$1616.27</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-xs">
+                                <span class="text-gray-500">EMA 89</span>
+                                <span
+                                    class="font-mono text-neon-green">$1527.86</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-xs border-t border-gray-800 pt-1.5">
+                                <span class="text-gray-500">SMA 50 (Inst)</span>
+                                <span
+                                    class="font-mono text-neon-green font-bold">$1594.88</span>
+                            </div>
+                            <div class="flex justify-between text-xs">
+                                <span class="text-gray-500">SMA 200 (Trend)</span>
+                                <span
+                                    class="font-mono text-neon-green font-bold">$1262.52</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Pivots -->
+                    <div class="p-4">
+                        <h4 class="text-[10px] text-neon-amber mb-3 uppercase tracking-wider font-bold">Pivot Points
+                        </h4>
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between text-xs border-l-2 border-neon-red/50 pl-2"><span
+                                    class="text-gray-500">RES 2</span><span class="font-mono text-gray-300">$1772.14</span></div>
+                            <div class="flex justify-between text-xs border-l-2 border-neon-red/30 pl-2"><span
+                                    class="text-gray-500">RES 1</span><span class="font-mono text-gray-300">$1749.2</span></div>
+                            <div class="flex justify-between text-xs border-l-2 border-white/20 pl-2 bg-white/5 py-1">
+                                <span class="text-gray-300 font-bold">PIVOT</span><span
+                                    class="font-mono text-white font-bold">$1722.1</span>
+                            </div>
+                            <div class="flex justify-between text-xs border-l-2 border-neon-green/30 pl-2"><span
+                                    class="text-gray-500">SUP 1</span><span class="font-mono text-gray-300">$1699.16</span></div>
+                            <div class="flex justify-between text-xs border-l-2 border-neon-green/50 pl-2"><span
+                                    class="text-gray-500">SUP 2</span><span class="font-mono text-gray-300">$1672.06</span></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Fibs & Volume -->
+                <div class="grid grid-cols-2 divide-x divide-gray-800">
+                    <div class="p-4">
+                        <h4 class="text-[10px] text-purple-400 mb-3 uppercase tracking-wider font-bold">Fibonacci (1Y)
+                        </h4>
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-[10px]"><span class="text-gray-600">1.000</span><span
+                                    class="font-mono text-gray-400">$1939.36</span>
+                            </div>
+                            <div class="flex justify-between text-[10px]"><span class="text-gray-600">0.618</span><span
+                                    class="font-mono text-gray-400">$1402.45</span>
+                            </div>
+                            <div class="flex justify-between text-[10px]"><span class="text-gray-600">0.500</span><span
+                                    class="font-mono text-gray-400">$1504.96</span>
+                            </div>
+                            <div class="flex justify-between text-[10px]"><span class="text-gray-600">0.382</span><span
+                                    class="font-mono text-gray-400">$1607.48</span>
+                            </div>
+                            <div class="flex justify-between text-[10px]"><span class="text-gray-600">0.000</span><span
+                                    class="font-mono text-gray-400">$1070.57</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h4 class="text-[10px] text-cyan-400 mb-3 uppercase tracking-wider font-bold">Volume Profile
+                        </h4>
+                        <div class="space-y-2">
+                            <div class="text-xs">
+                                <div class="flex justify-between mb-1"><span class="text-gray-500">Relative
+                                        Vol</span><span class="text-white">0.85x</span></div>
+                                <div class="w-full bg-gray-800 h-1.5 rounded-full">
+                                    <div class="h-full bg-cyan-500"
+                                        style="width: 42%"></div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between text-[10px] mt-2"><span
+                                    class="text-gray-600">CURRENT</span><span class="font-mono text-gray-400">791,600</span></div>
+                            <div class="flex justify-between text-[10px]"><span class="text-gray-600">AVG
+                                    (20D)</span><span class="font-mono text-gray-400">933,700</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INDICATORS ROW -->
+            <div class="grid grid-cols-4 gap-2">
+                
+                <div class="hud-panel p-3 text-center rounded-sm">
+                    <div class="text-[9px] text-gray-500 uppercase">ADX</div>
+                    <div class="text-lg font-bold font-mono text-white">33.05</div>
+                </div>
+                
+                <div class="hud-panel p-3 text-center rounded-sm">
+                    <div class="text-[9px] text-gray-500 uppercase">MACD Hist</div>
+                    <div class="text-lg font-bold font-mono text-white">-19.66</div>
+                </div>
+                
+                <div class="hud-panel p-3 text-center rounded-sm">
+                    <div class="text-[9px] text-gray-500 uppercase">Stoch %K</div>
+                    <div class="text-lg font-bold font-mono text-white">22.95</div>
+                </div>
+                
+                <div class="hud-panel p-3 text-center rounded-sm">
+                    <div class="text-[9px] text-gray-500 uppercase">HV
+                (30D)</div>
+                    <div class="text-lg font-bold font-mono text-white">51.12</div>
+                </div>
+                
+            </div>
+
+            <!-- EXPECTED MOVES -->
+            
+            <div class="hud-panel p-0 rounded-sm overflow-hidden">
+                <div class="bg-gray-900 border-b border-gray-800 p-2 px-4">
+                    <span class="text-xs font-bold text-gray-400">EXPECTED.MOVES</span>
+                </div>
+                <table class="w-full text-[10px]">
+                    <thead>
+                        <tr class="text-gray-500 border-b border-gray-800 font-mono">
+                            <th class="p-2 text-left font-normal">EXPIRATION</th>
+                            <th class="p-2 text-right font-normal">DTE</th>
+                            <th class="p-2 text-right font-normal">EXP MOVE</th>
+                            <th class="p-2 text-right font-normal">RANGE</th>
+                            <th class="p-2 text-right font-normal">IV</th>
+                        </tr>
+                    </thead>
+                    <tbody class="font-mono text-gray-300 divide-y divide-gray-800/50">
+                        
+                        <tr class="hover:bg-gray-800/50">
+                            <td class="p-2">2026-05-15</td>
+                            <td class="p-2 text-right">9</td>
+                            <td class="p-2 text-right text-neon-amber font-bold">$147.58</td>
+                            <td class="p-2 text-right text-gray-400">1565.74 - 1860.9</td>
+                            <td class="p-2 text-right text-neon-blue">54.9%</td>
+                        </tr>
+                        
+                        <tr class="hover:bg-gray-800/50">
+                            <td class="p-2">2026-06-18</td>
+                            <td class="p-2 text-right">43</td>
+                            <td class="p-2 text-right text-neon-amber font-bold">$287.03</td>
+                            <td class="p-2 text-right text-gray-400">1426.29 - 2000.35</td>
+                            <td class="p-2 text-right text-neon-blue">48.8%</td>
+                        </tr>
+                        
+                        <tr class="hover:bg-gray-800/50">
+                            <td class="p-2">2026-09-18</td>
+                            <td class="p-2 text-right">135</td>
+                            <td class="p-2 text-right text-neon-amber font-bold">$568.25</td>
+                            <td class="p-2 text-right text-gray-400">1145.07 - 2281.57</td>
+                            <td class="p-2 text-right text-neon-blue">54.5%</td>
+                        </tr>
+                        
+                        <tr class="hover:bg-gray-800/50">
+                            <td class="p-2">2026-12-18</td>
+                            <td class="p-2 text-right">226</td>
+                            <td class="p-2 text-right text-neon-amber font-bold">$739.69</td>
+                            <td class="p-2 text-right text-gray-400">973.63 - 2453.01</td>
+                            <td class="p-2 text-right text-neon-blue">54.9%</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+            
+
+        </div>
+
+        <!-- COLUMN 3: RIGHT SIDEBAR -->
+        <div class="col-span-12 lg:col-span-3 space-y-4">
+
+            <!-- OPTIONS FLOW -->
+            
+            <div class="hud-panel p-4 rounded-sm border-r-4 border-neon-blue">
+                <div class="hud-header">
+                    <span class="hud-title text-neon-blue">OPTIONS.FLOW</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center mb-3">
+                    <div>
+                        <div class="text-[9px] text-gray-500">CALLS</div>
+                        <div class="text-sm font-bold text-neon-green">1,711</div>
+                    </div>
+                    <div>
+                        <div class="text-[9px] text-gray-500">PUTS</div>
+                        <div class="text-sm font-bold text-neon-red">3,378</div>
+                    </div>
+                    <div>
+                        <div class="text-[9px] text-gray-500">TOTAL</div>
+                        <div class="text-sm font-bold text-white">5,089</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+                    <div class="bg-gray-900/50 p-2 rounded border border-gray-800">
+                        <div class="text-[9px] text-gray-500">P/C (VOL)</div>
+                        <div
+                            class="text-lg font-bold text-neon-red">
+                            1.97</div>
+                    </div>
+                    <div class="bg-gray-900/50 p-2 rounded border border-gray-800">
+                        <div class="text-[9px] text-gray-500">P/C (OI)</div>
+                        <div
+                            class="text-lg font-bold text-neon-red">
+                            1.66</div>
+                    </div>
+                </div>
+            </div>
+            
+
+            <!-- TICKERTRACE INSTITUTIONAL -->
+            
+
+            <!-- INSIDERS -->
+            <div class="hud-panel p-0 rounded-sm border-r-4 border-neon-red">
+                <div class="p-3 border-b border-gray-800 bg-gray-900/50">
+                    <span class="hud-title text-neon-red">INSIDER.ACTIVITY</span>
+                </div>
+                <table class="w-full text-left text-[10px]">
+                    <thead>
+                        <tr class="text-gray-500 border-b border-gray-800 font-mono">
+                            <th class="p-2 font-normal">DATE</th>
+                            <th class="p-2 font-normal">WHO</th>
+                            <th class="p-2 font-normal text-right">VAL</th>
+                        </tr>
+                    </thead>
+                    <tbody class="font-mono text-gray-300 divide-y divide-gray-800/50">
+                        
+                        <tr class="hover:bg-gray-800/50">
+                            <td class="p-2">2026-02-05</td>
+                            <td class="p-2 truncate max-w-[100px]">CALDERONI ROBERT M</td>
+                            <td class="p-2 text-right font-bold text-neon-green">$0</td>
+                        </tr>
+                        
+                        <tr class="hover:bg-gray-800/50">
+                            <td class="p-2">2025-12-16</td>
+                            <td class="p-2 truncate max-w-[100px]">HIGGINS BREN D.</td>
+                            <td class="p-2 text-right font-bold text-neon-green">$2.79M</td>
+                        </tr>
+                        
+                        <tr class="hover:bg-gray-800/50">
+                            <td class="p-2">2025-11-12</td>
+                            <td class="p-2 truncate max-w-[100px]">KHAN AHMAD A</td>
+                            <td class="p-2 text-right font-bold text-neon-green">$0</td>
+                        </tr>
+                        
+                        <tr class="hover:bg-gray-800/50">
+                            <td class="p-2">2025-11-11</td>
+                            <td class="p-2 truncate max-w-[100px]">WALLACE RICHARD P</td>
+                            <td class="p-2 text-right font-bold text-neon-green">$0</td>
+                        </tr>
+                        
+                        <tr class="hover:bg-gray-800/50">
+                            <td class="p-2">2025-11-11</td>
+                            <td class="p-2 truncate max-w-[100px]">WALLACE RICHARD P</td>
+                            <td class="p-2 text-right font-bold text-neon-green">$13.00M</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- NEWS FEED -->
+            
+            <div class="hud-panel p-4 rounded-sm">
+                <div class="hud-header">
+                    <span class="hud-title text-gray-400">NEWS.FEED</span>
+                </div>
+                <div class="space-y-2 max-h-48 overflow-y-auto">
+                    
+                    <div class="border-b border-gray-800/50 pb-2">
+                        <a href="https://247wallst.com/investing/2026/05/04/bernstein-analyst-ai-agents-drive-chip-demand-off-the-charts-supply-cant-keep-up/?.tsrc=rss" target="_blank"
+                            class="text-[10px] text-gray-300 hover:text-neon-blue transition-colors">Bernstein Analyst: AI Agents Drive Chip Demand ‘Off the Charts,’ Supply Can’t Keep Up</a>
+                        <div class="text-[9px] text-gray-600 mt-0.5"></div>
+                    </div>
+                    
+                    <div class="border-b border-gray-800/50 pb-2">
+                        <a href="https://247wallst.com/technology-3/2026/05/04/kla-is-gaining-share-as-ai-chip-complexity-drives-up-yield-costs/?.tsrc=rss" target="_blank"
+                            class="text-[10px] text-gray-300 hover:text-neon-blue transition-colors">KLA Is Gaining Share as AI Chip Complexity Drives Up Yield Costs</a>
+                        <div class="text-[9px] text-gray-600 mt-0.5"></div>
+                    </div>
+                    
+                    <div class="border-b border-gray-800/50 pb-2">
+                        <a href="https://finance.yahoo.com/markets/stocks/articles/kla-klac-international-revenue-focus-131505525.html?.tsrc=rss" target="_blank"
+                            class="text-[10px] text-gray-300 hover:text-neon-blue transition-colors">KLA (KLAC) International Revenue in Focus: Trends and Expectations</a>
+                        <div class="text-[9px] text-gray-600 mt-0.5"></div>
+                    </div>
+                    
+                </div>
+            </div>
+            
+
+            <!-- SYSTEM FOOTER -->
+            <div class="text-[9px] text-gray-600 font-mono text-center mt-8 opacity-50">
+                generated by Sam the Ghost Quant // 2026-05-05 06:17 AM CST <br>
+                ALPHA.HUD V2 // DEEP DIVE
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- JSON EXPORT MODAL -->
+    <div id="jsonModal" class="fixed inset-0 bg-black/90 z-[100] hidden flex items-center justify-center p-8">
+        <div
+            class="bg-gray-900 border border-neon-blue w-full max-w-4xl h-full max-h-[80vh] flex flex-col rounded shadow-[0_0_30px_rgba(0,243,255,0.2)]">
+            <div class="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900/50">
+                <span class="text-neon-blue font-tech text-lg">SOURCE.JSON // EXPORT</span>
+                <div class="flex space-x-4">
+                    <button onclick="copyToClipboard()"
+                        class="px-4 py-1 bg-neon-blue/20 text-neon-blue border border-neon-blue/50 hover:bg-neon-blue/40 text-xs font-mono uppercase transition-colors">>>
+                        COPY TO CLIPBOARD</button>
+                    <button onclick="closeModal()" class="text-gray-500 hover:text-white">X</button>
+                </div>
+            </div>
+            <div class="flex-1 overflow-auto p-4 bg-black/50">
+                <pre class="text-[10px] text-gray-400 font-mono whitespace-pre-wrap select-all" id="jsonContent"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawJson = {"ticker": "KLAC", "companyName": "KLA Corporation", "sector": "Technology", "industry": "Semiconductor Equipment & Materials", "currentPrice": 1713.32, "priceChange": -12.94, "priceChangePct": -0.75, "timestamp": "2026-05-05 06:17 AM CST", "logo_url": "https://logo.clearbit.com/www.kla.com", "generated_at": "2026-05-05 06:17 AM CST", "impliedVolatility": 54.54, "historicVolatility": 51.12, "ivRank": 0, "ivPercentile": 0, "trendOverall": "Bullish", "trendShort": "Weak", "trendMed": "Strong", "trendLong": "Strong", "expectedMoves": [{"expiration": "2026-05-15", "expectedMove": 147.58, "expectedRange": "1565.74 - 1860.9", "iv": 54.9, "dte": 9}, {"expiration": "2026-06-18", "expectedMove": 287.03, "expectedRange": "1426.29 - 2000.35", "iv": 48.8, "dte": 43}, {"expiration": "2026-09-18", "expectedMove": 568.25, "expectedRange": "1145.07 - 2281.57", "iv": 54.5, "dte": 135}, {"expiration": "2026-12-18", "expectedMove": 739.69, "expectedRange": "973.63 - 2453.01", "iv": 54.9, "dte": 226}], "volumeStats": {"callVolume": 1711, "putVolume": 3378, "totalVolume": 5089, "pcRatioVol": 1.97, "callOpenInt": 9668, "putOpenInt": 16060, "totalOpenInt": 25728, "pcRatioOi": 1.66}, "market_snapshot": {"price": 1713.32, "market_cap": "$223.81B", "beta": 1.5, "range_52w": "1070.57 - 1939.36", "analyst_target": 1814.28}, "technical_analysis": {"trend": {"outlook": "Bullish", "sma_50": 1594.88, "sma_200": 1262.52, "crossover": "Golden Cross"}, "ema": {"8": 1772.72, "21": 1737.62, "34": 1684.59, "55": 1616.27, "89": 1527.86}, "ema_stack": "FULL BULLISH", "volume": {"current": "791,600", "avg_20d": "933,700", "rel_vol": 0.85, "rel_vol_pct": 42}, "pivots": {"R2": 1772.14, "R1": 1749.2, "PP": 1722.1, "S1": 1699.16, "S2": 1672.06}, "fibonacci": {"100": 1939.36, "61.8": 1402.45, "50": 1504.96, "38.2": 1607.48, "0": 1070.57}, "oscillators": {"rsi_14": 42.31, "adx_14": 33.05, "macd_hist": -19.66, "stoch_k": 22.95}}, "volatility": {"hv_30d": 51.12, "iv_current": 54.54}, "valuation": {"status": "OVERVALUED", "gap_pct": -53.3, "target_price": 800.68, "method": "BLENDED (Graham+Lynch+Analyst)"}, "scores": {"technical": 95, "fundamental": 80, "grade": "A"}, "tradingview": {"recommendation": "NEUTRAL", "buy": 9, "sell": 7, "neutral": 10}, "insider_transactions": [{"date": "2026-02-05", "insider": "CALDERONI ROBERT M", "type": "", "value": "$0"}, {"date": "2025-12-16", "insider": "HIGGINS BREN D.", "type": "", "value": "$2.79M"}, {"date": "2025-11-12", "insider": "KHAN AHMAD A", "type": "", "value": "$0"}, {"date": "2025-11-11", "insider": "WALLACE RICHARD P", "type": "", "value": "$0"}, {"date": "2025-11-11", "insider": "WALLACE RICHARD P", "type": "", "value": "$13.00M"}], "news": [{"title": "Bernstein Analyst: AI Agents Drive Chip Demand \u2018Off the Charts,\u2019 Supply Can\u2019t Keep Up", "link": "https://247wallst.com/investing/2026/05/04/bernstein-analyst-ai-agents-drive-chip-demand-off-the-charts-supply-cant-keep-up/?.tsrc=rss", "summary": "Bernstein Research\u2019s Stacy Rasgon has been making the rounds with a deceptively simple thesis: stop arguing about market share. On a recent Marketplac", "source": "Yahoo Finance"}, {"title": "KLA Is Gaining Share as AI Chip Complexity Drives Up Yield Costs", "link": "https://247wallst.com/technology-3/2026/05/04/kla-is-gaining-share-as-ai-chip-complexity-drives-up-yield-costs/?.tsrc=rss", "summary": "KLA (KLAC) is not like other semiconductor equipment companies, and that difference is becoming more important as AI drives a shift in how chips are m", "source": "Yahoo Finance"}, {"title": "KLA (KLAC) International Revenue in Focus: Trends and Expectations", "link": "https://finance.yahoo.com/markets/stocks/articles/kla-klac-international-revenue-focus-131505525.html?.tsrc=rss", "summary": "Examine the evolution of KLA's (KLAC) overseas revenue trends and their effects on Wall Street's forecasts and the stock's prospects.", "source": "Yahoo Finance"}], "tickertrace": {"detail": {}, "signal": {}}, "sec_insights": {"operations": "KLA Corporation // Technology [Semiconductor Equipment & Materials]. Mkt Cap: $223.81B. Rev Growth: 11.5%. PM: 35.7%.", "forward_looking": "Beta: 1.5. Range(52W): 1070.57 - 1939.36. Analyst Tgt: 1814.28."}, "ai_analysis": "<span class='text-neon-blue font-bold'>AI.SYNTHESIS // </span><br>Asset demonstrates a <span class='text-neon-green'>STRONG</span> technical posture (Score: 95/100) within a wider Bullish trend. Asset appears overvalued \u2014 exercise caution. <br><br><span class='text-gray-400 font-bold'>RISK.PROFILE // </span>Implied volatility exceeds historical norms, expecting turbulence. <br><br><span class='text-neon-amber font-bold'>VERDICT // </span>WAIT for validation"};
+
+        try {
+            const chartData = [{"time": "2025-11-05", "open": 1199.97, "high": 1239.45, "low": 1197.96, "close": 1223.45}, {"time": "2025-11-06", "open": 1219.42, "high": 1219.42, "low": 1188.24, "close": 1202.82}, {"time": "2025-11-07", "open": 1196.33, "high": 1204.73, "low": 1156.67, "close": 1189.82}, {"time": "2025-11-10", "open": 1217.31, "high": 1223.19, "low": 1198.16, "close": 1214.33}, {"time": "2025-11-11", "open": 1199.53, "high": 1207.1, "low": 1181.48, "close": 1187.36}, {"time": "2025-11-12", "open": 1204.53, "high": 1206.27, "low": 1189.31, "close": 1195.41}, {"time": "2025-11-13", "open": 1183.63, "high": 1189.23, "low": 1145.3, "close": 1158.27}, {"time": "2025-11-14", "open": 1132.17, "high": 1171.73, "low": 1123.72, "close": 1130.95}, {"time": "2025-11-17", "open": 1138.42, "high": 1154.35, "low": 1116.66, "close": 1132.23}, {"time": "2025-11-18", "open": 1112.99, "high": 1138.96, "low": 1096.47, "close": 1121.63}, {"time": "2025-11-19", "open": 1130.43, "high": 1175.86, "low": 1128.02, "close": 1165.94}, {"time": "2025-11-20", "open": 1186.42, "high": 1199.93, "low": 1096.16, "close": 1101.02}, {"time": "2025-11-21", "open": 1095.58, "high": 1109.39, "low": 1070.57, "close": 1095.7}, {"time": "2025-11-24", "open": 1103.47, "high": 1146.48, "low": 1101.57, "close": 1135.25}, {"time": "2025-11-25", "open": 1128.72, "high": 1146.99, "low": 1105.98, "close": 1144.4}, {"time": "2025-11-26", "open": 1156.25, "high": 1165.76, "low": 1143.38, "close": 1157.57}, {"time": "2025-11-28", "open": 1167.37, "high": 1174.45, "low": 1149.51, "close": 1173.94}, {"time": "2025-12-01", "open": 1163.49, "high": 1174.21, "low": 1149.73, "close": 1155.68}, {"time": "2025-12-02", "open": 1168.98, "high": 1196.35, "low": 1162.19, "close": 1188.32}, {"time": "2025-12-03", "open": 1184.46, "high": 1214.38, "low": 1164.71, "close": 1210.18}, {"time": "2025-12-04", "open": 1201.0, "high": 1215.48, "low": 1196.26, "close": 1206.51}, {"time": "2025-12-05", "open": 1222.41, "high": 1238.39, "low": 1210.75, "close": 1212.88}, {"time": "2025-12-08", "open": 1230.97, "high": 1240.79, "low": 1217.62, "close": 1223.0}, {"time": "2025-12-09", "open": 1214.15, "high": 1232.0, "low": 1210.06, "close": 1224.02}, {"time": "2025-12-10", "open": 1229.27, "high": 1252.07, "low": 1219.22, "close": 1237.3}, {"time": "2025-12-11", "open": 1227.68, "high": 1249.07, "low": 1189.45, "close": 1244.56}, {"time": "2025-12-12", "open": 1228.45, "high": 1238.04, "low": 1183.64, "close": 1192.37}, {"time": "2025-12-15", "open": 1227.44, "high": 1253.37, "low": 1213.76, "close": 1223.52}, {"time": "2025-12-16", "open": 1235.4, "high": 1238.39, "low": 1205.84, "close": 1221.78}, {"time": "2025-12-17", "open": 1221.41, "high": 1231.96, "low": 1167.87, "close": 1170.5}, {"time": "2025-12-18", "open": 1221.41, "high": 1231.4, "low": 1209.43, "close": 1220.8}, {"time": "2025-12-19", "open": 1238.4, "high": 1261.93, "low": 1238.0, "close": 1244.05}, {"time": "2025-12-22", "open": 1274.71, "high": 1276.34, "low": 1248.27, "close": 1264.02}, {"time": "2025-12-23", "open": 1257.38, "high": 1270.44, "low": 1255.91, "close": 1267.1}, {"time": "2025-12-24", "open": 1267.73, "high": 1277.52, "low": 1263.36, "close": 1275.33}, {"time": "2025-12-26", "open": 1281.34, "high": 1285.14, "low": 1273.61, "close": 1277.94}, {"time": "2025-12-29", "open": 1271.44, "high": 1284.4, "low": 1255.1, "close": 1258.75}, {"time": "2025-12-30", "open": 1265.15, "high": 1265.97, "low": 1239.62, "close": 1242.04}, {"time": "2025-12-31", "open": 1242.04, "high": 1249.31, "low": 1212.51, "close": 1213.5}, {"time": "2026-01-02", "open": 1258.08, "high": 1282.32, "low": 1248.93, "close": 1272.82}, {"time": "2026-01-05", "open": 1308.27, "high": 1370.11, "low": 1302.31, "close": 1350.69}, {"time": "2026-01-06", "open": 1367.53, "high": 1405.14, "low": 1363.51, "close": 1393.19}, {"time": "2026-01-07", "open": 1367.29, "high": 1378.21, "low": 1350.78, "close": 1357.93}, {"time": "2026-01-08", "open": 1349.52, "high": 1352.05, "low": 1307.5, "close": 1322.88}, {"time": "2026-01-09", "open": 1355.66, "high": 1402.64, "low": 1334.27, "close": 1398.18}, {"time": "2026-01-12", "open": 1384.83, "high": 1430.39, "low": 1384.83, "close": 1426.32}, {"time": "2026-01-13", "open": 1459.1, "high": 1467.95, "low": 1431.34, "close": 1439.95}, {"time": "2026-01-14", "open": 1429.01, "high": 1432.93, "low": 1394.29, "close": 1432.64}, {"time": "2026-01-15", "open": 1536.0, "high": 1569.45, "low": 1523.02, "close": 1542.96}, {"time": "2026-01-16", "open": 1572.63, "high": 1579.29, "low": 1533.11, "close": 1565.79}, {"time": "2026-01-20", "open": 1523.42, "high": 1553.24, "low": 1482.41, "close": 1484.25}, {"time": "2026-01-21", "open": 1505.29, "high": 1539.25, "low": 1478.52, "close": 1518.03}, {"time": "2026-01-22", "open": 1547.13, "high": 1554.56, "low": 1495.94, "close": 1498.05}, {"time": "2026-01-23", "open": 1482.3, "high": 1511.01, "low": 1449.94, "close": 1510.82}, {"time": "2026-01-26", "open": 1510.48, "high": 1554.7, "low": 1488.62, "close": 1541.03}, {"time": "2026-01-27", "open": 1559.47, "high": 1616.09, "low": 1552.98, "close": 1614.23}, {"time": "2026-01-28", "open": 1632.34, "high": 1647.86, "low": 1598.89, "close": 1625.09}, {"time": "2026-01-29", "open": 1640.8, "high": 1691.15, "low": 1606.12, "close": 1682.52}, {"time": "2026-01-30", "open": 1538.0, "high": 1582.94, "low": 1415.0, "close": 1426.09}, {"time": "2026-02-02", "open": 1398.21, "high": 1438.38, "low": 1398.19, "close": 1408.62}, {"time": "2026-02-03", "open": 1444.07, "high": 1447.41, "low": 1322.67, "close": 1353.78}, {"time": "2026-02-04", "open": 1363.46, "high": 1375.53, "low": 1283.37, "close": 1305.52}, {"time": "2026-02-05", "open": 1291.21, "high": 1348.13, "low": 1283.37, "close": 1329.3}, {"time": "2026-02-06", "open": 1375.37, "high": 1447.37, "low": 1369.4, "close": 1441.08}, {"time": "2026-02-09", "open": 1438.13, "high": 1455.11, "low": 1422.68, "close": 1438.29}, {"time": "2026-02-10", "open": 1422.29, "high": 1442.13, "low": 1410.18, "close": 1428.98}, {"time": "2026-02-11", "open": 1467.01, "high": 1500.16, "low": 1444.09, "close": 1477.58}, {"time": "2026-02-12", "open": 1476.1, "high": 1493.13, "low": 1432.6, "close": 1448.97}, {"time": "2026-02-13", "open": 1449.12, "high": 1492.53, "low": 1433.15, "close": 1462.23}, {"time": "2026-02-17", "open": 1445.5, "high": 1486.95, "low": 1427.67, "close": 1470.19}, {"time": "2026-02-18", "open": 1478.1, "high": 1502.84, "low": 1467.57, "close": 1480.3}, {"time": "2026-02-19", "open": 1450.1, "high": 1474.67, "low": 1442.08, "close": 1469.9}, {"time": "2026-02-20", "open": 1455.07, "high": 1497.61, "low": 1455.07, "close": 1496.0}, {"time": "2026-02-23", "open": 1489.87, "high": 1517.0, "low": 1456.0, "close": 1487.66}, {"time": "2026-02-24", "open": 1507.77, "high": 1530.0, "low": 1475.55, "close": 1506.65}, {"time": "2026-02-25", "open": 1544.76, "high": 1577.35, "low": 1541.11, "close": 1546.68}, {"time": "2026-02-26", "open": 1545.11, "high": 1555.0, "low": 1468.81, "close": 1524.31}, {"time": "2026-02-27", "open": 1497.01, "high": 1537.39, "low": 1490.52, "close": 1524.55}, {"time": "2026-03-02", "open": 1475.0, "high": 1540.77, "low": 1475.0, "close": 1534.95}, {"time": "2026-03-03", "open": 1475.63, "high": 1487.5, "low": 1426.52, "close": 1441.35}, {"time": "2026-03-04", "open": 1466.3, "high": 1490.0, "low": 1449.03, "close": 1475.91}, {"time": "2026-03-05", "open": 1453.34, "high": 1475.56, "low": 1390.0, "close": 1429.36}, {"time": "2026-03-06", "open": 1372.92, "high": 1418.67, "low": 1332.0, "close": 1344.55}, {"time": "2026-03-09", "open": 1322.93, "high": 1435.22, "low": 1321.02, "close": 1429.1}, {"time": "2026-03-10", "open": 1421.1, "high": 1487.1, "low": 1410.0, "close": 1452.94}, {"time": "2026-03-11", "open": 1459.0, "high": 1495.0, "low": 1454.0, "close": 1465.0}, {"time": "2026-03-12", "open": 1465.0, "high": 1469.99, "low": 1396.01, "close": 1409.57}, {"time": "2026-03-13", "open": 1417.15, "high": 1445.85, "low": 1408.43, "close": 1418.64}, {"time": "2026-03-16", "open": 1453.9, "high": 1457.02, "low": 1425.14, "close": 1438.24}, {"time": "2026-03-17", "open": 1446.72, "high": 1485.0, "low": 1434.9, "close": 1481.35}, {"time": "2026-03-18", "open": 1479.32, "high": 1513.07, "low": 1459.14, "close": 1482.36}, {"time": "2026-03-19", "open": 1437.64, "high": 1518.0, "low": 1420.29, "close": 1511.52}, {"time": "2026-03-20", "open": 1511.52, "high": 1535.0, "low": 1457.05, "close": 1498.67}, {"time": "2026-03-23", "open": 1533.52, "high": 1573.26, "low": 1510.33, "close": 1511.43}, {"time": "2026-03-24", "open": 1484.84, "high": 1582.45, "low": 1481.7, "close": 1566.19}, {"time": "2026-03-25", "open": 1574.31, "high": 1576.03, "low": 1534.65, "close": 1543.82}, {"time": "2026-03-26", "open": 1503.91, "high": 1514.79, "low": 1445.51, "close": 1451.13}, {"time": "2026-03-27", "open": 1436.6, "high": 1479.24, "low": 1435.26, "close": 1443.21}, {"time": "2026-03-30", "open": 1469.0, "high": 1473.58, "low": 1374.43, "close": 1382.58}, {"time": "2026-03-31", "open": 1417.08, "high": 1476.37, "low": 1400.0, "close": 1472.41}, {"time": "2026-04-01", "open": 1484.21, "high": 1539.93, "low": 1483.8, "close": 1519.84}, {"time": "2026-04-02", "open": 1454.17, "high": 1528.0, "low": 1451.0, "close": 1516.84}, {"time": "2026-04-06", "open": 1522.78, "high": 1542.0, "low": 1517.41, "close": 1540.06}, {"time": "2026-04-07", "open": 1523.62, "high": 1548.91, "low": 1507.28, "close": 1548.85}, {"time": "2026-04-08", "open": 1666.19, "high": 1686.26, "low": 1635.33, "close": 1672.34}, {"time": "2026-04-09", "open": 1669.89, "high": 1734.7, "low": 1669.16, "close": 1727.26}, {"time": "2026-04-10", "open": 1747.62, "high": 1759.96, "low": 1732.18, "close": 1737.28}, {"time": "2026-04-13", "open": 1734.64, "high": 1771.82, "low": 1720.27, "close": 1768.78}, {"time": "2026-04-14", "open": 1788.75, "high": 1798.0, "low": 1765.4, "close": 1795.91}, {"time": "2026-04-15", "open": 1766.0, "high": 1770.32, "low": 1680.51, "close": 1748.11}, {"time": "2026-04-16", "open": 1718.58, "high": 1742.05, "low": 1696.46, "close": 1734.85}, {"time": "2026-04-17", "open": 1771.26, "high": 1791.75, "low": 1744.07, "close": 1791.44}, {"time": "2026-04-20", "open": 1791.63, "high": 1806.75, "low": 1770.0, "close": 1805.32}, {"time": "2026-04-21", "open": 1814.0, "high": 1823.27, "low": 1772.43, "close": 1785.37}, {"time": "2026-04-22", "open": 1812.99, "high": 1814.34, "low": 1776.64, "close": 1812.06}, {"time": "2026-04-23", "open": 1824.38, "high": 1844.59, "low": 1788.53, "close": 1815.43}, {"time": "2026-04-24", "open": 1852.78, "high": 1939.36, "low": 1844.72, "close": 1935.0}, {"time": "2026-04-27", "open": 1909.73, "high": 1926.77, "low": 1867.78, "close": 1900.0}, {"time": "2026-04-28", "open": 1778.98, "high": 1855.58, "low": 1772.66, "close": 1808.97}, {"time": "2026-04-29", "open": 1829.56, "high": 1840.0, "low": 1786.4, "close": 1816.21}, {"time": "2026-04-30", "open": 1688.0, "high": 1788.66, "low": 1646.0, "close": 1750.35}, {"time": "2026-05-01", "open": 1733.0, "high": 1745.04, "low": 1695.0, "close": 1726.26}, {"time": "2026-05-04", "open": 1720.5, "high": 1751.14, "low": 1676.79, "close": 1713.32}];
+        const emaData = {"8": [{"time": "2025-11-05", "value": 1223.45}, {"time": "2025-11-06", "value": 1218.87}, {"time": "2025-11-07", "value": 1212.41}, {"time": "2025-11-10", "value": 1212.84}, {"time": "2025-11-11", "value": 1207.18}, {"time": "2025-11-12", "value": 1204.56}, {"time": "2025-11-13", "value": 1194.28}, {"time": "2025-11-14", "value": 1180.2}, {"time": "2025-11-17", "value": 1169.54}, {"time": "2025-11-18", "value": 1158.9}, {"time": "2025-11-19", "value": 1160.46}, {"time": "2025-11-20", "value": 1147.25}, {"time": "2025-11-21", "value": 1135.8}, {"time": "2025-11-24", "value": 1135.68}, {"time": "2025-11-25", "value": 1137.61}, {"time": "2025-11-26", "value": 1142.05}, {"time": "2025-11-28", "value": 1149.14}, {"time": "2025-12-01", "value": 1150.59}, {"time": "2025-12-02", "value": 1158.97}, {"time": "2025-12-03", "value": 1170.35}, {"time": "2025-12-04", "value": 1178.39}, {"time": "2025-12-05", "value": 1186.05}, {"time": "2025-12-08", "value": 1194.26}, {"time": "2025-12-09", "value": 1200.88}, {"time": "2025-12-10", "value": 1208.97}, {"time": "2025-12-11", "value": 1216.88}, {"time": "2025-12-12", "value": 1211.43}, {"time": "2025-12-15", "value": 1214.12}, {"time": "2025-12-16", "value": 1215.82}, {"time": "2025-12-17", "value": 1205.75}, {"time": "2025-12-18", "value": 1209.1}, {"time": "2025-12-19", "value": 1216.86}, {"time": "2025-12-22", "value": 1227.34}, {"time": "2025-12-23", "value": 1236.18}, {"time": "2025-12-24", "value": 1244.88}, {"time": "2025-12-26", "value": 1252.23}, {"time": "2025-12-29", "value": 1253.68}, {"time": "2025-12-30", "value": 1251.09}, {"time": "2025-12-31", "value": 1242.74}, {"time": "2026-01-02", "value": 1249.42}, {"time": "2026-01-05", "value": 1271.93}, {"time": "2026-01-06", "value": 1298.87}, {"time": "2026-01-07", "value": 1312.0}, {"time": "2026-01-08", "value": 1314.42}, {"time": "2026-01-09", "value": 1333.03}, {"time": "2026-01-12", "value": 1353.76}, {"time": "2026-01-13", "value": 1372.91}, {"time": "2026-01-14", "value": 1386.19}, {"time": "2026-01-15", "value": 1421.02}, {"time": "2026-01-16", "value": 1453.19}, {"time": "2026-01-20", "value": 1460.09}, {"time": "2026-01-21", "value": 1472.97}, {"time": "2026-01-22", "value": 1478.54}, {"time": "2026-01-23", "value": 1485.72}, {"time": "2026-01-26", "value": 1498.01}, {"time": "2026-01-27", "value": 1523.83}, {"time": "2026-01-28", "value": 1546.34}, {"time": "2026-01-29", "value": 1576.6}, {"time": "2026-01-30", "value": 1543.15}, {"time": "2026-02-02", "value": 1513.26}, {"time": "2026-02-03", "value": 1477.82}, {"time": "2026-02-04", "value": 1439.53}, {"time": "2026-02-05", "value": 1415.03}, {"time": "2026-02-06", "value": 1420.82}, {"time": "2026-02-09", "value": 1424.7}, {"time": "2026-02-10", "value": 1425.65}, {"time": "2026-02-11", "value": 1437.19}, {"time": "2026-02-12", "value": 1439.81}, {"time": "2026-02-13", "value": 1444.79}, {"time": "2026-02-17", "value": 1450.44}, {"time": "2026-02-18", "value": 1457.07}, {"time": "2026-02-19", "value": 1459.92}, {"time": "2026-02-20", "value": 1467.94}, {"time": "2026-02-23", "value": 1472.32}, {"time": "2026-02-24", "value": 1479.95}, {"time": "2026-02-25", "value": 1494.78}, {"time": "2026-02-26", "value": 1501.34}, {"time": "2026-02-27", "value": 1506.5}, {"time": "2026-03-02", "value": 1512.82}, {"time": "2026-03-03", "value": 1496.94}, {"time": "2026-03-04", "value": 1492.27}, {"time": "2026-03-05", "value": 1478.29}, {"time": "2026-03-06", "value": 1448.57}, {"time": "2026-03-09", "value": 1444.24}, {"time": "2026-03-10", "value": 1446.17}, {"time": "2026-03-11", "value": 1450.36}, {"time": "2026-03-12", "value": 1441.29}, {"time": "2026-03-13", "value": 1436.26}, {"time": "2026-03-16", "value": 1436.7}, {"time": "2026-03-17", "value": 1446.62}, {"time": "2026-03-18", "value": 1454.56}, {"time": "2026-03-19", "value": 1467.22}, {"time": "2026-03-20", "value": 1474.21}, {"time": "2026-03-23", "value": 1482.48}, {"time": "2026-03-24", "value": 1501.08}, {"time": "2026-03-25", "value": 1510.58}, {"time": "2026-03-26", "value": 1497.37}, {"time": "2026-03-27", "value": 1485.33}, {"time": "2026-03-30", "value": 1462.5}, {"time": "2026-03-31", "value": 1464.7}, {"time": "2026-04-01", "value": 1476.95}, {"time": "2026-04-02", "value": 1485.82}, {"time": "2026-04-06", "value": 1497.87}, {"time": "2026-04-07", "value": 1509.2}, {"time": "2026-04-08", "value": 1545.45}, {"time": "2026-04-09", "value": 1585.86}, {"time": "2026-04-10", "value": 1619.51}, {"time": "2026-04-13", "value": 1652.68}, {"time": "2026-04-14", "value": 1684.51}, {"time": "2026-04-15", "value": 1698.64}, {"time": "2026-04-16", "value": 1706.69}, {"time": "2026-04-17", "value": 1725.52}, {"time": "2026-04-20", "value": 1743.25}, {"time": "2026-04-21", "value": 1752.61}, {"time": "2026-04-22", "value": 1765.82}, {"time": "2026-04-23", "value": 1776.85}, {"time": "2026-04-24", "value": 1811.99}, {"time": "2026-04-27", "value": 1831.55}, {"time": "2026-04-28", "value": 1826.53}, {"time": "2026-04-29", "value": 1824.24}, {"time": "2026-04-30", "value": 1807.82}, {"time": "2026-05-01", "value": 1789.69}, {"time": "2026-05-04", "value": 1772.72}], "21": [{"time": "2025-11-05", "value": 1223.45}, {"time": "2025-11-06", "value": 1221.58}, {"time": "2025-11-07", "value": 1218.69}, {"time": "2025-11-10", "value": 1218.3}, {"time": "2025-11-11", "value": 1215.48}, {"time": "2025-11-12", "value": 1213.66}, {"time": "2025-11-13", "value": 1208.62}, {"time": "2025-11-14", "value": 1201.56}, {"time": "2025-11-17", "value": 1195.26}, {"time": "2025-11-18", "value": 1188.57}, {"time": "2025-11-19", "value": 1186.51}, {"time": "2025-11-20", "value": 1178.74}, {"time": "2025-11-21", "value": 1171.19}, {"time": "2025-11-24", "value": 1167.92}, {"time": "2025-11-25", "value": 1165.78}, {"time": "2025-11-26", "value": 1165.04}, {"time": "2025-11-28", "value": 1165.85}, {"time": "2025-12-01", "value": 1164.92}, {"time": "2025-12-02", "value": 1167.05}, {"time": "2025-12-03", "value": 1170.97}, {"time": "2025-12-04", "value": 1174.2}, {"time": "2025-12-05", "value": 1177.72}, {"time": "2025-12-08", "value": 1181.83}, {"time": "2025-12-09", "value": 1185.67}, {"time": "2025-12-10", "value": 1190.36}, {"time": "2025-12-11", "value": 1195.29}, {"time": "2025-12-12", "value": 1195.02}, {"time": "2025-12-15", "value": 1197.62}, {"time": "2025-12-16", "value": 1199.81}, {"time": "2025-12-17", "value": 1197.15}, {"time": "2025-12-18", "value": 1199.3}, {"time": "2025-12-19", "value": 1203.37}, {"time": "2025-12-22", "value": 1208.88}, {"time": "2025-12-23", "value": 1214.17}, {"time": "2025-12-24", "value": 1219.73}, {"time": "2025-12-26", "value": 1225.02}, {"time": "2025-12-29", "value": 1228.09}, {"time": "2025-12-30", "value": 1229.36}, {"time": "2025-12-31", "value": 1227.92}, {"time": "2026-01-02", "value": 1232.0}, {"time": "2026-01-05", "value": 1242.79}, {"time": "2026-01-06", "value": 1256.46}, {"time": "2026-01-07", "value": 1265.69}, {"time": "2026-01-08", "value": 1270.89}, {"time": "2026-01-09", "value": 1282.46}, {"time": "2026-01-12", "value": 1295.54}, {"time": "2026-01-13", "value": 1308.66}, {"time": "2026-01-14", "value": 1319.94}, {"time": "2026-01-15", "value": 1340.21}, {"time": "2026-01-16", "value": 1360.72}, {"time": "2026-01-20", "value": 1371.95}, {"time": "2026-01-21", "value": 1385.23}, {"time": "2026-01-22", "value": 1395.48}, {"time": "2026-01-23", "value": 1405.97}, {"time": "2026-01-26", "value": 1418.25}, {"time": "2026-01-27", "value": 1436.06}, {"time": "2026-01-28", "value": 1453.25}, {"time": "2026-01-29", "value": 1474.09}, {"time": "2026-01-30", "value": 1469.73}, {"time": "2026-02-02", "value": 1464.17}, {"time": "2026-02-03", "value": 1454.14}, {"time": "2026-02-04", "value": 1440.63}, {"time": "2026-02-05", "value": 1430.51}, {"time": "2026-02-06", "value": 1431.47}, {"time": "2026-02-09", "value": 1432.09}, {"time": "2026-02-10", "value": 1431.8}, {"time": "2026-02-11", "value": 1435.97}, {"time": "2026-02-12", "value": 1437.15}, {"time": "2026-02-13", "value": 1439.43}, {"time": "2026-02-17", "value": 1442.22}, {"time": "2026-02-18", "value": 1445.69}, {"time": "2026-02-19", "value": 1447.89}, {"time": "2026-02-20", "value": 1452.26}, {"time": "2026-02-23", "value": 1455.48}, {"time": "2026-02-24", "value": 1460.13}, {"time": "2026-02-25", "value": 1468.0}, {"time": "2026-02-26", "value": 1473.12}, {"time": "2026-02-27", "value": 1477.79}, {"time": "2026-03-02", "value": 1482.99}, {"time": "2026-03-03", "value": 1479.2}, {"time": "2026-03-04", "value": 1478.91}, {"time": "2026-03-05", "value": 1474.4}, {"time": "2026-03-06", "value": 1462.6}, {"time": "2026-03-09", "value": 1459.55}, {"time": "2026-03-10", "value": 1458.95}, {"time": "2026-03-11", "value": 1459.5}, {"time": "2026-03-12", "value": 1454.96}, {"time": "2026-03-13", "value": 1451.66}, {"time": "2026-03-16", "value": 1450.44}, {"time": "2026-03-17", "value": 1453.25}, {"time": "2026-03-18", "value": 1455.9}, {"time": "2026-03-19", "value": 1460.95}, {"time": "2026-03-20", "value": 1464.38}, {"time": "2026-03-23", "value": 1468.66}, {"time": "2026-03-24", "value": 1477.53}, {"time": "2026-03-25", "value": 1483.55}, {"time": "2026-03-26", "value": 1480.6}, {"time": "2026-03-27", "value": 1477.2}, {"time": "2026-03-30", "value": 1468.6}, {"time": "2026-03-31", "value": 1468.95}, {"time": "2026-04-01", "value": 1473.58}, {"time": "2026-04-02", "value": 1477.51}, {"time": "2026-04-06", "value": 1483.19}, {"time": "2026-04-07", "value": 1489.16}, {"time": "2026-04-08", "value": 1505.82}, {"time": "2026-04-09", "value": 1525.95}, {"time": "2026-04-10", "value": 1545.16}, {"time": "2026-04-13", "value": 1565.49}, {"time": "2026-04-14", "value": 1586.44}, {"time": "2026-04-15", "value": 1601.13}, {"time": "2026-04-16", "value": 1613.29}, {"time": "2026-04-17", "value": 1629.49}, {"time": "2026-04-20", "value": 1645.47}, {"time": "2026-04-21", "value": 1658.19}, {"time": "2026-04-22", "value": 1672.18}, {"time": "2026-04-23", "value": 1685.2}, {"time": "2026-04-24", "value": 1707.91}, {"time": "2026-04-27", "value": 1725.37}, {"time": "2026-04-28", "value": 1732.97}, {"time": "2026-04-29", "value": 1740.54}, {"time": "2026-04-30", "value": 1741.43}, {"time": "2026-05-01", "value": 1740.05}, {"time": "2026-05-04", "value": 1737.62}], "34": [{"time": "2025-11-05", "value": 1223.45}, {"time": "2025-11-06", "value": 1222.28}, {"time": "2025-11-07", "value": 1220.42}, {"time": "2025-11-10", "value": 1220.07}, {"time": "2025-11-11", "value": 1218.2}, {"time": "2025-11-12", "value": 1216.9}, {"time": "2025-11-13", "value": 1213.55}, {"time": "2025-11-14", "value": 1208.83}, {"time": "2025-11-17", "value": 1204.45}, {"time": "2025-11-18", "value": 1199.72}, {"time": "2025-11-19", "value": 1197.79}, {"time": "2025-11-20", "value": 1192.26}, {"time": "2025-11-21", "value": 1186.74}, {"time": "2025-11-24", "value": 1183.8}, {"time": "2025-11-25", "value": 1181.55}, {"time": "2025-11-26", "value": 1180.18}, {"time": "2025-11-28", "value": 1179.82}, {"time": "2025-12-01", "value": 1178.44}, {"time": "2025-12-02", "value": 1179.01}, {"time": "2025-12-03", "value": 1180.79}, {"time": "2025-12-04", "value": 1182.26}, {"time": "2025-12-05", "value": 1184.01}, {"time": "2025-12-08", "value": 1186.24}, {"time": "2025-12-09", "value": 1188.4}, {"time": "2025-12-10", "value": 1191.19}, {"time": "2025-12-11", "value": 1194.24}, {"time": "2025-12-12", "value": 1194.13}, {"time": "2025-12-15", "value": 1195.81}, {"time": "2025-12-16", "value": 1197.3}, {"time": "2025-12-17", "value": 1195.77}, {"time": "2025-12-18", "value": 1197.2}, {"time": "2025-12-19", "value": 1199.87}, {"time": "2025-12-22", "value": 1203.54}, {"time": "2025-12-23", "value": 1207.17}, {"time": "2025-12-24", "value": 1211.07}, {"time": "2025-12-26", "value": 1214.89}, {"time": "2025-12-29", "value": 1217.39}, {"time": "2025-12-30", "value": 1218.8}, {"time": "2025-12-31", "value": 1218.5}, {"time": "2026-01-02", "value": 1221.6}, {"time": "2026-01-05", "value": 1228.98}, {"time": "2026-01-06", "value": 1238.36}, {"time": "2026-01-07", "value": 1245.2}, {"time": "2026-01-08", "value": 1249.63}, {"time": "2026-01-09", "value": 1258.12}, {"time": "2026-01-12", "value": 1267.73}, {"time": "2026-01-13", "value": 1277.58}, {"time": "2026-01-14", "value": 1286.44}, {"time": "2026-01-15", "value": 1301.09}, {"time": "2026-01-16", "value": 1316.22}, {"time": "2026-01-20", "value": 1325.82}, {"time": "2026-01-21", "value": 1336.8}, {"time": "2026-01-22", "value": 1346.02}, {"time": "2026-01-23", "value": 1355.44}, {"time": "2026-01-26", "value": 1366.04}, {"time": "2026-01-27", "value": 1380.22}, {"time": "2026-01-28", "value": 1394.22}, {"time": "2026-01-29", "value": 1410.69}, {"time": "2026-01-30", "value": 1411.57}, {"time": "2026-02-02", "value": 1411.4}, {"time": "2026-02-03", "value": 1408.11}, {"time": "2026-02-04", "value": 1402.25}, {"time": "2026-02-05", "value": 1398.08}, {"time": "2026-02-06", "value": 1400.54}, {"time": "2026-02-09", "value": 1402.69}, {"time": "2026-02-10", "value": 1404.2}, {"time": "2026-02-11", "value": 1408.39}, {"time": "2026-02-12", "value": 1410.71}, {"time": "2026-02-13", "value": 1413.65}, {"time": "2026-02-17", "value": 1416.88}, {"time": "2026-02-18", "value": 1420.51}, {"time": "2026-02-19", "value": 1423.33}, {"time": "2026-02-20", "value": 1427.48}, {"time": "2026-02-23", "value": 1430.92}, {"time": "2026-02-24", "value": 1435.25}, {"time": "2026-02-25", "value": 1441.62}, {"time": "2026-02-26", "value": 1446.34}, {"time": "2026-02-27", "value": 1450.81}, {"time": "2026-03-02", "value": 1455.62}, {"time": "2026-03-03", "value": 1454.8}, {"time": "2026-03-04", "value": 1456.01}, {"time": "2026-03-05", "value": 1454.49}, {"time": "2026-03-06", "value": 1448.2}, {"time": "2026-03-09", "value": 1447.11}, {"time": "2026-03-10", "value": 1447.45}, {"time": "2026-03-11", "value": 1448.45}, {"time": "2026-03-12", "value": 1446.23}, {"time": "2026-03-13", "value": 1444.65}, {"time": "2026-03-16", "value": 1444.28}, {"time": "2026-03-17", "value": 1446.4}, {"time": "2026-03-18", "value": 1448.46}, {"time": "2026-03-19", "value": 1452.06}, {"time": "2026-03-20", "value": 1454.72}, {"time": "2026-03-23", "value": 1457.96}, {"time": "2026-03-24", "value": 1464.15}, {"time": "2026-03-25", "value": 1468.7}, {"time": "2026-03-26", "value": 1467.7}, {"time": "2026-03-27", "value": 1466.3}, {"time": "2026-03-30", "value": 1461.51}, {"time": "2026-03-31", "value": 1462.14}, {"time": "2026-04-01", "value": 1465.43}, {"time": "2026-04-02", "value": 1468.37}, {"time": "2026-04-06", "value": 1472.47}, {"time": "2026-04-07", "value": 1476.83}, {"time": "2026-04-08", "value": 1488.0}, {"time": "2026-04-09", "value": 1501.68}, {"time": "2026-04-10", "value": 1515.14}, {"time": "2026-04-13", "value": 1529.63}, {"time": "2026-04-14", "value": 1544.85}, {"time": "2026-04-15", "value": 1556.46}, {"time": "2026-04-16", "value": 1566.66}, {"time": "2026-04-17", "value": 1579.5}, {"time": "2026-04-20", "value": 1592.41}, {"time": "2026-04-21", "value": 1603.43}, {"time": "2026-04-22", "value": 1615.35}, {"time": "2026-04-23", "value": 1626.79}, {"time": "2026-04-24", "value": 1644.4}, {"time": "2026-04-27", "value": 1659.0}, {"time": "2026-04-28", "value": 1667.57}, {"time": "2026-04-29", "value": 1676.07}, {"time": "2026-04-30", "value": 1680.31}, {"time": "2026-05-01", "value": 1682.94}, {"time": "2026-05-04", "value": 1684.67}], "55": [{"time": "2025-11-05", "value": 1223.45}, {"time": "2025-11-06", "value": 1222.72}, {"time": "2025-11-07", "value": 1221.54}, {"time": "2025-11-10", "value": 1221.29}, {"time": "2025-11-11", "value": 1220.07}, {"time": "2025-11-12", "value": 1219.19}, {"time": "2025-11-13", "value": 1217.02}, {"time": "2025-11-14", "value": 1213.94}, {"time": "2025-11-17", "value": 1211.02}, {"time": "2025-11-18", "value": 1207.83}, {"time": "2025-11-19", "value": 1206.34}, {"time": "2025-11-20", "value": 1202.58}, {"time": "2025-11-21", "value": 1198.76}, {"time": "2025-11-24", "value": 1196.49}, {"time": "2025-11-25", "value": 1194.63}, {"time": "2025-11-26", "value": 1193.31}, {"time": "2025-11-28", "value": 1192.61}, {"time": "2025-12-01", "value": 1191.3}, {"time": "2025-12-02", "value": 1191.19}, {"time": "2025-12-03", "value": 1191.87}, {"time": "2025-12-04", "value": 1192.39}, {"time": "2025-12-05", "value": 1193.12}, {"time": "2025-12-08", "value": 1194.19}, {"time": "2025-12-09", "value": 1195.25}, {"time": "2025-12-10", "value": 1196.76}, {"time": "2025-12-11", "value": 1198.46}, {"time": "2025-12-12", "value": 1198.25}, {"time": "2025-12-15", "value": 1199.15}, {"time": "2025-12-16", "value": 1199.96}, {"time": "2025-12-17", "value": 1198.9}, {"time": "2025-12-18", "value": 1199.69}, {"time": "2025-12-19", "value": 1201.27}, {"time": "2025-12-22", "value": 1203.51}, {"time": "2025-12-23", "value": 1205.78}, {"time": "2025-12-24", "value": 1208.27}, {"time": "2025-12-26", "value": 1210.76}, {"time": "2025-12-29", "value": 1212.47}, {"time": "2025-12-30", "value": 1213.53}, {"time": "2025-12-31", "value": 1213.53}, {"time": "2026-01-02", "value": 1215.64}, {"time": "2026-01-05", "value": 1220.47}, {"time": "2026-01-06", "value": 1226.63}, {"time": "2026-01-07", "value": 1231.32}, {"time": "2026-01-08", "value": 1234.59}, {"time": "2026-01-09", "value": 1240.44}, {"time": "2026-01-12", "value": 1247.07}, {"time": "2026-01-13", "value": 1253.96}, {"time": "2026-01-14", "value": 1260.34}, {"time": "2026-01-15", "value": 1270.44}, {"time": "2026-01-16", "value": 1280.99}, {"time": "2026-01-20", "value": 1288.25}, {"time": "2026-01-21", "value": 1296.45}, {"time": "2026-01-22", "value": 1303.65}, {"time": "2026-01-23", "value": 1311.05}, {"time": "2026-01-26", "value": 1319.26}, {"time": "2026-01-27", "value": 1329.8}, {"time": "2026-01-28", "value": 1340.34}, {"time": "2026-01-29", "value": 1352.57}, {"time": "2026-01-30", "value": 1355.19}, {"time": "2026-02-02", "value": 1357.1}, {"time": "2026-02-03", "value": 1356.98}, {"time": "2026-02-04", "value": 1355.14}, {"time": "2026-02-05", "value": 1354.22}, {"time": "2026-02-06", "value": 1357.32}, {"time": "2026-02-09", "value": 1360.21}, {"time": "2026-02-10", "value": 1362.67}, {"time": "2026-02-11", "value": 1366.77}, {"time": "2026-02-12", "value": 1369.71}, {"time": "2026-02-13", "value": 1373.01}, {"time": "2026-02-17", "value": 1376.48}, {"time": "2026-02-18", "value": 1380.19}, {"time": "2026-02-19", "value": 1383.4}, {"time": "2026-02-20", "value": 1387.42}, {"time": "2026-02-23", "value": 1391.0}, {"time": "2026-02-24", "value": 1395.13}, {"time": "2026-02-25", "value": 1400.54}, {"time": "2026-02-26", "value": 1404.96}, {"time": "2026-02-27", "value": 1409.23}, {"time": "2026-03-02", "value": 1413.72}, {"time": "2026-03-03", "value": 1414.71}, {"time": "2026-03-04", "value": 1416.89}, {"time": "2026-03-05", "value": 1417.34}, {"time": "2026-03-06", "value": 1414.74}, {"time": "2026-03-09", "value": 1415.25}, {"time": "2026-03-10", "value": 1416.6}, {"time": "2026-03-11", "value": 1418.33}, {"time": "2026-03-12", "value": 1418.01}, {"time": "2026-03-13", "value": 1418.04}, {"time": "2026-03-16", "value": 1418.76}, {"time": "2026-03-17", "value": 1420.99}, {"time": "2026-03-18", "value": 1423.19}, {"time": "2026-03-19", "value": 1426.34}, {"time": "2026-03-20", "value": 1428.92}, {"time": "2026-03-23", "value": 1431.87}, {"time": "2026-03-24", "value": 1436.67}, {"time": "2026-03-25", "value": 1440.49}, {"time": "2026-03-26", "value": 1440.87}, {"time": "2026-03-27", "value": 1440.96}, {"time": "2026-03-30", "value": 1438.87}, {"time": "2026-03-31", "value": 1440.07}, {"time": "2026-04-01", "value": 1442.92}, {"time": "2026-04-02", "value": 1445.56}, {"time": "2026-04-06", "value": 1448.93}, {"time": "2026-04-07", "value": 1452.5}, {"time": "2026-04-08", "value": 1460.35}, {"time": "2026-04-09", "value": 1469.89}, {"time": "2026-04-10", "value": 1479.44}, {"time": "2026-04-13", "value": 1489.77}, {"time": "2026-04-14", "value": 1500.7}, {"time": "2026-04-15", "value": 1509.54}, {"time": "2026-04-16", "value": 1517.59}, {"time": "2026-04-17", "value": 1527.37}, {"time": "2026-04-20", "value": 1537.29}, {"time": "2026-04-21", "value": 1546.15}, {"time": "2026-04-22", "value": 1555.65}, {"time": "2026-04-23", "value": 1564.93}, {"time": "2026-04-24", "value": 1578.14}, {"time": "2026-04-27", "value": 1589.64}, {"time": "2026-04-28", "value": 1597.47}, {"time": "2026-04-29", "value": 1605.28}, {"time": "2026-04-30", "value": 1610.47}, {"time": "2026-05-01", "value": 1614.6}, {"time": "2026-05-04", "value": 1618.13}], "89": [{"time": "2025-11-05", "value": 1223.45}, {"time": "2025-11-06", "value": 1223.0}, {"time": "2025-11-07", "value": 1222.26}, {"time": "2025-11-10", "value": 1222.08}, {"time": "2025-11-11", "value": 1221.31}, {"time": "2025-11-12", "value": 1220.74}, {"time": "2025-11-13", "value": 1219.35}, {"time": "2025-11-14", "value": 1217.38}, {"time": "2025-11-17", "value": 1215.49}, {"time": "2025-11-18", "value": 1213.41}, {"time": "2025-11-19", "value": 1212.35}, {"time": "2025-11-20", "value": 1209.88}, {"time": "2025-11-21", "value": 1207.34}, {"time": "2025-11-24", "value": 1205.74}, {"time": "2025-11-25", "value": 1204.37}, {"time": "2025-11-26", "value": 1203.33}, {"time": "2025-11-28", "value": 1202.68}, {"time": "2025-12-01", "value": 1201.64}, {"time": "2025-12-02", "value": 1201.34}, {"time": "2025-12-03", "value": 1201.54}, {"time": "2025-12-04", "value": 1201.65}, {"time": "2025-12-05", "value": 1201.9}, {"time": "2025-12-08", "value": 1202.37}, {"time": "2025-12-09", "value": 1202.85}, {"time": "2025-12-10", "value": 1203.61}, {"time": "2025-12-11", "value": 1204.52}, {"time": "2025-12-12", "value": 1204.25}, {"time": "2025-12-15", "value": 1204.68}, {"time": "2025-12-16", "value": 1205.06}, {"time": "2025-12-17", "value": 1204.29}, {"time": "2025-12-18", "value": 1204.66}, {"time": "2025-12-19", "value": 1205.54}, {"time": "2025-12-22", "value": 1206.83}, {"time": "2025-12-23", "value": 1208.17}, {"time": "2025-12-24", "value": 1209.67}, {"time": "2025-12-26", "value": 1211.18}, {"time": "2025-12-29", "value": 1212.24}, {"time": "2025-12-30", "value": 1212.9}, {"time": "2025-12-31", "value": 1212.92}, {"time": "2026-01-02", "value": 1214.25}, {"time": "2026-01-05", "value": 1217.28}, {"time": "2026-01-06", "value": 1221.19}, {"time": "2026-01-07", "value": 1224.23}, {"time": "2026-01-08", "value": 1226.42}, {"time": "2026-01-09", "value": 1230.24}, {"time": "2026-01-12", "value": 1234.59}, {"time": "2026-01-13", "value": 1239.16}, {"time": "2026-01-14", "value": 1243.46}, {"time": "2026-01-15", "value": 1250.11}, {"time": "2026-01-16", "value": 1257.13}, {"time": "2026-01-20", "value": 1262.17}, {"time": "2026-01-21", "value": 1267.86}, {"time": "2026-01-22", "value": 1272.98}, {"time": "2026-01-23", "value": 1278.26}, {"time": "2026-01-26", "value": 1284.1}, {"time": "2026-01-27", "value": 1291.44}, {"time": "2026-01-28", "value": 1298.85}, {"time": "2026-01-29", "value": 1307.38}, {"time": "2026-01-30", "value": 1310.02}, {"time": "2026-02-02", "value": 1312.21}, {"time": "2026-02-03", "value": 1313.13}, {"time": "2026-02-04", "value": 1312.96}, {"time": "2026-02-05", "value": 1313.32}, {"time": "2026-02-06", "value": 1316.16}, {"time": "2026-02-09", "value": 1318.88}, {"time": "2026-02-10", "value": 1321.32}, {"time": "2026-02-11", "value": 1324.8}, {"time": "2026-02-12", "value": 1327.56}, {"time": "2026-02-13", "value": 1330.55}, {"time": "2026-02-17", "value": 1333.65}, {"time": "2026-02-18", "value": 1336.91}, {"time": "2026-02-19", "value": 1339.87}, {"time": "2026-02-20", "value": 1343.34}, {"time": "2026-02-23", "value": 1346.54}, {"time": "2026-02-24", "value": 1350.1}, {"time": "2026-02-25", "value": 1354.47}, {"time": "2026-02-26", "value": 1358.24}, {"time": "2026-02-27", "value": 1361.94}, {"time": "2026-03-02", "value": 1365.78}, {"time": "2026-03-03", "value": 1367.46}, {"time": "2026-03-04", "value": 1369.87}, {"time": "2026-03-05", "value": 1371.19}, {"time": "2026-03-06", "value": 1370.6}, {"time": "2026-03-09", "value": 1371.9}, {"time": "2026-03-10", "value": 1373.7}, {"time": "2026-03-11", "value": 1375.73}, {"time": "2026-03-12", "value": 1376.48}, {"time": "2026-03-13", "value": 1377.42}, {"time": "2026-03-16", "value": 1378.77}, {"time": "2026-03-17", "value": 1381.05}, {"time": "2026-03-18", "value": 1383.3}, {"time": "2026-03-19", "value": 1386.15}, {"time": "2026-03-20", "value": 1388.65}, {"time": "2026-03-23", "value": 1391.38}, {"time": "2026-03-24", "value": 1395.27}, {"time": "2026-03-25", "value": 1398.57}, {"time": "2026-03-26", "value": 1399.74}, {"time": "2026-03-27", "value": 1400.7}, {"time": "2026-03-30", "value": 1400.3}, {"time": "2026-03-31", "value": 1401.9}, {"time": "2026-04-01", "value": 1404.52}, {"time": "2026-04-02", "value": 1407.02}, {"time": "2026-04-06", "value": 1409.97}, {"time": "2026-04-07", "value": 1413.06}, {"time": "2026-04-08", "value": 1418.82}, {"time": "2026-04-09", "value": 1425.68}, {"time": "2026-04-10", "value": 1432.6}, {"time": "2026-04-13", "value": 1440.07}, {"time": "2026-04-14", "value": 1447.98}, {"time": "2026-04-15", "value": 1454.65}, {"time": "2026-04-16", "value": 1460.88}, {"time": "2026-04-17", "value": 1468.22}, {"time": "2026-04-20", "value": 1475.71}, {"time": "2026-04-21", "value": 1482.59}, {"time": "2026-04-22", "value": 1489.92}, {"time": "2026-04-23", "value": 1497.15}, {"time": "2026-04-24", "value": 1506.88}, {"time": "2026-04-27", "value": 1515.61}, {"time": "2026-04-28", "value": 1522.13}, {"time": "2026-04-29", "value": 1528.67}, {"time": "2026-04-30", "value": 1533.6}, {"time": "2026-05-01", "value": 1537.88}, {"time": "2026-05-04", "value": 1541.78}]};
+
+        if (chartData && chartData.length > 0) {
+            const dates = chartData.map(d => d.time);
+            const open = chartData.map(d => d.open);
+            const high = chartData.map(d => d.high);
+            const low = chartData.map(d => d.low);
+            const close = chartData.map(d => d.close);
+
+            const candlestick = {
+                x: dates, open, high, low, close,
+                type: 'candlestick', name: 'OHLC',
+                increasing: { line: { color: '#22c55e' }, fillcolor: '#22c55e' },
+                decreasing: { line: { color: '#ef4444' }, fillcolor: '#ef4444' }
+            };
+
+            const plotData = [candlestick];
+
+            const emaConfigs = [
+                { span: "8", color: "#22d3ee", width: 2 },
+                { span: "21", color: "#4ade80", width: 2 },
+                { span: "34", color: "#facc15", width: 1.5 },
+                { span: "55", color: "#fb923c", width: 1.5 },
+                { span: "89", color: "#f87171", width: 1.5 }
+            ];
+
+            emaConfigs.forEach(config => {
+                if (emaData[config.span]) {
+                    plotData.push({
+                        x: emaData[config.span].map(d => d.time),
+                        y: emaData[config.span].map(d => d.value),
+                        type: 'scatter', mode: 'lines',
+                        name: `EMA ${config.span}`,
+                        line: { color: config.color, width: config.width, shape: 'spline' },
+                        opacity: 0.8
+                    });
+                }
+            });
+
+            const layout = {
+                dragmode: 'zoom', showlegend: false,
+                margin: { r: 10, t: 10, b: 30, l: 40 },
+                xaxis: { rangeslider: { visible: false }, gridcolor: '#1e293b', zeroline: false, tickfont: { color: '#94a3b8', size: 10, family: 'JetBrains Mono' }, type: 'date' },
+                yaxis: { gridcolor: '#1e293b', zeroline: false, autorange: true, tickfont: { color: '#94a3b8', size: 10, family: 'JetBrains Mono' }, side: 'right' },
+                paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+                hovermode: 'x unified',
+                hoverlabel: { bgcolor: '#0a0a0a', bordercolor: '#333', font: { color: '#fff', size: 10, family: 'JetBrains Mono' } }
+            };
+
+            Plotly.newPlot('plotly-chart', plotData, layout, {
+                responsive: true, displayModeBar: true,
+                modeBarButtonsToRemove: ['select2d', 'lasso2d', 'autoScale2d'],
+                displaylogo: false, scrollZoom: true
+            });
+
+            window.resetChart = () => Plotly.relayout('plotly-chart', { 'xaxis.autorange': true, 'yaxis.autorange': true });
+        }
+        } catch (e) { console.error("CRITICAL :: Chart Initialization Failed ::", e); }
+
+        document.getElementById('jsonContent').textContent = JSON.stringify(rawJson, null, 2);
+
+        function openModal() { document.getElementById('jsonModal').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('jsonModal').classList.add('hidden'); }
+        function copyToClipboard() {
+            navigator.clipboard.writeText(JSON.stringify(rawJson, null, 2)).then(() => alert('JSON Copied!'));
+        }
+
+        // ── Page View Tracking ──
+        (function () {
+            const KEY = 'ghost_dossier_analytics';
+            let a = {};
+            try { a = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { }
+            const page = 'ticker:KLAC';
+            a[page] = (a[page] || 0) + 1;
+            localStorage.setItem(KEY, JSON.stringify(a));
+        })();
+    </script>
+</body>
+
+</html>
