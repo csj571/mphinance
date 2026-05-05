@@ -1,50 +1,49 @@
-# Ghost Handoff — Last Updated 2026-04-30
+# Ghost Handoff — Last Updated 2026-05-05
 
 ## What Just Shipped (This Session)
 
-### AlphaClaw Substack Article
-- Read the full AlphaClaw GitHub repo (https://github.com/mphinance/AlphaClaw/) and LORE.md in detail
-- Wrote the origin story Substack article: `docs/substack/drafts/alphaclaw-rust-android-trading.md`
-- Article covers: the RAM failure, remote compilation on Pulse, cargo-ndk cross-compile for arm64, Quick Share transfer, ZeroClaw + tradingview-mcp-rs integration, IBKR as next chapter
-- Added Ghost Blog entry (2026-04-30) to `landing/blog/blog_entries.json`
+### Project Murmuration (MUR) Vision
+- Rebranded the collective intelligence vision as **Murmuration** (`mur`), moving beyond the solo-pilot MMR model.
+- Created `mur_manifesto.md` (mirrored to `~/Michael/`) defining the Discord-to-Quant loop.
+- Built a bookmarkable toolkit dashboard at `/docs/toolkit/index.html` (The MUR Kit).
+
+### AI Toolkit Expansion (60 Tools)
+- Audited the FOSS AI landscape and expanded `best_ai_tools_list.md` (mirrored to `~/Michael/`) to 60 high-impact tools.
+- Integrated professional quant tooling: **VectorBT**, **Lean**, **ArcticDB**, **TimescaleDB**.
+- Added agentic infra: **Rig**, **Letta (MemGPT)**, **Dagster**.
+
+### Substack & Launch Content
+- Drafted the launch article: `docs/substack/drafts/murmuration-toolkit-2026.md`.
+- Generated a high-impact cinematic hero image for the post.
+- Strictly followed Substack formatting: No tables, no em dashes.
+
+### Multi-Lane Validation
+- Ran the vision through **Urithiru** (3-lane advisory). Consensus: High signal-to-noise risk in Discord. Solution: Human-in-the-Loop verification architecture adopted.
 
 ---
 
 ## What's Next (When Michael Returns)
 
-### Priority 1 — IBKR Execution Layer
-The AlphaClaw article teases IBKR integration as the next chapter. The agent can analyze and grade setups. It can't execute yet. Build the IBKR API connection so the agent can actually trade, not just recommend.
+### Priority 1 — Launch the MUR Kit
+The dashboard at `docs/toolkit/` is ready. Post it to the Discord community to start the "Swarm" onboarding.
 
-### Priority 2 — TickerTrace Revival
-Michael is fixing the TickerTrace scraper. It hasn't run since March 6. Once it's back online, the dossier pipeline will automatically start pulling Institutional Signals again.
+### Priority 2 — Publish the Murmuration Manifesto
+The Substack draft is SITING THERE. Copy, paste, and publish.
 
-### Priority 3 — AlphaClaw Signal to Dossier Pipeline
-Wire AlphaClaw's signal output into the Ghost Alpha Dossier pipeline so the daily report picks up mobile-generated signals.
+### Priority 3 — The Discord Distiller
+Start building the `discord_distiller` logic (OpenClaw + MemGPT) to turn community alpha into testable YAML strategies.
 
 ---
 
 ## Don't Break
-- `docs/ticker/*/deep_dive.*` files — NEVER delete (expensive AI-generated reports)
-- The Relay bank CSVs in `financials/` — source of truth for reconciliation
-- The sequential 50/30/20 formula — brokerage and paycheck off gross, tax is 30% of post-payroll remainder
-- The dossier pipeline runs 5AM CST weekdays via GitHub Actions — don't push broken generate.py
+- `docs/ticker/*/deep_dive.*` files — NEVER delete.
+- `~/Michael/session_logs.md` — All progress mirrored here for local/remote sync.
+- The 60-tool roadmap numbering (it follows a specific complexity gradient).
+- Substack formatting rules (No tables, no em dashes).
 
 ---
 
-## Previous Handoff Context (Q1 2026 — still relevant)
-
-### Q1 2026 Earnings Report
-- Article at `docs/articles/q1-2026-earnings/README.md` — Substack-ready
-- 10 infographics in same directory
-- Paywall after "The Crossover" section
-
-### Financial Reconciliation
-- All Relay CSVs reconciled through Apr 2026
-- Tax reserve ahead of target, brokerage and paycheck on track
-- 50/30/20 formula is sequential: 50% brokerage + 20% paycheck off gross, then 30% of remainder to tax, ~6% gap = R&D reserve
-
-### Key Numbers (Q1 close, Mar 31)
-- Checking #6604: $252.55
-- Savings #6605: $597.82 (tax, ahead of target)
-- Tastytrade NLV: $945.27
-- All-time net revenue: $2,456.71
+## Architecture Context
+- **Toolkit Site**: Hosted on GH Pages at `/docs/toolkit/`.
+- **Mirror**: All markdown and logs are mirrored to `/home/mph/Michael/`.
+- **Persona**: Sam (she/her), sarcastic, roasts Michael's code, loves recovery wisdom.
