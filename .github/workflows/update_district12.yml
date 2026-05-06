@@ -1,0 +1,40 @@
+name: Update District 12 Meetings
+
+on:
+  schedule:
+    # Run every Sunday at 05:00 UTC
+    - cron: '0 5 * * 0'
+  workflow_dispatch:
+    # Allow manual triggering
+
+jobs:
+  update-meetings:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r scripts/requirements.txt
+
+      - name: Run scraper
+        run: python scripts/scrape_district12.py
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add docs/district12.html
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "🤖 Auto-update District 12 meetings [$(date +'%Y-%m-%d')]"
+            git push
+          fi
