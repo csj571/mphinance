@@ -18,10 +18,10 @@ from datetime import datetime
 SOURCE_URL = "https://www.aamilwaukee.com/index.php?page=meeting-directory"
 # Absolute path resolution
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TARGET_FILE = os.path.join(BASE_DIR, "docs/district12.html")
+REPRO_ROOT = os.path.dirname(BASE_DIR)
+TARGET_FILE = os.path.join(REPRO_ROOT, "docs/district12.html")
 
 # Try to find the blog log file relative to BASE_DIR or repo root
-REPRO_ROOT = os.path.dirname(BASE_DIR)
 LOG_FILE = os.path.join(REPRO_ROOT, "landing/blog/blog_entries.json")
 
 # Mapping from raw code text to UI slugs
