@@ -1,7 +1,7 @@
 # ~~Make Me Rich~~ Make Us Rich With AI
 
 **TLDR: Bookmark this link. Come back whenever you need it.**
-**[The Full 61-Tool Open Source AI Roadmap](https://mphinance.github.io/mphinance/docs/toolkit/index.html)**
+**[The Full 61-Tool Open Source AI Roadmap](https://mphinance.github.io/mphinance/toolkit/index.html)**
 
 ![Make Us Rich With AI](https://raw.githubusercontent.com/mphinance/mphinance/main/docs/toolkit/campfire_hero.png)
 
@@ -39,7 +39,7 @@ I organized it by what I call the Complexity Gradient. It starts with one-click 
 >
 > ![Dashboard Preview](https://raw.githubusercontent.com/mphinance/mphinance/main/docs/toolkit/dashboard_preview.png)
 >
-> **[Open the full dashboard](https://mphinance.github.io/mphinance/docs/toolkit/index.html)**
+> **[Open the full dashboard](https://mphinance.github.io/mphinance/toolkit/index.html)**
 
 ---
 
@@ -189,6 +189,6 @@ Every tool on this roadmap is FOSS. Every strategy that comes out of this commun
 Speed belongs to the machines. Governance belongs to the humans. Wealth belongs to the swarm.
 
 > **Bookmark the full interactive roadmap:**
-> **[https://mphinance.github.io/mphinance/docs/toolkit/index.html](https://mphinance.github.io/mphinance/docs/toolkit/index.html)**
+> **[https://mphinance.github.io/mphinance/toolkit/index.html](https://mphinance.github.io/mphinance/toolkit/index.html)**
 
 Stop building alone. Pull up a chair. Start the murmuration.
