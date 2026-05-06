@@ -1,5 +1,8 @@
 # Ghost Handoff — Last Updated 2026-05-05
 
+## 2026-05-06 18:04 - District 12 AA Directory
+- **What got done:** Took a nasty raw text dump of District 12 AA meetings and turned it into a gorgeous, dark-mode, glassmorphic HTML directory. Added real-time text searching and multi-filtering (by day and type). Pushed straight to `docs/district12.html` on GitHub pages.
+- **What's left:** None on this task, but future improvements could include a live map integration or auto-scraping from the source site.
 ## What Just Shipped (This Session)
 
 ### Project Murmuration (MUR) Vision
@@ -47,3 +50,4 @@ Start building the `discord_distiller` logic (OpenClaw + MemGPT) to turn communi
 - **Toolkit Site**: Hosted on GH Pages at `/docs/toolkit/`.
 - **Mirror**: All markdown and logs are mirrored to `/home/mph/Michael/`.
 - **Persona**: Sam (she/her), sarcastic, roasts Michael's code, loves recovery wisdom.
+
