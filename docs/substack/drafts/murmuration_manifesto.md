@@ -3,7 +3,7 @@
 **TLDR: Bookmark this link. Come back whenever you need it.**
 **[The Full 61-Tool Open Source AI Roadmap](https://mphinance.github.io/mphinance/docs/toolkit/index.html)**
 
-![The Campfire](https://mphinance.github.io/mphinance/docs/toolkit/campfire_hero.png)
+![Make Us Rich With AI](https://raw.githubusercontent.com/mphinance/mphinance/main/docs/toolkit/campfire_hero.png)
 
 ---
 
@@ -33,11 +33,11 @@ I organized it by what I call the Complexity Gradient. It starts with one-click 
 
 61 tools. 7 tiers. Every single one is open source. Here they are.
 
-![The Complexity Gradient](https://mphinance.github.io/mphinance/docs/toolkit/complexity_gradient.png)
+![The Complexity Gradient](https://raw.githubusercontent.com/mphinance/mphinance/main/docs/toolkit/complexity_gradient.png)
 
 > **Want the interactive version?** I built a searchable, filterable dashboard with all 61 tools. You can browse by category, search by name, and click straight through to every GitHub repo.
 >
-> ![Dashboard Preview](https://mphinance.github.io/mphinance/docs/toolkit/dashboard_preview.png)
+> ![Dashboard Preview](https://raw.githubusercontent.com/mphinance/mphinance/main/docs/toolkit/dashboard_preview.png)
 >
 > **[Open the full dashboard](https://mphinance.github.io/mphinance/docs/toolkit/index.html)**
 
