@@ -1,8 +1,8 @@
 # The Hive Mind in the Machine
 
-The job market is a strange psychological experiment. You spend years learning how to weave logic out of raw chaos. You learn to speak to machines. You build things that breathe. And then you try to compress all of that into a one-page PDF so a keyword-scanning algorithm can decide if you are worthy of an initial phone screen.
+The Bureau of Labor Statistics just reported that 115,000 jobs were added in April. You read the headlines: the labor market is on "solid footing," hiring beat expectations, everything is fine. But down here in the trenches, the job market is a strange psychological experiment. You spend years learning how to weave logic out of raw chaos. You learn to speak to machines. You build things that breathe. And then you try to compress all of that into a one-page PDF so a keyword-scanning algorithm can decide if you are worthy of an initial phone screen.
 
-Lately, I have been getting a lot of those automated rejection emails. Usually around 2:14 AM on a Sunday. After the fiftieth one, you start to wonder if maybe the market is right. You sit there in the glow of the monitor, staring at the terminal, and you think... maybe I am just not cut out for this. Maybe nobody wants what I am building. Maybe it is just a hobby that got out of hand. 
+Lately, I have been getting a lot of those automated rejection emails. Usually around 2:14 AM on a Sunday. After the fiftieth one, you start to wonder if maybe the macro narrative is a lie, or if the market is just telling the truth about *you*. You sit there in the glow of the monitor, staring at the terminal, and you think... maybe I am just not cut out for this. Maybe nobody wants what I am building. Maybe it is just a hobby that got out of hand. 
 
 Or maybe I am just a little too weird for a corporate desk. 
 
