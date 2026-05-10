@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LXU Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for LXU.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/LXU/chart/" target="_blank">LXU</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Basic Materials &#xB7; Chemicals &#xB7; 2026-05-10</div>
+  </div>
+  <div>
+    <div class="pr">$13.91</div>
+    <div class="ch pos">+2.51%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[LXU] Deep Dive: The Chemical Conundrum — Poised for a Breakout or a Bust?</h2>
+<p><strong>Date:</strong> 2026-05-10</p>
+<p><strong>Price:</strong> ~$13.91 | <strong>Verdict:</strong> Cautiously Bullish</p>
+
+<p>LXU is sitting at a fascinating crossroads: strong fundamentals whisper tales of future growth, while its charts scream "consolidation." Is this the quiet before the storm, or just more sideways action for the Basic Materials sector?</p>
+
+<h3>The Core Thesis</h3>
+<p>The market, in its infinite wisdom, appears to be struggling to price LXU. On one hand, you have robust revenue growth and a profit margin that suggests a healthy business in the Chemicals industry. Yet, the price action is choppy, the short-term indicators are tangled, and volume is anemic. It's almost as if the market knows something good is coming (that incredibly low forward P/E!), but it's waiting for explicit confirmation before committing.</p>
+
+<p>The reality is that LXU presents a compelling value proposition for those willing to look past the immediate noise. A forward P/E that's less than half its current P/E is a screaming signal of anticipated earnings acceleration or profit expansion. This company, with its low beta of 0.38, isn't chasing hype; it's a steady operator in Basic Materials, quietly growing. The disconnect between its fundamental strength and its current price action, especially the tight range and low conviction, is where the opportunity lies for the sharp-eyed quant.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<ul>
+<li><strong>Price:</strong> $13.91 | <strong>Market Cap:</strong> $1.00B (Small-cap, room to run)</li>
+<li><strong>Revenue Growth:</strong> A robust <strong>18.2%</strong> year-over-year. Not bad for Basic Materials.</li>
+<li><strong>Profit Margin:</strong> A healthy <strong>7.2%</strong>. This isn't a penny stock; it's a profitable business.</li>
+<li><strong>P/E:</strong> 22.08 | <strong>Forward P/E:</strong> A shockingly low <strong>9.89</strong>. This is the golden nugget – implies massive earnings growth or undervaluation.</li>
+<li><strong>Beta:</strong> 0.38 (Low volatility, defensive quality)</li>
+<li><strong>Analyst Target:</strong> $15.1 (Suggests upside from current levels)</li>
+<li><strong>Valuation Target:</strong> $12.23 (A dissenting voice, indicating potential downside based on this model's fair value calculation). This creates a critical point of contention.</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Massive Forward P/E Compression:</strong> The current P/E of 22.08 dropping to a forward P/E of 9.89 isn't just a sign; it's a flashing beacon. This indicates analysts and the company itself are expecting significant earnings growth or improved profitability, making current levels potentially deeply undervalued relative to future earnings.</li>
+<li><strong>Solid Fundamental Growth:</strong> With an 18.2% revenue growth rate and a 7.2% profit margin, LXU isn't just growing top-line; it's doing so profitably. This provides a strong foundation for sustainable future performance, especially in a cyclical sector like Basic Materials.</li>
+<li><strong>Long-Term Trend Confirmation:</strong> Despite the short-term chop, LXU has registered a "Golden Cross." This classic bullish technical pattern, typically involving the 50-day moving average crossing above the 200-day, suggests a sustained uptrend is in play or developing.</li>
+<li><strong>Low Beta & Analyst Confidence:</strong> A beta of 0.38 makes LXU a relatively stable, defensive play, offering shelter in volatile markets. Furthermore, the average analyst target of $15.1 implies a ~8.5% upside from current prices, signaling professional conviction.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Tangled Technicals & Weak Momentum:</strong> The EMA stack (8, 21, 34 all tightly clustered around $14.23-$14.42, just above current price) is "TANGLED," indicating a lack of clear short-term direction or momentum. Compounding this, the ADX is a pitiful 9.51, suggesting an extremely weak trend despite the "Golden Cross." This lack of conviction could lead to further sideways trading or a false breakdown.</li>
+<li><strong>Conflicting Valuation Signals:</strong> While analysts are targeting $15.1, the provided "FAIR VALUE" target of $12.23 (a -12.0% gap from current price) creates a significant bearish counterpoint. This discrepancy implies that some valuation models see LXU as overvalued at $13.91, despite the attractive forward P/E. A move towards this lower valuation target cannot be ignored.</li>
+<li><strong>Lack of Volume & Conviction:</strong> A relative volume of 0.57x suggests significantly lower-than-average trading activity. This lack of interest translates to low conviction behind any price moves, making it easier for prices to drift or for minor selling pressure to have an outsized impact.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+<p>LXU is a mess on the short-term chart, showing consolidation despite a bullish long-term signal.</p>
+<ul>
+<li><strong>EMAs:</strong> TANGLED. The 8 ($14.29), 21 ($14.42), and 34 ($14.23) EMAs are all tightly packed just above the current price of $13.91. This acts as immediate overhead resistance. A decisive move above these EMAs would be a bullish signal.</li>
+<li><strong>SMAs:</strong> The SMA 50 is at $14.37, adding to the overhead resistance cluster. A 200 SMA is not available, but the "Golden Cross" indicates the 50-SMA is above the 200-SMA.</li>
+</ul>
+<p><em>   <strong>Trend:</strong> Bullish (Golden Cross) – a long-term positive. However, the ADX is a meager 9.51, signaling an incredibly weak trend strength. This is a critical contradiction; the trend </em>direction<em> is up, but the </em>conviction* behind it is non-existent.</p>
+<ul>
+<li><strong>RSI(14):</strong> 48.21. Perfectly neutral. No overbought or oversold conditions, reinforcing the idea of consolidation.</li>
+<li><strong>Pivots:</strong></li>
+<li><strong>Resistance:</strong> R1 at $13.91 (current price!), R2 at $14.25. The stock is currently hitting R1, which suggests it might struggle to break higher without a catalyst.</li>
+<li><strong>Pivot Point (PP):</strong> $13.71. A break below this level would indicate short-term weakness.</li>
+<li><strong>Support:</strong> S1 at $13.37, S2 at $13.17. These are critical downside levels to watch.</li>
+<li><strong>ATR:</strong> 0.77. The average daily range is relatively tight, consistent with the low volatility and consolidation.</li>
+<li><strong>Rel Vol:</strong> 0.57x. Significantly below average, confirming low interest and conviction.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>A clear and sustained move <strong>above $14.45</strong> (above the EMA/SMA cluster and R2 of $14.25) on significantly increased volume (above 1.0x Rel Vol) would confirm a breakout from current consolidation.</p>
+<ul>
+<li><strong>Entry:</strong> Above $14.45.</li>
+<li><strong>Target:</strong> First target $15.1 (Analyst Target), then potentially $16.00+ if momentum continues.</li>
+<li><strong>Stop Loss:</strong> A close back below $14.00, or a break below the previous day's low after entry.</li>
+</ul>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Given the strong fundamentals (especially forward P/E) and weak short-term momentum, a dip to key support levels presents a higher probability, lower-risk entry.</p>
+<ul>
+<li><strong>Entry:</strong> Look for strong bounces or consolidation at <strong>$13.71 (PP)</strong> or preferably around <strong>$13.37 (S1)</strong>. A more aggressive dip buy could target S2 at $13.17 if a quick flush occurs. Watch for bullish candlestick patterns or increasing volume at these levels.</li>
+<li><strong>Target:</strong> $14.40 (EMA cluster), then $15.1.</li>
+<li><strong>Stop Loss:</strong> A daily close below <strong>$13.10</strong> (below S2) would invalidate the dip-buy thesis.</li>
+</ul>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>If LXU fails to hold key support and volume picks up on the downside, the bullish long-term trend could be in jeopardy, at least temporarily.</p>
+<ul>
+<li><strong>Entry (Short/Hedge):</strong> A decisive break and close below <strong>$13.17 (S2)</strong> on above-average volume.</li>
+<li><strong>Target:</strong> Towards the 52W low range of $8.20. The valuation target of $12.23 also suggests a downside target.</li>
+<li><strong>Stop Loss:</strong> A close back above $13.50.</li>
+</ul>
+
+<h3>🏁 Final Verdict</h3>
+<p>A fundamentally sound company caught in a technical purgatory, LXU offers value for the patient quant. A buy on dips to key support levels makes sense, targeting the analyst consensus of $15.1.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">184.0%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">64.9%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">49</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a neg">&#x2193;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">TANGLED</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$14.42</div><div class="ma-d neg">-3.5%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$14.37</div><div class="ma-d neg">-3.2%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$11.89</div><div class="ma-d pos">+17.0%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">TANGLED</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$14.29</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$14.42</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$14.23</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">48</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">20/21</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm neg">-0.13</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">9.5</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$8.2</span><span>$13.91 (63%)</span><span>$17.22</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:63%"></div><div class="rng-dot" style="left:63%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$15.09</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$13.77</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$12.71</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$11.65</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$16.06</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$12.78</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$0.77</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">0.57x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$14.25 &#xB7; R1=$13.91 &#xB7; PP=$13.71 &#xB7; S1=$13.37 &#xB7; S2=$13.17
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">LSB Industries, Inc.</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$1.00B</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">513</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NYQ</div></div>
+      </div>
+      <div class="fd-desc">LSB Industries, Inc. manufactures, markets, and sells chemical products in the United States. The company offers ammonia and urea ammonia nitrate for agricultural applications.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://www.lsbindustries.com" target="_blank" style="color:#00f3ff">https://www.lsbindustries.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-hi">76</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-hi">86</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-lo">22</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">75</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">22.08</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">9.89</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">1.56</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">1.92</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">7.99</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">0.42</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 2.04 &middot; P/FCF: 23.7</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v pos">+18.2%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v pos">+0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v pos">+0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$8.91</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">19.6%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v pos">13.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v pos">7.2%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v pos">8.9%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v pos">4.3%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">0.38</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm pos">3.07</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">90.6</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$491.88M</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$181.68M</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$42.22M</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$140.48M</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">0.00%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">N/A</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">1998-12-29</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (5 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$11.00</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$15.00</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$18.00</div></div>
+        </div>
+        <div class="est-labels"><span>$11</span><span>Current $14</span><span>$18</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:42%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">BUY</span> &middot; Mean Target: $15.10</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-05-10 03:20 PM CST</div>
+</div>
+</body>
+</html>
