@@ -1,6 +1,6 @@
 # The Hormuz Money Glitch: Why $1,100 Fertilizer is Crashing Fertilizer Stocks
 
-Everyone's losing their mind about $150 crude oil. I get it. But that's the wrong crisis to be watching.
+Everyone's losing their mind about crude spiking toward $150. I get it. But that's the wrong crisis to be watching.
 
 The real one is in the soil.
 
@@ -42,7 +42,7 @@ Three reasons.
 
 **Demand destruction.** At $1,123 a ton for anhydrous, farmers don't just eat the cost. They plant less nitrogen-intensive crops like soybeans. They skip applications. They delay purchases. The market knows that sky-high prices eventually cure sky-high prices by killing the demand. This is real, and it's a valid concern. But it misses the point. Even if volume drops 15 to 20%, the margin per ton at these prices more than compensates. CF is running a 23.7% profit margin at *lower* prices. Do the math on what $1,100 ammonia does to a company with cheap Henry Hub gas inputs.
 
-**Macro terror.** Crude is at $150. Global GDP is projected to drop by almost 3 percentage points this quarter. The algorithms are blindly selling anything tied to cyclical commodities because their models say "recession" and their risk parameters say "reduce exposure." They are pricing in a global economic collapse. They are completely ignoring the fact that these domestic producers just inherited a localized monopoly on the Western Hemisphere's nitrogen supply. The algos do not care about your supply chain thesis. They care about beta and sector correlation. And right now, correlation is 1.0 across everything.
+**Macro terror.** Brent crude averaged $103 to $119 this quarter, spiking toward $150 at the peak. Global GDP is projected to drop by almost 3 percentage points this quarter. The algorithms are blindly selling anything tied to cyclical commodities because their models say "recession" and their risk parameters say "reduce exposure." They are pricing in a global economic collapse. They are completely ignoring the fact that these domestic producers just inherited a localized monopoly on the Western Hemisphere's nitrogen supply. The algos do not care about your supply chain thesis. They care about beta and sector correlation. And right now, correlation is 1.0 across everything.
 
 **Implied volatility is through the roof.** CF is sitting at an 83% IV rank. LXU is at 81%. Options traders are pricing in massive, violent moves in both directions. When institutional capital sees that kind of uncertainty, they pull back. They wait. They let the dust settle. That is rational behavior for a fund manager who has to explain losses to an investment committee. It is terrible behavior if you are trying to actually capture a structural mispricing.
 
