@@ -1,6 +1,8 @@
 # The Hormuz Money Glitch: Why $1,100 Fertilizer is Crashing Fertilizer Stocks
 
-Everyone's losing their mind about crude spiking toward $150. I get it. But that's the wrong crisis to be watching.
+![Stranded cargo tanker in the Persian Gulf at night, cracked farmland in the foreground — the Hormuz fertilizer crisis](../assets/hormuz_fertilizer_hero.png)
+
+Everyone's losing their mind about the oil shock. I get it. But that's the wrong crisis to be watching.
 
 The real one is in the soil.
 
