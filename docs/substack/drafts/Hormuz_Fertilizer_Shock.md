@@ -1,12 +1,12 @@
 # The Hormuz Money Glitch: Why $1,100 Fertilizer is Crashing Fertilizer Stocks
 
-Earnings are mostly bullsh*t. But supply chain destruction? That is pure math.
+Everyone's losing their mind about $150 crude oil. I get it. But that's the wrong crisis to be watching.
 
-Everyone is panicking about $150 crude oil. That is amateur hour. The real crisis is not in your gas tank. It is in the damn soil.
+The real one is in the soil.
 
-The Strait of Hormuz closure just wiped out roughly half of global seaborne urea exports. Half. The stuff that makes food grow is trapped behind a geopolitical blockade, and nobody on FinTwit seems to care because crude oil is a sexier headline.
+The Strait of Hormuz closure just wiped out roughly half of global seaborne urea exports. Half. The stuff that literally makes food grow is trapped behind a geopolitical blockade, 1,550 vessels are stranded in a war zone, and everyone on FinTwit is busy posting oil charts. Japan's releasing 80 million barrels from reserves. Air New Zealand suspended earnings guidance over jet fuel. Supply chain destruction everywhere you look.
 
-Japan is releasing 80 million barrels of oil from reserves. Air New Zealand suspended earnings guidance because of jet fuel costs. Over 1,550 vessels are stranded in a war zone. But you know what you cannot release from a strategic reserve?
+But you know what you can't release from a strategic reserve?
 
 Anhydrous ammonia.
 
