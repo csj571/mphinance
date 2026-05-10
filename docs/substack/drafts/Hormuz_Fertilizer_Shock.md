@@ -12,13 +12,13 @@ Anhydrous ammonia.
 
 ## The Numbers Nobody Is Talking About
 
-Here is the truth. The market is broken, and we are witnessing one of the biggest disconnects I have ever tracked.
+Countries in the Gulf account for roughly 49% of global urea exports and 30% of global ammonia exports. Iran, Qatar, Saudi Arabia, Egypt. All of it bottlenecked. These are the actual numbers from the USDA AMS Illinois production cost report as of mid-April.
 
-Anhydrous ammonia just spiked 36% to $1,124 per ton. Liquid nitrogen solutions are up 25%. Phosphate rock has jumped 18 to 22% depending on grade. Global urea exports through Hormuz have been cut by roughly 50%, and Middle Eastern urea is functionally stranded because commercial traffic through the Strait dropped by 95%.
+Anhydrous ammonia in Illinois hit $1,123 per ton. That's a 30%+ jump from pre-conflict levels and 56% higher than January 2025. Urea reached $902 per ton, up 55% since the conflict started. 28% liquid nitrogen solutions crossed $523 per ton, up more than 20%. DAP phosphate climbed to $866 per ton.
 
-If you are a Midwest corn farmer, your nitrogen input costs just jumped about $27 per acre. That is not a rounding error. That destroys farm margins in a season where corn prices were already squeezing growers.
+Not vibes. Not FinTwit. USDA data.
 
-So you would think domestic fertilizer companies, the ones sitting outside the conflict zone with cheap US natural gas inputs, would be printing money right now.
+So you'd think domestic fertilizer companies, the ones sitting outside the conflict zone with cheap US natural gas inputs, would be printing money right now.
 
 Instead? The stocks are getting hammered.
 
@@ -40,7 +40,7 @@ So three out of four domestic nitrogen producers are fundamentally undervalued, 
 
 Three reasons.
 
-**Demand destruction.** At $1,124 a ton, farmers do not just eat the cost. They plant less nitrogen-intensive crops like soybeans. They skip applications. They delay purchases. The market knows that sky-high prices eventually cure sky-high prices by killing the demand. This is real, and it is a valid concern. But it misses the point. Even if volume drops 15 to 20%, the margin per ton at these prices more than compensates. CF is running a 23.7% profit margin at *lower* prices. Do the math on what $1,100 ammonia does to a company with cheap Henry Hub gas inputs.
+**Demand destruction.** At $1,123 a ton for anhydrous, farmers don't just eat the cost. They plant less nitrogen-intensive crops like soybeans. They skip applications. They delay purchases. The market knows that sky-high prices eventually cure sky-high prices by killing the demand. This is real, and it's a valid concern. But it misses the point. Even if volume drops 15 to 20%, the margin per ton at these prices more than compensates. CF is running a 23.7% profit margin at *lower* prices. Do the math on what $1,100 ammonia does to a company with cheap Henry Hub gas inputs.
 
 **Macro terror.** Crude is at $150. Global GDP is projected to drop by almost 3 percentage points this quarter. The algorithms are blindly selling anything tied to cyclical commodities because their models say "recession" and their risk parameters say "reduce exposure." They are pricing in a global economic collapse. They are completely ignoring the fact that these domestic producers just inherited a localized monopoly on the Western Hemisphere's nitrogen supply. The algos do not care about your supply chain thesis. They care about beta and sector correlation. And right now, correlation is 1.0 across everything.
 
