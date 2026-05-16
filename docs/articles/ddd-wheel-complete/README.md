@@ -18,6 +18,8 @@ I call this your **True Basis**: not what you paid for the stock, but what you p
 
 ## Phase 1: The Entry (January 23, 2026)
 
+![Phase 1: The Entry](ddd_phase1_entry.png)
+
 I started with two trades on the same day.
 
 Bought 1 share of DDD at $2.70. Just a toe in the water.
@@ -31,6 +33,8 @@ Total invested so far: $257.70 for 101 shares.
 Premium collected: $5.88 net.
 
 ## Phase 2: The Grind (February to March 2026)
+
+![Phase 2: The Grind](ddd_phase2_grind.png)
 
 This is where the wheel starts doing its thing. Every week or two, I sold a covered call at the $2.50 strike. DDD just hung around the $2.00 to $2.30 range, which meant every call expired worthless. I kept the premium and sold another one.
 
@@ -68,6 +72,8 @@ Running premium total by end of March: **$69.56 net** across 10 options contract
 
 ## Phase 3: Building the Exit (April 2026)
 
+![Phase 3: Building the Exit](ddd_phase3_exit_build.png)
+
 The premiums started getting fatter. DDD was moving up. The calls were getting more expensive, which meant more premium for me.
 
 **Apr 10:** Apr 10 Call expired. Retained.
@@ -81,6 +87,8 @@ The premiums started getting fatter. DDD was moving up. The calls were getting m
 By end of April, my net premium total was **$102.30** across 12 contracts.
 
 ## Phase 4: The Exit (May 2026)
+
+![Phase 4: The Exit](ddd_phase4_exit.png)
 
 And then DDD cooperated.
 
@@ -133,6 +141,8 @@ Total fees: **$28.59**
 <!--paywall-->
 
 ## The Bottom Line
+
+![The Bottom Line](ddd_final_summary.png)
 
 **Total net profit: $140.93**
 
