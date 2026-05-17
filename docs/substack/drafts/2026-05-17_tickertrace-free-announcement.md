@@ -46,7 +46,7 @@ Think about it. These funds publish their holdings to their own websites for fre
 
 Retail traders are already bleeding $200/month on tools. TradingView. Discord servers. Scanner subscriptions. Options flow services. I did not want to be another line item on that stack.
 
-So I ripped the paywall down. No login required. No "Pro tier." No account needed. Just go to tickertrace.pro and start reading the damn data.
+So I ripped the paywall down. No login required. No "Pro tier." No account needed. Just go to [tickertrace.pro](https://tickertrace.pro) and start reading the damn data.
 
 Not everyone wants to trade options. Not everyone needs a full AI-powered dashboard. But everyone deserves to know what the institutions are doing with their money. That is the whole point.
 
@@ -78,7 +78,7 @@ Maybe you just want to know that 3 different ETF providers all started buying GO
 
 That is TickerTrace. Free. Forever.
 
-If you want the full platform with AI signals, momentum scoring, option flow, and trade execution tools, that is traderdaddy.pro. But the intelligence layer? The "what are the institutions actually doing" part? That belongs to everyone.
+If you want the full platform with AI signals, momentum scoring, option flow, and trade execution tools, that is [traderdaddy.pro](https://traderdaddy.pro). But the intelligence layer? The "what are the institutions actually doing" part? That belongs to everyone.
 
 Beat the institutions with their own data. That is the pitch. That is the whole product.
 
@@ -104,9 +104,9 @@ We just added 16 Corgi Funds thematic ETFs this week. If your fund is not on the
 
 This is the part that matters most to me.
 
-The entire TickerTrace codebase is public on GitHub: github.com/mphinance/TickerTrace
+The entire TickerTrace codebase is public on GitHub: [github.com/mphinance/TickerTrace](https://github.com/mphinance/TickerTrace)
 
-165 commits. Every scraper. Every API endpoint. Every data pipeline. Every line of code that powers the dashboard you see at tickertrace.pro. If you do not trust the data, read the code. If you do not like how it works, fork it and build your own.
+165 commits. Every scraper. Every API endpoint. Every data pipeline. Every line of code that powers the dashboard you see at [tickertrace.pro](https://tickertrace.pro). If you do not trust the data, read the code. If you do not like how it works, fork it and build your own.
 
 But it goes further than that.
 
@@ -128,9 +128,9 @@ I genuinely believe that access to this kind of data should not depend on how mu
 
 The paywall is gone. The code is open. The API is live. Go look at what the funds bought today.
 
-tickertrace.pro
+[tickertrace.pro](https://tickertrace.pro)
 
-github.com/mphinance/TickerTrace
+[github.com/mphinance/TickerTrace](https://github.com/mphinance/TickerTrace)
 
 Drink water. Check the heatmap. Call your sponsor.
 
