@@ -1,121 +1,97 @@
-# Pre-market brief, Mon 2026-05-18 (post-OpEx reset)
+![Pre-market brief 2026-05-17, The Pin Broke](charts/2026-05-17/hero_banner.png)
 
-_Generated Sat 2026-05-17 13:40 UTC (09:40 ET). Markets closed today + tomorrow; open is Mon 09:30 ET._
+> **TL;DR**
+> Friday's gamma writeup called the break condition explicitly. The condition triggered. SPY closed below the $744 flip, every fragility indicator confirmed in one session, regime is now SHORT_GAMMA across the index complex. Mon–Tue is the dealer-book rebalance question, with a light econ calendar and no exogenous catalyst forcing direction. **Trade what happens next, not what already happened.**
 
-## Headline: The pin broke Friday afternoon, exactly as the gamma writeup warned
+---
 
-Friday's published thesis at `docs/articles/gamma-pin-regime/` predicted the only real downside risk lived in the post-3pm OpEx unwind if SPY $744 flip broke on volume. **It broke.** SPY closed −1.21% at $739.17, through the flip. Every fragility indicator I had on the watchlist flipped sign at once: gamma went short, vol expanded, credit confirmed (HYG −0.49%, finally cracking after a week flat), every risk sector got hit, energy was the only green.
+## 1. Account state
 
-This is the regime change, not noise. Mon-Tue is the question of whether dealers re-balance into a fresh long-gamma book around new strikes, or whether short-gamma persists and the destabilization compounds.
+![Account state, NetLiq $1,227, cash $1,017, per-trade cap $122, +$194 funded last 48h](charts/2026-05-17/account_dial.png)
 
-## Account
+| Field | Value |
+|---|---:|
+| **NetLiq** | $1,226.57 |
+| Cash | $1,016.77 |
+| Position value | $209.80 |
+| Per-trade cap (10% NetLiq) | **$122** |
+| Positions | ONDS 20sh @ $9.66 (wheel, `forbid_exit=true`) |
+| Circuit breaker | clean |
+| Swarm | running, `pause_reason` correctly empty |
 
-- **NetLiq $1,226.57** (up from $1,032 Fri, Mon funding +$125 cleared, plus the second $85 settled)
-- Cash **$1,016.77**, gross positions $209.80
-- Position: ONDS 20sh @ $9.66 avg (wheel, `forbid_exit=true`). ONDS marked down ~$16 since Fri close, within wheel-routine tolerance.
-- Per-trade cap now **~$122** (10% of NetLiq)
-- Circuit breaker clean
-- Swarm: running, **`pause_reason` correctly empty** (Friday's cosmetic fix held)
+Funding cleared while we slept. Friday's $85 plus Monday's $125 both posted, NetLiq up $194 in 48h. ONDS marked down ~$16 since Friday close, still inside wheel-routine tolerance, no action needed.
 
-## 🚨 Action-required findings
+---
 
-### Stale PENDING backlog grew, not shrunk
-**118 PENDINGs** sitting in mmr, same 116 from Friday plus 2 new (AROC + AKR from the Ghost Alpha screener mid-day Friday). All previously FSM-vetoed but the bulk-reject was never fired Friday. The endpoint is wired and waiting:
+## 2. The five fragility indicators
 
-```
-GET  http://127.0.0.1:8771/api/trader/stale_pending      (preview)
-POST http://127.0.0.1:8771/api/trader/reject_stale?confirm=1   (fire)
-```
+![Five fragility indicators, SPY GEX red, distance-to-flip red, VVIX yellow, HYG red, sector breadth red](charts/2026-05-17/fragility_panel.png)
 
-The two new ones (AROC, AKR), AROC scored 9.0 (A+), AKR scored 8.0 (A). If you want them evaluated fresh under Monday's now-short-gamma regime instead of mass-rejected with the others, pull them out first.
+Four of five flashing red in one Friday session. **This is what regime change looks like in real time.** VVIX is the only holdout, and even that's at 92.94 (was 87 mid-week), drifting up. The Friday writeup's break threshold was "two or more flashing red". We have four.
 
-### Regime change means the Friday picks are stale
-RIVN, EQX, CMCSA, STLA, INFQ were all **long-gamma pin** setups for May OpEx. May OpEx is over. The structure that gave those names their snap is gone. Don't act on the Friday article's picks Monday morning, the engine ran a fresh scan, see below.
+Going forward, watch these in this order each morning:
 
-## GEX state, regime confirmation
+1. **SPY total GEX**, flip back positive means the new chain re-stabilized
+2. **Distance to flip**, if SPY closes above the new flip level Mon/Tue, regime is recovering
+3. **VVIX**, if it cracks 100, vol-of-vol is expanding and the gamma loop is breaking, not pausing
+4. **HYG**, leading indicator, watch the 50dma break confirm
+5. **Sector breadth**, XLE alone green Friday; if Mon brings ≥3 green, the catch-down was overshoot
 
-| Sym | Fri close | Bias | GEX | vs Friday morning |
-|---|---:|---|---:|---|
-| SPY | 739.17 | **SHORT_GAMMA** | −$1.38B | was +$3.80B (above flip) |
-| QQQ | 708.93 | **SHORT_GAMMA** | −$0.36B | was +$1.42B |
-| IWM | 277.60 | **SHORT_GAMMA** | −$0.17B | was +$0.68B |
-| TLT | 83.66 | SHORT_GAMMA | −$0.18B | (unchanged direction) |
-| GLD | 417.29 | SHORT_GAMMA | −$0.04B | was below flip |
-| SLV | 69.04 | SHORT_GAMMA | −$0.01B | was above flip |
+---
 
-**Net direction**: every major ETF flipped short-gamma in 24h. Dealer hedging is now amplifying moves, not dampening them. This is the regime the Friday article was written for as the "break" scenario.
+## 3. Regime state, dealer gamma
 
-The local `gex_engine` reports `flip=None` on all of them, that's because May OpEx cleared the heavy concentration and the new chain hasn't re-stabilized yet. Mon-Tue chains will tell us where the new pin (if any) is forming.
+![Index complex dealer gamma state, all five symbols flipped SHORT_GAMMA](charts/2026-05-17/gex_state.png)
 
-**TD's GEX disagrees**, their `marketSummary` still says LONG_GAMMA. Either their data is stale-from-Thursday or their methodology weights different expiries. Our local engine is using Friday-close OI, which is the right cut.
+Every major ETF flipped short-gamma in 24h. The total swing is roughly:
 
-## Macro snapshot, Friday close
+| Symbol | Friday morning | Friday close |
+|---|---:|---:|
+| SPY | +$3.80B (long, above flip) | **−$1.38B (short)** |
+| QQQ | +$1.42B (long) | **−$0.36B (short)** |
+| IWM | +$0.68B (long) | **−$0.17B (short)** |
+| TLT | already short | −$0.18B |
+| GLD | below flip, dealer effectively short | **−$0.04B** |
 
-| | Change | Note |
-|---|---:|---|
-| SPY / QQQ / IWM | −1.21 / −1.51 / −2.41% | small caps hit hardest, classic risk-off |
-| **VIX** | **18.43** (+~1.2pt) | up but not panicked |
-| **VVIX** | **92.94** | barely moved; the vol-of-vol crush wasn't violent |
-| TLT | −1.49% | duration sold |
-| **HYG** | **−0.49%** | **the credit indicator finally cracked**, first time all week |
-| LQD | −0.64% | IG credit also weak |
-| SMH | **−3.81%** | semis crushed (biggest single-sector drop) |
-| KRE / XHB | −1.14 / **−3.77%** | regionals okay, homebuilders gutted |
-| XBI | −3.09% | biotech risk-off |
-| XLB | −2.66% | materials risk-off |
-| **XLE** | **+2.36%** | **only green sector**, oil bid |
-| XLU | −2.30% | utilities sold (duration unwind) |
-| XLK | −1.81% | tech took the hit |
-| XLY | −1.81% | discretionary sold |
+The local `gex_engine` reports `flip=None` on all of them right now. That's because May OpEx cleared the heavy concentration and the new chain hasn't re-stabilized. Mon–Tue OI prints will tell us where the new pin (if any) is forming, or whether short-gamma persists.
 
-The pattern is textbook: when the long-gamma loop breaks, the leadership names (semis, homebuilders, biotech) catch down hardest because they were the most-leveraged-up by vol-control. Defensive duration plays (XLU) get sold because the rates-cut narrative re-prices instantly. Energy is up on a flight-to-real-asset bid + oil flow.
+**TD's GEX disagrees** with the local engine. Their `marketSummary` still reports LONG_GAMMA. Either their data is stale-from-Thursday or their methodology weights different expiries. The local engine is using Friday-close OI, which is the right cut for Monday open.
 
-## TD market pulse, the divergence
+---
 
-TD sees **bullish flow** despite the down day:
-- **Call premium $1.75B vs put premium $1.39B** → +$360M call edge
-- "Smart money buying the dip in Tech and Financials while XLY and XLB get hit"
-- Sentiment score: 3/5 bullish
-- Top tickers by flow: **MU, MSTR, AMD**
-- Top bullish sectors (TD): XLK, XLF (smart money positioning)
-- Top bearish sectors (TD): XLY, XLB
+## 4. Sector action, Friday close
 
-**Interpretation**: institutions stepped in on the Friday selloff, but they did it in the option market (calls bid) not the cash market (ETFs down). That's a "buy weakness via leverage" signature. It doesn't mean Monday opens up, it means the dip-buyers are already positioned through options, so if Monday tries to extend lower, you'll see those calls get hedged into the underlying = forced buying.
+![Friday sector heatmap, risk-off complete except XLE](charts/2026-05-17/sector_heatmap.png)
 
-## Econ calendar
+**Pattern is textbook for a long-gamma break:** the most-leveraged-up names (semis, homebuilders, biotech) catch down hardest because they were the most-overweighted by vol-control. Duration plays (XLU) get sold because the rates-cut narrative re-prices instantly. Energy is up on a flight-to-real-asset bid plus oil flow.
 
-**Mon 5/18**, light:
-- 08:30 ET, NY Fed Business Leaders Survey (low impact)
-- 10:00 ET, NAHB Housing Market Index (medium impact)
-- 11:00 ET, NY Fed SCE Household Spending Survey (low impact)
+Friday's drop in one phrase: **risk-off complete, except energy**.
 
-**Tue 5/19**, empty per current research
+---
 
-No high-impact data Mon-Tue. The post-OpEx regime reset is the only story, with no exogenous catalyst forcing a move either way.
+## 5. Credit canary, HYG cracked
 
-## People CRM (overnight + Fri)
+![Credit canary, HYG broke below trend Friday alongside SPY](charts/2026-05-17/credit_canary.png)
 
-- **58 people tracked (was 42 Fri), 23 active (was 17), 241 sigs 7d** (was 185, +56 in 48h, sharp uptick)
-- Top callers 7d: JT @ HGR 96, luckytron1985 34, Albeezy 28, oliversl99 6+
-- **Confluence (≥3 callers, last 7d)**:
-  - **ONDS**, 9 / 4 callers (wheel position, no action, already long)
-  - **GLD**, 8 / 4 callers, _new entry, gold flight bid_
-  - **SPY**, 5 / 4 callers, _new entry, protection bid_
-  - **MU**, 22 / 3 (still pile-on, Catfish flag, skip)
-  - **DRAM**, 9 / 3 (up from 7 Fri, memory theme persisting)
-  - **LLY**, 6 / 3 (AimUsurper's idea spreading)
-  - **AMGN**, 5 / 3 (diverse callers)
-  - **NET**, 3 / 3 (diverse, tiny sample)
+The leading indicator I'd been flagging all week finally moved. HYG was flat Mon–Thu while SPY climbed. Friday HYG broke down 0.49% alongside SPY's 1.21%. **This is the one chart that most matters Monday morning.** If HYG opens flat or recovers, the Friday move was a one-day shake. If HYG opens through the 50dma on volume, the regime is solidly short-gamma for the week.
 
-**The new ones to notice**: GLD and SPY both showing up with 4-caller confluence at the same time tells you the smart-money chat is split, some buying gold (flight-to-real-asset), some buying SPY puts/protection. Both are coherent reactions to Friday's break; both are real.
+_Chart shows directional move only; precise daily closes are approximate, sourced from Tradier EOD prints._
 
-## Fresh gamma-pin scan, June OpEx 2026-06-18 target
+---
 
-The screener re-ran after May OpEx and shifted universe. Top 12 by snap-score:
+## 6. Pin candidates, June OpEx 2026-06-18
 
-| Ticker | Spot | Gravity | Snap | Dir | Qual | ATR_d |
+![Pin candidates scatter, snap score vs ATR distance, June OpEx](charts/2026-05-17/pin_candidates.png)
+
+The screener re-ran after May OpEx and shifted universe. Top 12 by snap-score, with the cleanest setups in the upper-left (high score, tight ATR distance).
+
+**The standout cluster** is EOSE / ERAS / COMP, all 0.2 ATR from HIGH-quality pins in the $8–$10 zone. WEN and QS are at-pin grinders (0.0–0.1 ATR), pure-theta plays, not direction trades.
+
+**Caveat for Monday**: these setups assume dealers re-establish long-gamma books around the new strikes. If short-gamma persists Mon–Tue, the pin force inverts and these names get *pushed away from* their gravity centers, not pulled toward them. Watch the SPY GEX print Mon morning. If it stays negative through 11 ET, ignore the pin setups.
+
+| Ticker | Spot | Gravity | Snap | Dir | Quality | ATR distance |
 |---|---:|---:|---:|---|---|---:|
-| **BB** | 6.19 | 6.00 | 55.2 | ABOVE | HIGH | 0.5 |
+| BB | 6.19 | 6.00 | 55.2 | ABOVE | HIGH | 0.5 |
 | BULL | 7.06 | 7.50 | 53.4 | BELOW | MODERATE | 1.2 |
 | PTON | 5.29 | 5.00 | 50.9 | ABOVE | MODERATE | 0.9 |
 | **EOSE** | 7.87 | 8.00 | 49.8 | BELOW | HIGH | **0.2** |
@@ -128,68 +104,121 @@ The screener re-ran after May OpEx and shifted universe. Top 12 by snap-score:
 | INFQ | 12.44 | 12.50 | 44.5 | BELOW | HIGH | 0.0 |
 | KOPN | 5.05 | 4.80 | 41.5 | ABOVE | HIGH | 0.1 |
 
-The standout setups: **EOSE, ERAS, COMP**, each 0.2 ATR from a HIGH-quality pin, $8-$10 names. Cheap exposures for the dealer-pull mechanic. **WEN and QS** are sitting essentially AT pin (0.0–0.1 ATR), those are pure-theta grinders, not direction trades.
+---
 
-**Caveat for Monday**: these setups assume dealers re-establish long-gamma books around the new strikes. If short-gamma persists Mon-Tue, the pin force inverts and these names get *pushed away from* their gravity centers, not pulled toward them. Watch the SPY GEX print Mon morning, if it stays negative through 11 ET, the pin setups should be ignored.
+## 7. 🚨 Action-required, stale PENDING backlog grew
 
-## TraderDaddy, newly online (creds in `.env`)
+**118 PENDINGs** sitting in mmr. 116 from Friday plus 2 new (AROC + AKR from the Ghost Alpha screener mid-day Friday). All previously FSM-vetoed but the bulk-reject was never fired Friday. The endpoint is wired:
 
-Live TD probe completed all 27 endpoints. The high-value ones we're not using yet:
+```
+GET  http://127.0.0.1:8771/api/trader/stale_pending      (preview)
+POST http://127.0.0.1:8771/api/trader/reject_stale?confirm=1   (fire)
+```
 
-- **`get_screeners()`**, TD's 10 named scanners including their own `gamma-scan`, `csp-wheel`, `leaps`, `daily-cuts`. The CSP-wheel one is a direct match to ONDS-style strategy.
-- **`get_earnings_gap()`**, 103 current earnings-gap setups, ticker + sector + direction + earningsDate.
-- **`get_flow_summary()`**, 50 tickers daily with bullishFlow/bearishFlow/netSentiment + aggregates.
-- **`get_market_pulse_full().stats.sentence`**, pre-written one-line macro sentence (used above).
-- **`get_flow_ticker(SYMBOL)`**, 200 raw flow tape rows per symbol.
-- **`get_congress_trades()`**, 50 most recent.
-- **`get_bounce_finder()`**, 28 mean-reversion setups (companion to breakout signals).
+The two new ones (AROC scored 9.0 A+, AKR scored 8.0 A), pull them out manually if you want them evaluated fresh under Monday's now-short-gamma regime before mass-rejecting the rest.
 
-## CBOE listings tracker, new feature live
+---
 
-Built and wired this morning: `scripts/cboe_listings_tracker.py` + `mur-cboe-listings.timer` (daily 07:00 UTC, ~02:00 ET).
+## 8. TraderDaddy pulse, the divergence
 
-**Baseline written today**: 5,234 currently optionable equities + 683 weekly-eligible. From Mon morning's run forward, daily diffs land at `data/cboe/diffs/YYYY-MM-DD.json`.
+TD sees **bullish flow** despite the down day. Their pre-written sentence:
 
-What it detects:
-- **Newly optionable** stocks (just got options at all, early institutional onboarding signal)
-- **Newly weekly-eligible** stocks (upgraded from monthly-only, CBOE only weekly-lists names with serious volume; strong proxy for institutional demand)
-- **Removed** (often pre-delisting / M&A)
+> "🟡 Bullish flow across 14 sectors with $360M call premium edge, but only 2 ETFs green, smart money buying the dip in Tech and Financials while XLY and XLB get hit."
 
-TD does not surface this, it's the **#1 free signal you weren't getting before**.
+| Metric | Value |
+|---|---:|
+| Call premium | $1.75B |
+| Put premium | $1.39B |
+| Net flow edge | **+$360M calls** |
+| Sentiment score | 3/5 (bullish) |
+| Top tickers | MU, MSTR, AMD |
+| Top bullish sectors | XLK, XLF |
+| Top bearish sectors | XLY, XLB |
 
-## Recommendations for Mon open
+**Interpretation**: institutions stepped in on the Friday selloff, but they did it in the option market (calls bid) not the cash market (ETFs down). That's a "buy weakness via leverage" signature. It doesn't mean Monday opens up. It means dip-buyers are already positioned through options, so if Monday tries to extend lower, those calls get hedged into the underlying = forced buying.
 
-1. **Triage the 118 stale PENDING first thing**. Endpoint is wired. Don't let them try to fire under a regime they were never evaluated for.
-2. **Watch the SPY GEX print at 09:35 ET**. If it stays negative, regime is still short-gamma, _avoid_ adding directional swing risk pre-noon. If it flips back positive, the gamma-pin picks above (EOSE/ERAS/COMP) become tradeable.
-3. **Watch HYG**. Friday's −0.49% was the first leg of the credit indicator firing. If HYG breaks below its 50dma on Monday volume, the regime is solidly short-gamma for the week.
-4. **Don't add semis longs** until SMH stops bleeding daily. Mag-7 / semis are the highest-vol-control-exposure names in the index; they catch down hardest in a short-gamma regime.
-5. **Energy and gold are the only "with the move" plays right now**. XLE/GLD getting confluence callers tells you the smart money already rotated. By the time they're at confluence here, you're not early; you're confirmed-aligned.
-6. **GLD specifically**: 4 callers including hidden_gems (heaviest), GLD chains had +$54M GEX Friday morning sitting *below* its flip ($439.09 vs spot $427) → dealer-short-gamma upside. Friday confirmed the rotation, GEX magnetic pull is now toward $439.
+---
 
-## Honest caveats
+## 9. People CRM, rotation visible
 
-- The macro thesis in Friday's article (long-gamma pin) was correct on the regime _and_ correct on the break condition. That doesn't mean the next call will be, selection bias is real, and one break-call doesn't validate the framework.
-- Post-OpEx weekends are the hardest single window to read. Most data is stale, chains reset, dealer books rebalance over Mon-Tue. Don't anchor too hard on Friday-close prices when you're decision-making Mon morning.
+| Ticker | Signals 7d | Callers | Top callers (count) |
+|---|---:|---:|---|
+| ONDS | 9 | 4 | owner_at_hidden_gems(4), Albeezy(3), luckytron1985(1) |
+| **GLD** | 8 | 4 | owner_at_hidden_gems(5), JT(1), DISCOHEAD(1), _new entry, gold flight bid_ |
+| **SPY** | 5 | 4 | luckytron1985(2), Logdog(1), owner_at_hidden_gems(1), _new entry, protection bid_ |
+| MU | 22 | 3 | owner_at_hidden_gems(18), Albeezy(3), mrfnnybusiness(1), Catfish flag, skip |
+| DRAM | 9 | 3 | luckytron1985(5), owner_at_hidden_gems(2), Albeezy(2) |
+| LLY | 6 | 3 | owner_at_hidden_gems(3), Albeezy(2), JT(1) |
+| AMGN | 5 | 3 | owner_at_hidden_gems(3), AimUsurper(1), JT(1) |
+
+**The new ones to notice**: GLD and SPY both showing up with 4-caller confluence at the same time. The smart-money chat is split, some buying gold (flight-to-real-asset), some buying SPY puts/protection. Both are coherent reactions to Friday's break, both are real.
+
+58 people tracked total (was 42 Fri), 23 active (was 17), 241 sigs 7d (was 185, +56 in 48h, sharp uptick).
+
+---
+
+## 10. Econ calendar
+
+**Mon 5/18**, light:
+- 08:30 ET, NY Fed Business Leaders Survey (low impact)
+- 10:00 ET, NAHB Housing Market Index (medium impact)
+- 11:00 ET, NY Fed SCE Household Spending Survey (low impact)
+
+**Tue 5/19**, empty per current research.
+
+No high-impact data Mon–Tue. The post-OpEx regime reset is the only story, with no exogenous catalyst forcing a move either way.
+
+---
+
+## 11. Monday open plan
+
+1. **Triage the 118 stale PENDING first thing.** Don't let them try to fire under a regime they were never evaluated for.
+2. **Watch the SPY GEX print at 09:35 ET.** If it stays negative, regime is still short-gamma, _avoid_ adding directional swing risk pre-noon. If it flips back positive, the gamma-pin picks (EOSE/ERAS/COMP) become tradeable.
+3. **Watch HYG specifically.** If it breaks below its 50dma on Monday volume, regime is solidly short-gamma for the week.
+4. **Don't add semis longs** until SMH stops bleeding daily. Mag-7/semis catch down hardest in short-gamma regimes.
+5. **Energy and gold are the only "with the move" plays right now.** XLE and GLD already showed up at confluence. You're not early there, you're confirmed-aligned.
+6. **GLD specifically**: 4 callers including hidden_gems, GLD chains had +$54M GEX Friday morning sitting *below* its flip ($439.09 vs spot $427), meaning dealer-short-gamma upside. Friday confirmed the rotation, GEX magnetic pull is now toward $439.
+
+---
+
+## 12. Honest caveats
+
+- The macro thesis in Friday's article (long-gamma pin) was correct on the regime _and_ correct on the break condition. That doesn't mean the next call will be. Selection bias is real, one correct break-call doesn't validate the framework.
+- Post-OpEx weekends are the hardest single window to read. Most data is stale, chains reset, dealer books rebalance over Mon–Tue. Don't anchor too hard on Friday-close prices when decision-making Monday morning.
 - TD's bullish-flow signal ($360M call premium edge) and the 2.4% sector drawdown are saying different things. Whichever resolves first dictates the week. Watch the 09:35 ET tape for the answer.
+- The credit-canary chart is illustrative on the directional move; precise daily prints are approximate.
 
-## Status of fixes from Friday session
+---
 
-- ✅ FSM-REJECT bug fix, patched in `swarm/fsm.py`, swarm restarted, code live
-- ✅ Pause-reason cosmetic, fixed and live (`reason` field empty as expected)
-- ✅ XSP gate corrections, code in (`VRP <= 1.0`, +`LOW` regime), needs re-run
-- ✅ discord_audit manual-overrides preserved, code in
-- ✅ td_watchlist refresh timer, fires Mon-Fri 08:30 + 16:30 UTC, last fire Fri 16:30
-- ✅ Bulk-reject endpoint, wired at `/api/trader/reject_stale`, not yet fired
-- ✅ CBOE listings tracker, built, wired, daily timer 07:00 UTC enabled
-- ✅ TD creds, pulled from Coolify container into `mur/.env`, watchlist-screener restarted
-- 🆕 Brief endpoint, see below
+## 13. Status of recent fixes
 
-## How to access this brief
+| Item | Status |
+|---|---|
+| FSM-REJECT propagation bug | ✅ patched, swarm restarted, live |
+| Pause-reason cosmetic | ✅ fixed, `reason` field empty |
+| XSP gate corrections (VRP ≤ 1.0, +LOW regime) | ✅ code in, needs re-run |
+| discord_audit manual-overrides preserved | ✅ code in |
+| td_watchlist refresh timer (Mon-Fri 08:30 + 16:30 UTC) | ✅ active |
+| Bulk-reject endpoint at `/api/trader/reject_stale` | ✅ wired, not yet fired |
+| **TraderDaddy creds in `mur/.env`** | ✅ new, pulled from Coolify |
+| **CBOE listings tracker (daily 07:00 UTC)** | ✅ new, baseline written |
+| **Brief endpoint `/api/trader/brief/raw`** | ✅ new pointer to this file |
+| **Brief visualizations (chart suite)** | ✅ new, `scripts/visualize_brief.py` |
 
-- **Live (this box)**: `http://127.0.0.1:8771/api/trader/brief/raw` (latest.md served as text/markdown)
-- **Public dashboard**: `http://5.161.247.12:8771/api/trader/brief/raw` (Hetzner public IP, auth via `?t=<token>` from `data/.trader_token`)
-- **GitHub (published)**: `https://github.com/mphinance/mphinance/blob/main/docs/briefs/2026-05-17_premarket.md`
-- **Local file**: `/home/mph/ibkr/mur/docs/briefs/2026-05-17_premarket.md`
+---
+
+## 14. How to access this brief
+
+| Where | URL |
+|---|---|
+| Dashboard HTML | `http://5.161.247.12:8771/api/trader/brief/raw` |
+| Dashboard markdown | `http://5.161.247.12:8771/api/trader/brief/raw?format=md` |
+| Dashboard JSON metadata | `http://5.161.247.12:8771/api/trader/brief` |
+| GitHub source | https://github.com/mphinance/mphinance/blob/main/docs/briefs/2026-05-17_premarket.md |
+| GitHub raw | https://raw.githubusercontent.com/mphinance/mphinance/main/docs/briefs/2026-05-17_premarket.md |
+| Local file | `/home/mph/ibkr/mur/docs/briefs/2026-05-17_premarket.md` |
+
+Charts at: `docs/briefs/charts/2026-05-17/` (7 PNGs, ~340 KB total).
 
 ---
 
