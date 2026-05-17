@@ -4,7 +4,7 @@
 
 I spent eight months building a tool that scrapes what ETFs are actually buying and selling every single day. Then I put it behind a paywall. Then I tore the paywall down.
 
-*[IMAGE: tickertrace_landing_v2.png - the updated hero with "Front-run the institutions" headline and TraderDaddy integration]*
+![The updated TickerTrace landing page with "Front-run the institutions" headline and TraderDaddy integration](tickertrace_landing_v2.png)
 
 Let me explain.
 
@@ -52,7 +52,7 @@ Not everyone wants to trade options. Not everyone needs a full AI-powered dashbo
 
 ## What You Are Looking At
 
-*[IMAGE: tickertrace_dashboard.png - the top of the dashboard showing search, stats bar, and top buys/sells/multi-provider/streaks]*
+![The TickerTrace dashboard showing search, stats bar, and top buys/sells/multi-provider signals/streaks](tickertrace_dashboard.png)
 
 The dashboard has four main sections that matter.
 
@@ -64,7 +64,7 @@ The dashboard has four main sections that matter.
 
 **The Heatmap.** Every fund on the Y-axis, every underlying stock on the X-axis. Green is accumulating. Red is reducing. Bright means big move. This is the single most useful view in the entire app. One glance and you know where the money is flowing.
 
-*[IMAGE: tickertrace_dashboard_full.png - cropped to the heatmap section showing the fund x ticker grid]*
+![The heatmap view showing fund x ticker grid with green for accumulation and red for distribution](tickertrace_dashboard_full.png)
 
 ## How This Fits Into TraderDaddy Pro
 
