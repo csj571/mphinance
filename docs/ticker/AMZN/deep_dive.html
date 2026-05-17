@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMZN Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for AMZN.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/AMZN/chart/" target="_blank">AMZN</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Consumer Cyclical &#xB7; Internet Retail &#xB7; 2026-05-16</div>
+  </div>
+  <div>
+    <div class="pr">$264.14</div>
+    <div class="ch neg">-1.15%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[AMZN] Deep Dive: The Cloud Titan's Relentless Ascent – Still a Ghost of Growth Past or Future?</h2>
+<p><strong>Date:</strong> 2026-05-16</p>
+<p><strong>Price:</strong> ~$264.14 | <strong>Verdict:</strong> Strong Buy, but Patience is a Virtue</p>
+
+<p>Forget the whispers of retail fatigue; Amazon isn't just surviving, it's meticulously orchestrating its next phase of dominant growth, hiding in plain sight. This isn't your grandma's online bookstore anymore.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market often gets caught staring at AMZN's colossal e-commerce division, meticulously tracking consumer spending habits and logistics costs like a hawk watching a snail. They see a mature retail giant, perhaps a bit clunky, facing macroeconomic headwinds. This view, while not entirely wrong, misses the ghost in the machine: Amazon Web Services (AWS) and the burgeoning, high-margin advertising business.</p>
+
+<p>The reality is that AMZN is a multi-headed hydra, expertly leveraging its ecosystem. AWS is a cash-printing machine, fueling innovation and expansion while demonstrating a profit margin that most companies can only dream of. The retail segment, far from being a drag, is undergoing a quiet revolution – optimizing logistics, expanding high-margin ad placements within its platform, and steadily improving profitability. AMZN isn't just selling you stuff; it's providing the digital infrastructure for the world, selling you ads, and delivering it all faster than ever before. This integrated approach, with AWS as the profit engine and retail as the data engine, makes AMZN a relentless growth beast.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<p>Let's cut to the chase, shall we?</p>
+<p><em>   <strong>Revenue Growth:</strong> A robust 16.6%. For a behemoth of $2841.38B market cap, that's not just growth, that's </em>acceleration*.</p>
+<ul>
+<li><strong>Profit Margin:</strong> A healthy 12.2%. This shows the operational efficiencies finally kicking in, a sign of maturity for its core retail and the inherent profitability of AWS.</li>
+<li><strong>P/E & Forward P/E:</strong> Current P/E of 31.63, dropping significantly to a Forward P/E of 26.75. This isn't just attractive, it suggests analysts expect substantial earnings growth in the near future – a direct contradiction to the "mature" narrative.</li>
+<li><strong>Beta:</strong> 1.47. Yes, it's volatile, but that's what we want when the trend is your friend. More juice on the upside.</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>AWS's Unstoppable Dominance:</strong> AWS remains the gold standard in cloud computing, consistently outpacing competitors. As AI adoption scales globally, the demand for robust, secure, and scalable cloud infrastructure will only explode. AMZN is perfectly positioned to capture this tsunami of data and processing, effectively selling the picks and shovels in the digital gold rush. This is AMZN's true profit engine.</li>
+<li><strong>Retail Efficiency & Advertising Mojo:</strong> The retail arm isn't just about sales volume; it's about optimizing the cost to deliver and monetizing every eyeball. Improved logistics networks are shrinking delivery times and costs. More importantly, Amazon's advertising business, quietly nestled within retail, is a high-margin powerhouse. Leveraging user data and purchase intent, it's diverting ad spend from traditional channels directly into AMZN's coffers, turning its retail traffic into pure profit.</li>
+<li><strong>Untapped Growth Verticals:</strong> Beyond core cloud and retail, AMZN is relentlessly expanding. Think international growth, particularly in emerging markets, or ventures like Project Kuiper (satellite internet) and its foray into healthcare (One Medical). These aren't small side projects; they are massive addressable markets where AMZN can leverage its infrastructure and customer base to become a major player.</li>
+<li><strong>Golden Cross Confirms Trend:</strong> The recent "Golden Cross" on the technical charts (SMA 50 above SMA 200, though SMA 200 isn't explicitly provided, the "Golden Cross" implies it) confirms a long-term bullish trend. This isn't just a flicker; it's a structural shift.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>The Valuation Elephant in the Room:</strong> Let's not sugarcoat it – our quant models scream "OVERVALUED" with a target of $179.34, representing a -32.1% gap from the current price. While momentum and growth often overshadow traditional valuation in the short term, this gap cannot be ignored. A market correction could bring AMZN back to earth, or rather, to its fair value.</li>
+<li><strong>Regulatory Scrutiny & Antitrust Threats:</strong> Governments globally are increasingly eyeing tech giants like AMZN. Potential antitrust lawsuits, forced breakups, or stricter regulations could impact operational flexibility, increase compliance costs, and fundamentally alter AMZN's integrated business model.</li>
+<li><strong>Intensifying Competition:</strong> While dominant, AMZN isn't without formidable foes. Microsoft Azure and Google Cloud are relentlessly challenging AWS. In retail, Walmart and Target are pouring resources into e-commerce, and Shopify empowers millions of direct-to-consumer brands. Price wars or market share erosion, however slight, could impact margins.</li>
+</ul>
+
+<h3>📉 The Technicals</h3>
+<p>AMZN closed at ~$264.14, having pulled back slightly by -1.15%. Don't let that daily dip fool you; the trend remains unequivocally <strong>Bullish</strong>.</p>
+<p><em>   <strong>EMA Stack:</strong> FULL BULLISH. The 8-EMA ($267.55) is above the 21-EMA ($261.03), which is above the 34-EMA ($252.92). This perfectly layered stack screams upward momentum. We're currently sitting </em>below<em> the 8-EMA but </em>above* the 21 and 34 EMAs, indicating a healthy pullback to established support.</p>
+<ul>
+<li><strong>RSI(14):</strong> At 53.85, the Relative Strength Index is comfortably neutral. This means AMZN isn't overbought and has plenty of room to run without needing to cool off.</li>
+<li><strong>ADX:</strong> A powerful 48.49. This is a very strong trend indicator, confirming the market's conviction in AMZN's direction.</li>
+<li><strong>Pivots:</strong> Current price ~$264.14 is hovering around the S2 support at $264.06. Our immediate resistance levels are PP ($268.21), R1 ($269.79), and R2 ($272.36).</li>
+<li><strong>ATR:</strong> 7.19. Expect daily swings of about $7.19, so buckle up. Relative Volume at 0.89x suggests current action is slightly below average, perhaps consolidating before its next move.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>A clear break and hold above the PP ($268.21), ideally with increasing volume, signals a continuation of the upward trend. Target R1 ($269.79) then R2 ($272.36) for quick gains. For more aggressive traders, breaching R2 could open up further upside towards the 52-week high of $278.56.</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Given the slight pullback and the valuation concerns, the current price hovering near S2 ($264.06) presents an opportunity. A stronger dip towards the 21-EMA ($261.03) or even the 34-EMA ($252.92) would be a prime entry zone. This aligns with a safer, value-conscious approach, accumulating shares on weakness within a strong uptrend. Keep an eye on S1 ($265.64) as immediate support.</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>A decisive break and close below the 34-EMA ($252.92), especially if accompanied by heavy volume, would be a strong warning sign. If it fails to hold the SMA 50 ($236.71), then the bullish trend is officially under significant threat. Consider hedging or reducing exposure if these key support levels are breached, as the fundamental overvaluation could then become the dominant market driver.</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>AMZN is a robust growth engine with a clear bullish technical setup, but heed the fundamental valuation ghost in the machine. Accumulate strategically on dips towards the 21-EMA, targeting the analyst consensus of $311.55 as its next potential stop.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">29.0%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">26.5%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">0</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BULLISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$264.53</div><div class="ma-d neg">-0.1%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$236.71</div><div class="ma-d pos">+11.6%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$231.20</div><div class="ma-d pos">+14.2%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BULLISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$267.55</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$261.03</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$252.92</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">54</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">36/49</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm neg">-2.02</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">48.5</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$196.0</span><span>$264.14 (82%)</span><span>$278.56</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:82%"></div><div class="rng-dot" style="left:82%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$259.08</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$247.02</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$237.28</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$227.54</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$278.29</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$250.77</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$7.19</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">0.89x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$272.36 &#xB7; R1=$269.79 &#xB7; PP=$268.21 &#xB7; S1=$265.64 &#xB7; S2=$264.06
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">Amazon.com, Inc.</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$2841.38B</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">1,575,000</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NMS</div></div>
+      </div>
+      <div class="fd-desc">Amazon.com, Inc. engages in the retail sale of consumer products, advertising, and subscriptions service through online and physical stores in North America and internationally. The company operates through three segments: North America, International, and Amazon Web Services (AWS).</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://www.amazon.com" target="_blank" style="color:#00f3ff">https://www.amazon.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-mid">45</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-hi">91</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-mid">45</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">90</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">31.63</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">26.75</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">3.83</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">6.43</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">18.82</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">1.86</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 3.95 &middot; P/FCF: 289.7</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v pos">+16.6%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v pos">+74.8%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v pos">+76.7%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$69.48</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">50.6%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v pos">13.1%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v pos">12.2%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v pos">24.3%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v pos">6.8%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">1.47</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm pos">1.18</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">53.3</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$235.54B</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$143.09B</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$9.81B</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$148.53B</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">0.00%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">N/A</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">N/A</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (62 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$207.00</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$317.00</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$370.00</div></div>
+        </div>
+        <div class="est-labels"><span>$207</span><span>Current $264</span><span>$370</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:35%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">STRONG_BUY</span> &middot; Mean Target: $311.55</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-05-16 07:53 PM CST</div>
+</div>
+</body>
+</html>

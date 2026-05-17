@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IBKR Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for IBKR.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/IBKR/chart/" target="_blank">IBKR</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Financial Services &#xB7; Capital Markets &#xB7; 2026-05-16</div>
+  </div>
+  <div>
+    <div class="pr">$87.0</div>
+    <div class="ch neg">-1.45%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[IBKR] Deep Dive: The Stealthy Giant's Premium Play</h2>
+<p><strong>Date:</strong> 2026-05-16</p>
+<p><strong>Price:</strong> ~$87.0 | <strong>Verdict:</strong> Bullish (Tactical Alpha)</p>
+
+<p>Forget the flashy meme stocks. Sometimes, the real alpha hides in plain sight, powering the very market infrastructure others trade on. Interactive Brokers (IBKR) isn't just another brokerage; it's a finely-tuned machine built for serious traders and institutions, now commanding a serious premium.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market often sees IBKR as just another brokerage, a quiet, if sophisticated, player in a crowded field. Traders hear "brokerage" and think commissions, maybe some interest on cash. <em>Reality check</em>: That's like calling a Formula 1 car "just a vehicle." IBKR is a global, technology-first powerhouse, offering unparalleled access to markets worldwide at ultra-low costs, attracting high-volume, sophisticated traders and institutions. Its robust platform and diverse offerings, from obscure futures to international equities, make it indispensable for those who demand more than a simple trading app.</p>
+
+<p>This distinction explains the current disconnect. While the market might raise an eyebrow at a P/E of 37.34, particularly when compared to its "OVERVALUED" fundamental assessment ($50.26 target), it's missing the structural advantage. IBKR isn't just executing trades; it's providing the picks and shovels for a global gold rush of information and capital, benefiting from increased market complexity and the sheer volume of assets it manages. The premium isn't entirely speculative; it's a nod to its strategic positioning and operational excellence, even if it feels stretched.</p>
+
+<h3>📊 The Numbers You Need</h3>
+
+<p>Let's cut to the chase and look under the hood:</p>
+<ul>
+<li><strong>Revenue Growth:</strong> A healthy <strong>16.8%</strong>. In the financial services sector, this isn't just good, it's a testament to its expanding reach and increasing activity on its platform.</li>
+<li><strong>Profit Margin:</strong> A solid <strong>16.1%</strong>. This isn't some fly-by-night operation; IBKR knows how to turn revenue into real profit. Efficiency is key here.</li>
+<li><strong>P/E Ratio:</strong> <strong>37.34</strong>, with a <strong>Forward P/E of 30.47</strong>. This tells you the market is expecting continued earnings growth. High? Yes. But for a growth-oriented financial tech play, it's not unheard of.</li>
+<li><strong>Market Cap:</strong> A hefty <strong>$147.91B</strong>. This isn't a small cap moonshot; it's a major player.</li>
+<li><strong>Beta:</strong> <strong>1.32</strong>. IBKR is more volatile than the broader market, meaning higher highs and lower lows – perfect for traders who thrive on movement.</li>
+</ul>
+<p><em>   <strong>Valuation:</strong> Here's the kicker – <strong>OVERVALUED (Gap: -42.2%)</strong>, with an intrinsic target of <strong>$50.26</strong>. Analyst consensus is slightly less pessimistic at <strong>$86.0</strong>. This is your fundamental anchor. While the market pushes higher, value investors will be wary. </em>Consider this your yellow flag.*</p>
+
+<h3>🚀 The Bull Case</h3>
+
+<ol>
+<li><strong>Global Market Dominance & Expansion:</strong> IBKR isn't just about US stocks. Its platform offers unparalleled access to over 150 markets in 33 countries, covering stocks, options, futures, forex, and more. As global economies intertwine and retail investors seek diversified international exposure, IBKR is perfectly positioned to capture this demand. Its technological superiority and low-cost structure make it the go-to for serious international traders.</li>
+<li><strong>Rising Interest Rate Environment (Again):</strong> A significant portion of IBKR's revenue comes from net interest income on client cash balances and margin loans. If global central banks maintain or increase interest rates, IBKR's NII line item gets fatter. It's a direct, almost passive, income boost that doesn't rely solely on trading volumes.</li>
+<li><strong>Increased Trader Activity & Volatility:</strong> With a Beta of 1.32, IBKR benefits disproportionately from periods of high market volatility and increased trading activity. Whether it's geopolitical events, earnings seasons, or broad market swings, more action means more commissions and more margin interest for IBKR. They thrive when the market is lively.</li>
+<li><strong>Continuous Platform Innovation:</strong> IBKR consistently invests in its technology, offering advanced trading tools, analytics, and APIs that attract sophisticated traders, institutions, and hedge funds. This commitment to innovation creates a sticky ecosystem, making it difficult for clients to switch to less robust platforms, ensuring long-term client retention and acquisition.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+
+<ol>
+<li><strong>Valuation Overhang & Interest Rate Reversal:</strong> The fundamental data screams "OVERVALUED" at a $50.26 target. This gap of over 42% is substantial. Should interest rates reverse course and decline, or if there's a significant market correction, this valuation could lead to a swift and brutal repricing. The analyst target of $86.0, already below the current price, hints at this concern.</li>
+<li><strong>Intensified Regulatory Scrutiny & Competition:</strong> The brokerage industry faces constant regulatory changes, especially concerning market structure, payment for order flow, and capital requirements. Increased compliance costs or adverse regulatory rulings could eat into margins. Furthermore, fierce competition from zero-commission brokers, even if less sophisticated, pressures the core commission revenue model.</li>
+<li><strong>Economic Downturn & Reduced Trading Activity:</strong> A prolonged recession or a significant market slump would inevitably lead to reduced trading volumes, lower asset values, and decreased demand for margin loans. This direct hit to commissions, interest income, and client assets could severely impact IBKR's revenue and profitability, especially given its higher beta.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+
+<p>IBKR is currently flashing serious bullish signals on the charts, sitting at ~$87.0 and pushing near its 52W high of $88.44.</p>
+<ul>
+<li><strong>EMA Stack:</strong> It's a <strong>FULL BULLISH</strong> stack with the 8-EMA ($85.31) above the 21-EMA ($81.84), which is above the 34-EMA ($79.33). This is textbook short-to-medium term strength. Price is clearly riding these moving averages higher.</li>
+<li><strong>Trend & SMAs:</strong> The trend is unequivocally <strong>Bullish</strong>, confirmed by a <strong>Golden Cross</strong>. While the 200-SMA isn't provided, the 50-SMA sits comfortably at $74.42, well below current price, reinforcing the strong uptrend.</li>
+<li><strong>RSI(14): 73.12.</strong> It's in overbought territory, but not excessively so for a stock in a powerful uptrend. This indicates strong momentum rather than imminent collapse.</li>
+<li><strong>ADX: 32.74.</strong> This confirms a strong, undeniable trend. The buyers are in control.</li>
+<li><strong>Pivots:</strong> Current price is just below the daily <strong>Pivot Point (PP) at $87.34</strong>. Key resistance levels are <strong>R1 at $89.37</strong> and <strong>R2 at $90.47</strong>. On the support side, watch <strong>S1 at $86.24</strong> and <strong>S2 at $84.21</strong>. These will be crucial battlegrounds.</li>
+<li><strong>ATR:</strong> <strong>$2.56</strong>. Expect daily price swings of this magnitude, which is decent for managing trades.</li>
+<li><strong>Rel Vol:</strong> <strong>0.9x</strong>. Slightly below average volume, suggesting the recent move hasn't been accompanied by a massive surge of new money, but rather consistent buying.</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>Given the strong technicals, a push higher is probable. Look for a convincing close above the 52-week high of $88.44 and the R1 pivot at $89.37. A breakout here, ideally on increased volume (above 0.9x Rel Vol), would target R2 at <strong>$90.47</strong>. Set your stop-loss tight, just below the newly established support, perhaps below $88.00 or a break below the 8-EMA ($85.31) if it reclaims it.</p>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>This is where the ghost likes to hunt. With the RSI showing overbought conditions and that valuation overhang, a pullback is a gift. Target an entry at key support levels:</p>
+<ul>
+<li>A shallower dip to <strong>S1 ($86.24)</strong> or the 8-EMA ($85.31) provides a strong initial buy point.</li>
+<li>A deeper, more attractive entry would be around the 21-EMA ($81.84) or S2 ($84.21). This offers a better risk/reward and acknowledges the valuation concerns.</li>
+</ul>
+<p>Look for candlestick reversal patterns (e.g., hammer, bullish engulfing) at these levels. Target a move back to $87.0, then R1 ($89.37). Place your stop-loss below the next major support, for example, below S2 ($84.21) if you entered at S1.</p>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>If IBKR breaks below critical supports with conviction, especially on increased selling volume, the bullish momentum is broken. A close below the 21-EMA ($81.84) and S2 ($84.21) would signal trouble. The next major support would be the 34-EMA ($79.33), then the 50-SMA ($74.42). If momentum truly shifts, the long-term valuation target of $50.26 becomes a real, albeit extreme, downside risk. Consider a short position or hedging if the trend decisively breaks lower, using a stop-loss if it reclaims these broken support levels.</p>
+
+<h3>🏁 Final Verdict</h3>
+<p>IBKR is a top-tier financial powerhouse with undeniable technical momentum, offering tactical upside to <strong>$90.47</strong> for momentum traders, but its lofty valuation demands prudence and a disciplined dip-buying strategy for sustainable conviction.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">53.3%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">36.8%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">2</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">FULL BULLISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$81.71</div><div class="ma-d pos">+6.5%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$74.42</div><div class="ma-d pos">+16.9%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$73.24</div><div class="ma-d pos">+18.8%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">FULL BULLISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$85.31</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$81.84</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$79.33</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neg">73</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">89/90</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm pos">+0.27</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">32.7</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$58.81</span><span>$87.0 (95%)</span><span>$88.44</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:95%"></div><div class="rng-dot" style="left:95%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$81.45</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$77.12</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$73.62</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$70.13</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$86.73</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$76.69</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$2.56</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">0.90x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$90.47 &#xB7; R1=$89.37 &#xB7; PP=$87.34 &#xB7; S1=$86.24 &#xB7; S2=$84.21
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">Interactive Brokers Group, Inc.</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$147.91B</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">3,232</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NMS</div></div>
+      </div>
+      <div class="fd-desc">Interactive Brokers Group, Inc. operates as an automated electronic broker in the United States and internationally. The company engages in the execution, clearance, and settlement of trades in stocks, options, futures, foreign exchange instruments, bonds, precious metals, and cryptocurrencies; and the company provides custody, prime brokerage, securities, and margin lending services.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://www.interactivebrokers.com" target="_blank" style="color:#00f3ff">https://www.interactivebrokers.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-lo">36</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-hi">78</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-hi">82</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">75</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">37.34</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">30.47</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">22.95</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">6.94</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">N/A</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">2.38</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: -5.87 &middot; P/FCF: N/A</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v pos">+16.8%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v pos">+22.9%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v pos">+25.4%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$14.54</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">93.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v pos">76.8%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v pos">16.1%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v pos">23.6%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v pos">2.4%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">1.32</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm pos">1.10</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">152.2</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$32.36B</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$124.59B</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">N/A</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$16.84B</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">0.40%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">$0.35</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">13.7%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">2026-06-01</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (10 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$64.00</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$89.00</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$99.00</div></div>
+        </div>
+        <div class="est-labels"><span>$64</span><span>Current $87</span><span>$99</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:66%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">BUY</span> &middot; Mean Target: $86.00</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-05-16 07:56 PM CST</div>
+</div>
+</body>
+</html>

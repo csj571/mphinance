@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KTHVTFX699"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KTHVTFX699');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APP Deep Dive | ALPHA.DOSSIER</title>
+<meta name="description" content="Full deep-dive analysis for APP.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#e0e0e0;font-family:'JetBrains Mono',monospace;
+  background-image:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size:100% 2px,3px 100%}
+.w{max-width:960px;margin:0 auto;padding:1rem}
+.hud{background:rgba(10,10,10,.85);border:1px solid #333;margin-bottom:.75rem}
+a{color:inherit;text-decoration:none}
+.pos{color:#00ff41}.neg{color:#ff3e3e}.neutral{color:#ffb000}.dim{color:#555}.accent{color:#00f3ff}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;margin-bottom:.5rem}
+.nav a{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;color:#00ff41}
+.nav a:hover{color:#fff}
+.nav-b{display:flex;gap:.5rem}
+.nav-b a{color:#666;border:1px solid #333;padding:2px 8px;font-size:9px;text-transform:uppercase}
+.nav-b a:hover{color:#fff;border-color:#666}
+
+.hdr{padding:1.25rem;border-left:4px solid #ffb000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.hdr h1{font-family:'Share Tech Mono',monospace;font-size:1.75rem;font-weight:900;letter-spacing:.15em;color:#fff}
+.hdr .amb{color:#ffb000}
+.hdr .sub{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.3em;margin-top:4px}
+.hdr .pr{font-size:1.75rem;font-weight:bold;color:#fff;text-align:right}
+.hdr .ch{font-size:.85rem;text-align:right}
+
+.gb{border-left:4px solid #00f3ff}
+.gb-h{padding:.75rem 1.25rem;border-bottom:1px solid #222;font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#555}
+.gb-h span{color:#00f3ff}
+.gb-b{padding:1rem 1.25rem}
+
+.vol-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.75rem}
+.gb-card{background:rgba(255,255,255,.02);border:1px solid #222;padding:.6rem .75rem;text-align:center}
+.label{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.val{font-size:1.1rem;font-weight:bold}.val.sm{font-size:.85rem}
+
+.gb-panel{background:rgba(255,255,255,.015);border:1px solid #1a1a1a;padding:.75rem;margin-bottom:.5rem}
+.gb-full{margin-bottom:.75rem}
+.gb-title{font-size:9px;color:#ffb000;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem;font-weight:bold}
+.gb-sub{font-size:9px;color:#444;margin-top:.4rem}
+
+.trend-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.trend-a{font-size:1.5rem;line-height:1}
+.trend-l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+.ma-g{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.ma-i{text-align:center}
+.ma-p{font-size:8px;color:#555;text-transform:uppercase}
+.ma-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+.ma-d{font-size:9px}
+
+.osc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+
+.rng-bar{background:#111;height:6px;border-radius:3px;position:relative;margin:.5rem 0}
+.rng-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.rng-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #00f3ff;transform:translateX(-50%)}
+.rng-lbl{display:flex;justify-content:space-between;font-size:9px;color:#555}
+
+.lvl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.5rem}
+.lvl-g{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.lvl-m{text-align:center}
+.lvl-k{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em}
+.lvl-v{font-size:.8rem;font-weight:bold;color:#e0e0e0}
+
+.stk-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:10px}
+.stk-tbl th{color:#555;text-align:left;padding:4px 6px;border-bottom:1px solid #222;font-weight:normal;text-transform:uppercase;font-size:8px}
+.stk-tbl td{padding:4px 6px;color:#c0c0c0;border-bottom:1px solid #111}
+
+.ct h2{font-size:1.3rem;font-weight:900;color:#fff;margin:1.8rem 0 .8rem;padding-bottom:.4rem;border-bottom:2px solid #333;
+  font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ct h3{font-size:1rem;font-weight:700;color:#ffb000;margin:1.2rem 0 .6rem;letter-spacing:.03em}
+.ct p{color:#c0c0c0;line-height:1.75;margin:.4rem 0;font-size:.8rem}
+.ct strong{color:#fff}.ct em{color:#00f3ff;font-style:normal}
+.ct ul,.ct ol{margin:.4rem 0 .4rem 1.5rem;color:#c0c0c0;font-size:.8rem;line-height:1.9}
+.ct li{margin:.25rem 0}
+.ct hr{border:none;border-top:1px solid #333;margin:1.5rem 0}
+.ct table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.75rem}
+.ct td{padding:.4rem .6rem;border:1px solid #222;color:#c0c0c0}
+.ct tr:first-child td{font-weight:bold;color:#888;background:rgba(255,255,255,.03)}
+.ft{text-align:center;padding:1.5rem 0;font-size:8px;color:#333;text-transform:uppercase;letter-spacing:.2em}
+
+.fd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.5rem}
+.fd-grid .gb-card{text-align:center}
+.fd-desc{font-size:.75rem;color:#888;line-height:1.7;margin:.5rem 0;padding:.5rem;background:rgba(255,255,255,.02);border-left:2px solid #333}
+.fd-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fd-split .gb-panel{margin-bottom:0}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.5rem}
+.score-card{text-align:center;background:rgba(255,255,255,.02);border:1px solid #222;padding:.75rem .5rem}
+.score-num{font-size:1.6rem;font-weight:900;line-height:1.2}
+.score-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.score-hi{color:#00ff41}.score-mid{color:#ffb000}.score-lo{color:#ff3e3e}.score-na{color:#333}
+.est-bar{background:#111;height:8px;border-radius:4px;position:relative;margin:.6rem 0}
+.est-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff3e3e,#ffb000,#00ff41)}
+.est-dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #ffb000;transform:translateX(-50%)}
+.est-labels{display:flex;justify-content:space-between;font-size:9px;color:#555}
+.prof-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.prof-item{display:flex;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,.02);border:1px solid #1a1a1a}
+.prof-k{font-size:9px;color:#555}
+.prof-v{font-size:9px;font-weight:bold}
+
+@media(max-width:640px){
+  .vol-row,.osc-row,.fd-grid{grid-template-columns:repeat(2,1fr)}
+  .ma-g{grid-template-columns:repeat(2,1fr)}
+  .lvl-row,.fd-split{grid-template-columns:1fr}
+  .score-row{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column}.hdr .pr{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div style="background:linear-gradient(90deg,#1a1a2e,#16213e);border:1px solid #0f3460;padding:6px 16px;text-align:center;margin-bottom:8px;font-size:10px">
+  <a href="https://www.traderdaddy.pro/register?ref=8DUEMWAJ" target="_blank" style="color:#00f3ff;letter-spacing:.1em;text-transform:uppercase">&#x1F680; Try TraderDaddy Pro &#x2014; AI-Powered Trading Dashboard</a>
+</div>
+
+<div class="nav">
+  <a href="../../index.html">&#x2190; ALPHA://HUD</a>
+  <div class="nav-b"><a href="deep_dive.md" download>&#x2193; MD</a><a href="deep_dive.json">&#x2193; JSON</a></div>
+</div>
+
+<div class="hud hdr">
+  <div>
+    <h1><a href="https://www.tradingview.com/symbols/APP/chart/" target="_blank">APP</a> <span class="amb">DEEP.DIVE</span></h1>
+    <div class="sub">Communication Services &#xB7; Advertising Agencies &#xB7; 2026-05-16</div>
+  </div>
+  <div>
+    <div class="pr">$501.0</div>
+    <div class="ch pos">+3.26%</div>
+  </div>
+</div>
+
+<div class="hud" style="padding:1.5rem 2rem"><div class="ct"><h2>[APP] Deep Dive: The Growth Monster Lurking Beneath the P/E</h2>
+<p><strong>Date:</strong> 2026-05-16</p>
+<p><strong>Price:</strong> ~$501.0 | <strong>Verdict:</strong> Bullish (High Growth, High Volatility)</p>
+
+<p>APP is not just another ad agency; it's a hyper-growth profit machine in the rapidly expanding communication services sector, but the market's initial glance might miss the raw power under the hood. Time to peek behind the curtain.</p>
+
+<h3>The Core Thesis</h3>
+<p>The market often sees APP through the lens of a high trailing P/E of 43.49, which for many traditionalists, screams "overvalued." They see the $501.0 price tag and immediately recoil, fearing a tech bubble rerun. What they're missing, however, is the explosive, almost unheard-of growth and staggering profitability that makes this valuation not just justifiable, but potentially cheap on a forward-looking basis.</p>
+
+<p>The reality is APP is dominating its niche within Advertising Agencies, leveraging cutting-edge strategies in the Communication Services sector. Its 59.0% revenue growth isn't a fluke, it's a testament to a robust business model capturing market share at an aggressive pace. Coupled with an eye-watering 64.3% profit margin, this company isn't just growing top-line; it's converting that growth into substantial bottom-line earnings. The forward P/E of 22.85 tells a completely different story, implying that analysts expect earnings to more than double, radically re-rating the stock's future value.</p>
+
+<h3>📊 The Numbers You Need</h3>
+<p>APP isn't playing small, boasting a <strong>Market Cap of $168.31B</strong>. But it's the operational metrics that truly shine:</p>
+<ul>
+<li><strong>Revenue Growth:</strong> A staggering <strong>59.0%</strong> YoY, indicating rapid market penetration and demand for its services.</li>
+<li><strong>Profit Margin:</strong> An exceptional <strong>64.3%</strong>, showcasing highly efficient operations and strong pricing power.</li>
+<li><strong>P/E (Trailing):</strong> <strong>43.49</strong>, which looks rich on the surface.</li>
+<li><strong>P/E (Forward):</strong> <strong>22.85</strong>, a dramatic reduction that points to massive expected earnings growth in the coming year.</li>
+<li><strong>Beta:</strong> <strong>2.37</strong>, meaning this stock moves more than twice as much as the broader market. Strap in; it's a wild ride.</li>
+</ul>
+
+<h3>🚀 The Bull Case</h3>
+<ol>
+<li><strong>Explosive Growth & Elite Profitability:</strong> A 59.0% revenue growth paired with a 64.3% profit margin is a rare combination of top-line expansion and operational efficiency. This isn't just growth, it's <em>profitable</em> growth, signaling a powerful business model.</li>
+<li><strong>Forward Valuation Re-rating:</strong> The shift from a 43.49 trailing P/E to a 22.85 forward P/E indicates that future earnings are projected to accelerate significantly. This suggests the stock is substantially cheaper on future earnings, making it attractive for growth investors willing to look beyond today's numbers.</li>
+<li><strong>Dominance in Digital Advertising:</strong> As a leader in Advertising Agencies within Communication Services, APP is perfectly positioned to capitalize on the continued shift to digital ad spending, driven by evolving consumer habits and technological advancements. Its ability to maintain high margins suggests a strong competitive moat.</li>
+<li><strong>Bullish Technical Momentum & Analyst Conviction:</strong> The stock is trading in a clear bullish trend with a recent Golden Cross. With a consensus analyst target of <strong>$644.47</strong>, there's a significant 28.6% upside from the current $501.0 price, reflecting strong Wall Street belief in its future prospects.</li>
+</ul>
+
+<h3>⚠️ The Bear Case: Risks</h3>
+<ol>
+<li><strong>Extreme Volatility & Beta:</strong> With a Beta of <strong>2.37</strong>, APP is highly susceptible to broader market downturns. Any significant correction in the overall market could see APP's price drop much harder and faster than its peers. This isn't for the faint of heart.</li>
+<li><strong>Valuation Scrutiny:</strong> Despite the strong growth, a trailing P/E of 43.49 is still lofty, and the "FAIR VALUE" model showing a target of <strong>$455.61</strong> (a -9.1% gap) suggests some traditional valuation metrics see it as overextended. Sustained growth is <em>essential</em> to justify this premium; any deceleration could trigger a swift re-evaluation.</li>
+<li><strong>Competition & Ad Spend Fluctuation:</strong> The advertising industry is fiercely competitive and sensitive to economic cycles. A slowdown in global ad spending or increased competition from new entrants could pressure APP's growth rates and, more importantly, its enviable profit margins.</li>
+</ol>
+
+<h3>📉 The Technicals</h3>
+<p>APP is flashing a <strong>PARTIAL BULLISH</strong> EMA stack, with the 8-EMA ($480.47) above the 21-EMA ($467.7) and 34-EMA ($461.26). The current price of $501.0 is comfortably above all these, indicating short-term strength. The <strong>SMA 50 at $448.06</strong> provides an additional layer of support, and a confirmed <strong>Golden Cross</strong> signals a strong bullish trend.</p>
+
+<p>However, the stock is currently battling <strong>R1 resistance at $498.52</strong>, with the next hurdle being <strong>R2 at $511.87</strong>. While the <strong>RSI(14) at 58.93</strong> is healthy and not overbought, the <strong>ADX at 17.38</strong> indicates that while the trend is bullish, it's not yet exceptionally strong, leaving room for consolidation or minor pullbacks. The <strong>ATR of 29.88</strong> highlights its significant daily movement, and <strong>Rel Vol at 1.14x</strong> shows higher-than-average interest.</p>
+
+<p>Key Pivots:</p>
+<ul>
+<li><strong>Resistance:</strong> R1=$498.52, R2=$511.87</li>
+<li><strong>Pivot Point (PP):</strong> $474.42</li>
+<li><strong>Support:</strong> S1=$461.07, S2=$436.97</li>
+</ul>
+
+<h3>📝 Trading Playbook</h3>
+
+<p><strong>Scenario A — The Breakout (Bullish):</strong></p>
+<p>If APP clears and holds above <strong>R2 ($511.87)</strong> on conviction volume, it signals a strong move higher.</p>
+<ul>
+<li><strong>Entry:</strong> Aggressive entry on a confirmed break above $511.87.</li>
+<li><strong>Target:</strong> Initial target toward the analyst's projection of <strong>$644.47</strong>.</li>
+<li><strong>Stop:</strong> Below $511.87 or the previous day's low, maintaining a tight risk-reward given its volatility.</li>
+</ul>
+
+<p><strong>Scenario B — The Dip Buy (Preferred):</strong></p>
+<p>Given the strong underlying growth and bullish technicals, pullbacks offer prime entry points.</p>
+<ul>
+<li><strong>Entry:</strong> Look for a retest of <strong>PP ($474.42)</strong> or <strong>S1 ($461.07)</strong>, ideally aligning with the 8-EMA ($480.47), 21-EMA ($467.7), or 34-EMA ($461.26). Accumulate on weakness.</li>
+<li><strong>Target:</strong> Initial target to retest the highs and <strong>R2 ($511.87)</strong>, with ultimate upside towards <strong>$644.47</strong>.</li>
+<li><strong>Stop:</strong> A clear break and close below <strong>S2 ($436.97)</strong> would invalidate the short-term bullish thesis.</li>
+</ul>
+
+<p><strong>Scenario C — Trend Failure (Hedge):</strong></p>
+<p>If APP fails to hold crucial support levels, the bullish momentum could unwind quickly.</p>
+<ul>
+<li><strong>Action:</strong> If price breaks decisively below <strong>S2 ($436.97)</strong> and the 50-SMA ($448.06), it suggests a significant trend reversal or deeper correction. Consider hedging or reducing exposure.</li>
+<li><strong>Confirmation:</strong> A drop below the <strong>FAIR VALUE target of $455.61</strong> would add further bearish confirmation.</li>
+</ul>
+
+<h3>🏁 Final Verdict</h3>
+<p>APP is a growth locomotive with phenomenal margins, currently navigating key technical resistance. Expect volatility, but the underlying fundamentals and analyst targets suggest significant upside potential towards <strong>$644.47</strong>.</p>
+
+<p>— Ghost out. 👻</p></div></div>
+
+<!-- GEARBOX -->
+<div class="hud gb">
+  <div class="gb-h">&#x2699; TECHNICAL.GEARBOX <span>// FULL DIAGNOSTICS</span></div>
+  <div class="gb-b">
+
+    <div class="vol-row">
+      <div class="gb-card"><div class="label">Implied Vol</div><div class="val accent">72.8%</div></div>
+      <div class="gb-card"><div class="label">Historic Vol 30D</div><div class="val">65.0%</div></div>
+      <div class="gb-card"><div class="label">IV Rank</div><div class="val neg">7</div></div>
+      <div class="gb-card"><div class="label">IV Percentile</div><div class="val">0%</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Trend // Bullish Market</div>
+      <div class="trend-g">
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Short-Term</div><div style="font-size:8px;color:#444">EMA 8/21</div></div>
+        <div><div class="trend-a pos">&#x2191;</div><div class="trend-l">Mid-Term</div><div style="font-size:8px;color:#444">EMA 21/SMA 50</div></div>
+        <div><div class="trend-a dim">&#x2013;</div><div class="trend-l">Long-Term</div><div style="font-size:8px;color:#444">SMA 50/200</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center;margin-top:8px">
+        EMA Stack: <span class="pos">PARTIAL BULLISH</span> &#xB7;
+        TradingView: <span class="accent">N/A</span> &#xB7; Golden Cross
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Moving Averages</div>
+      <div class="ma-g">
+        <div class="ma-i"><div class="ma-p">SMA 20</div><div class="ma-v">$470.38</div><div class="ma-d pos">+6.5%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 50</div><div class="ma-v">$448.06</div><div class="ma-d pos">+11.8%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 100</div><div class="ma-v">$488.79</div><div class="ma-d pos">+2.5%</div></div>
+        <div class="ma-i"><div class="ma-p">SMA 200</div><div class="ma-v">N/A</div><div class="ma-d dim">+0.0%</div></div>
+      </div>
+      <div class="gb-sub" style="margin-top:8px;text-align:center">EMA Stack: <span class="pos">PARTIAL BULLISH</span></div>
+      <div class="ma-g" style="margin-top:6px">
+        <div class="ma-i"><div class="ma-p">EMA 8</div><div class="ma-v">$480.47</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 21</div><div class="ma-v">$467.70</div></div>
+        <div class="ma-i"><div class="ma-p">EMA 34</div><div class="ma-v">$461.26</div></div>
+        <div class="ma-i"><div class="ma-p" style="font-size:7px">EMA 55/89</div><div class="ma-v" style="font-size:.7rem">N/A/N/A</div></div>
+      </div>
+    </div>
+
+    <div class="osc-row">
+      <div class="gb-card"><div class="label">RSI (14)</div><div class="val neutral">59</div></div>
+      <div class="gb-card"><div class="label">Stoch %K/%D</div><div class="val sm">86/60</div></div>
+      <div class="gb-card"><div class="label">MACD Hist</div><div class="val sm pos">+1.59</div></div>
+      <div class="gb-card"><div class="label">ADX (14)</div><div class="val sm">17.4</div></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">52-Week Range</div>
+      <div class="rng-lbl"><span>$359.0</span><span>$501.0 (38%)</span><span>$738.01</span></div>
+      <div class="rng-bar"><div class="rng-fill" style="width:38%"></div><div class="rng-dot" style="left:38%"></div></div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="gb-panel">
+        <div class="gb-title">Fibonacci Levels</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">0.236</div><div class="lvl-v">$648.56</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.382</div><div class="lvl-v">$593.23</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.500</div><div class="lvl-v">$548.50</div></div>
+          <div class="lvl-m"><div class="lvl-k">0.618</div><div class="lvl-v">$503.78</div></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Keltner / Pivots</div>
+        <div class="lvl-g">
+          <div class="lvl-m"><div class="lvl-k">Kelt Upper</div><div class="lvl-v">$527.24</div></div>
+          <div class="lvl-m"><div class="lvl-k">Kelt Lower</div><div class="lvl-v">$413.52</div></div>
+          <div class="lvl-m"><div class="lvl-k">ATR (14)</div><div class="lvl-v">$29.88</div></div>
+          <div class="lvl-m"><div class="lvl-k">Rel Vol</div><div class="lvl-v">1.14x</div></div>
+        </div>
+        <div class="gb-sub" style="margin-top:6px;text-align:center">
+          R2=$511.87 &#xB7; R1=$498.52 &#xB7; PP=$474.42 &#xB7; S1=$461.07 &#xB7; S2=$436.97
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+
+<!-- FUNDAMENTAL DASHBOARD -->
+<div class="hud gb" style="border-left-color:#ffb000">
+  <div class="gb-h">&#x1F4CA; FUNDAMENTAL.DASHBOARD <span>// FULL PICTURE</span></div>
+  <div class="gb-b">
+
+    <div class="gb-panel">
+      <div class="gb-title">Profile</div>
+      <div class="osc-row">
+        <div class="gb-card"><div class="label">Company</div><div class="val sm" style="color:#fff;font-size:.75rem">AppLovin Corporation</div></div>
+        <div class="gb-card"><div class="label">Market Cap</div><div class="val sm accent">$168.31B</div></div>
+        <div class="gb-card"><div class="label">Employees</div><div class="val sm">876</div></div>
+        <div class="gb-card"><div class="label">Exchange</div><div class="val sm">NMS</div></div>
+      </div>
+      <div class="fd-desc">AppLovin Corporation provides end-to-end artificial intelligence-powered advertising solutions for businesses in the United States and internationally. It operates through two segments, Advertising and Apps. The company offers Axon Ads Manager, a suite of marketing solutions that enables developers to automate, optimize, and manage marketing efforts; MAX, an in-app bidding technology that optimizes the value of a publisher's advertising inventory by running a real-time competitive auction; Adjust, a measurement and analytics marketing platform; and Wurl, a connected TV platform, which distributes streaming video for content companies, provides advertising and publishing solutions.</div>
+      <div class="gb-sub" style="margin-top:4px"><a href="https://www.applovin.com" target="_blank" style="color:#00f3ff">https://www.applovin.com</a></div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Scores Overview</div>
+      <div class="score-row">
+        <div class="score-card"><div class="score-num score-mid">43</div><div class="score-lbl">Value</div></div>
+        <div class="score-card"><div class="score-num score-hi">100</div><div class="score-lbl">Growth</div></div>
+        <div class="score-card"><div class="score-num score-hi">100</div><div class="score-lbl">Quality</div></div>
+        <div class="score-card"><div class="score-num score-hi">90</div><div class="score-lbl">Sentiment</div></div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Valuation</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">P/E (TTM)</div><div class="val sm">43.49</div></div>
+        <div class="gb-card"><div class="label">Forward P/E</div><div class="val sm">22.85</div></div>
+        <div class="gb-card"><div class="label">P/S</div><div class="val sm">27.30</div></div>
+        <div class="gb-card"><div class="label">P/B</div><div class="val sm">71.29</div></div>
+        <div class="gb-card"><div class="label">EV/EBITDA</div><div class="val sm">34.77</div></div>
+        <div class="gb-card"><div class="label">PEG</div><div class="val sm">1.34</div></div>
+      </div>
+      <div class="gb-sub" style="text-align:center">EV/Revenue: 27.48 &middot; P/FCF: 52.9</div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Growth</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Revenue Growth</span><span class="prof-v pos">+59.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Earnings Growth</span><span class="prof-v pos">+113.1%</span></div>
+          <div class="prof-item"><span class="prof-k">Quarterly EPS</span><span class="prof-v pos">+109.2%</span></div>
+          <div class="prof-item"><span class="prof-k">Rev/Share</span><span class="prof-v">$18.23</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Profitability</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Gross Margin</span><span class="prof-v pos">88.4%</span></div>
+          <div class="prof-item"><span class="prof-k">Operating Margin</span><span class="prof-v pos">78.2%</span></div>
+          <div class="prof-item"><span class="prof-k">Net Margin</span><span class="prof-v pos">64.3%</span></div>
+          <div class="prof-item"><span class="prof-k">ROE</span><span class="prof-v pos">266.4%</span></div>
+          <div class="prof-item"><span class="prof-k">ROA</span><span class="prof-v pos">44.2%</span></div>
+          <div class="prof-item"><span class="prof-k">Beta</span><span class="prof-v">2.37</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gb-panel">
+      <div class="gb-title">Financial Health</div>
+      <div class="fd-grid">
+        <div class="gb-card"><div class="label">Current Ratio</div><div class="val sm pos">3.24</div></div>
+        <div class="gb-card"><div class="label">Debt/Equity</div><div class="val sm">162.9</div></div>
+        <div class="gb-card"><div class="label">Total Debt</div><div class="val sm neg">$3.85B</div></div>
+        <div class="gb-card"><div class="label">Total Cash</div><div class="val sm pos">$2.76B</div></div>
+        <div class="gb-card"><div class="label">Free Cash Flow</div><div class="val sm pos">$3.18B</div></div>
+        <div class="gb-card"><div class="label">Operating CF</div><div class="val sm">$4.44B</div></div>
+      </div>
+    </div>
+
+    <div class="fd-split">
+      <div class="gb-panel">
+        <div class="gb-title">Dividends</div>
+        <div class="prof-row">
+          <div class="prof-item"><span class="prof-k">Yield</span><span class="prof-v pos">0.00%</span></div>
+          <div class="prof-item"><span class="prof-k">Annual Rate</span><span class="prof-v">N/A</span></div>
+          <div class="prof-item"><span class="prof-k">Payout Ratio</span><span class="prof-v">0.0%</span></div>
+          <div class="prof-item"><span class="prof-k">Ex-Div Date</span><span class="prof-v dim">N/A</span></div>
+        </div>
+      </div>
+      <div class="gb-panel">
+        <div class="gb-title">Analyst Estimates (30 analysts)</div>
+        <div class="osc-row" style="grid-template-columns:repeat(3,1fr)">
+          <div class="gb-card"><div class="label">Low</div><div class="val sm neg">$340.00</div></div>
+          <div class="gb-card"><div class="label">Median</div><div class="val sm accent">$660.00</div></div>
+          <div class="gb-card"><div class="label">High</div><div class="val sm pos">$860.00</div></div>
+        </div>
+        <div class="est-labels"><span>$340</span><span>Current $501</span><span>$860</span></div>
+        <div class="est-bar"><div class="est-fill" style="width:100%"></div><div class="est-dot" style="left:31%"></div></div>
+        <div class="gb-sub" style="text-align:center">Recommendation: <span class="pos">STRONG_BUY</span> &middot; Mean Target: $644.47</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="ft">Ghost Alpha Dossier // Watchlist Deep Dive // 2026-05-16 07:57 PM CST</div>
+</div>
+</body>
+</html>
