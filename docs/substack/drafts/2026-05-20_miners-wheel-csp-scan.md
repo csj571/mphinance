@@ -2,7 +2,7 @@
 
 *by Michael Hanko, Managing Partner, The Phund*
 
-![Gold mine meets options chain](../../articles/miners-csp-scan/miners_hero.png)
+![Gold mine meets options chain](../../../articles/miners-csp-scan/miners_hero.png)
 
 Last week I showed you the BTG wheel. $591 in premium. 36 contracts. A nicotine habit fully funded by a $5 gold miner.
 
@@ -32,7 +32,7 @@ No, you will not make 147% over a full year doing this. That's not how annualiza
 
 If you're new here, this is the strategy in one image:
 
-![The Wheel Strategy](../../articles/miners-csp-scan/miners_wheel_diagram.png)
+![The Wheel Strategy](../../../articles/miners-csp-scan/miners_wheel_diagram.png)
 
 Sell a put. Collect premium. If the stock stays above your strike, you keep the cash and do it again. If it drops below, you get assigned 100 shares at a price you were willing to pay. Then you sell covered calls on those shares. Collect more premium. If the stock gets called away, you pocket the gain and go back to selling puts.
 
@@ -42,13 +42,13 @@ The wheel turns. Premium income lowers your cost basis every cycle. That's liter
 
 Out of 41 miners, only 9 had weekly options expiring May 29. The other 32 only offer monthly options (next one is June 18). If you want to wheel weekly, your universe is smaller than you think.
 
-![Miners Wheel CSP Scan Results](../../articles/miners-csp-scan/miners_csp_scan_table.png)
+![Miners Wheel CSP Scan Results](../../../articles/miners-csp-scan/miners_csp_scan_table.png)
 
 Let me break down what you're looking at.
 
 ## The Top 3: Silver Miners Go Hard
 
-![Top 3 Silver Miners by Premium](../../articles/miners-csp-scan/miners_silver_podium.png)
+![Top 3 Silver Miners by Premium](../../../articles/miners-csp-scan/miners_silver_podium.png)
 
 **#1 AG (First Majestic Silver) - 2.86% weekly, 149% annualized**
 
@@ -94,7 +94,7 @@ My baby. The stock I've been wheeling since February. At $4.62 with the $4.50 pu
 
 This is where it gets real.
 
-![Cash Required Per Contract](../../articles/miners-csp-scan/miners_csp_capital.png)
+![Cash Required Per Contract](../../../articles/miners-csp-scan/miners_csp_capital.png)
 
 If you have a $5,000 account and you want to wheel miners, your realistic options are BTG ($450), HL ($1,600), CDE ($1,650), AG ($1,850), and KGC ($2,700). That's it. The bigger names (NEM, WPM, AEM) need five figures per contract.
 
@@ -106,7 +106,7 @@ If BTG gets assigned, welcome to the club. I have 721 shares and counting. Start
 
 ## Why Only 9?
 
-![Weekly vs Monthly Options Universe](../../articles/miners-csp-scan/miners_weekly_vs_monthly.png)
+![Weekly vs Monthly Options Universe](../../../articles/miners-csp-scan/miners_weekly_vs_monthly.png)
 
 32 of these miners only have monthly options. No weeklies. That doesn't make them bad wheel candidates, it just means you're locking up capital for 30 days instead of 9. The monthly June 18 expirations on stocks like GOLD (Barrick), GFI (Gold Fields), EGO (Eldorado), and IAG (IAMGOLD) are worth scanning too if you don't mind the longer duration.
 
