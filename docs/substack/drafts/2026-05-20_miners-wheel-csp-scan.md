@@ -2,6 +2,8 @@
 
 *by Michael Hanko, Managing Partner, The Phund*
 
+![Gold mine meets options chain](../../articles/miners-csp-scan/miners_hero.png)
+
 Last week I showed you the BTG wheel. $591 in premium. 36 contracts. A nicotine habit fully funded by a $5 gold miner.
 
 A few of you asked: "What else can I wheel?"
@@ -26,6 +28,16 @@ If you sell a $16.50 put on CDE for $0.60 with 9 days to expiration, you're putt
 
 No, you will not make 147% over a full year doing this. That's not how annualization works in practice. But it gives you a normalized way to compare which miners are paying the fattest premium relative to risk right now.
 
+## How the Wheel Works
+
+If you're new here, this is the strategy in one image:
+
+![The Wheel Strategy](../../articles/miners-csp-scan/miners_wheel_diagram.png)
+
+Sell a put. Collect premium. If the stock stays above your strike, you keep the cash and do it again. If it drops below, you get assigned 100 shares at a price you were willing to pay. Then you sell covered calls on those shares. Collect more premium. If the stock gets called away, you pocket the gain and go back to selling puts.
+
+The wheel turns. Premium income lowers your cost basis every cycle. That's literally all there is to it.
+
 ## The Results
 
 Out of 41 miners, only 9 had weekly options expiring May 29. The other 32 only offer monthly options (next one is June 18). If you want to wheel weekly, your universe is smaller than you think.
@@ -35,6 +47,8 @@ Out of 41 miners, only 9 had weekly options expiring May 29. The other 32 only o
 Let me break down what you're looking at.
 
 ## The Top 3: Silver Miners Go Hard
+
+![Top 3 Silver Miners by Premium](../../articles/miners-csp-scan/miners_silver_podium.png)
 
 **#1 AG (First Majestic Silver) - 2.86% weekly, 149% annualized**
 
@@ -91,6 +105,8 @@ If CDE gets assigned, you own 100 shares of a gold and silver miner held by 5 ma
 If BTG gets assigned, welcome to the club. I have 721 shares and counting. Start selling $5.00 calls. That's my Zyn money right there.
 
 ## Why Only 9?
+
+![Weekly vs Monthly Options Universe](../../articles/miners-csp-scan/miners_weekly_vs_monthly.png)
 
 32 of these miners only have monthly options. No weeklies. That doesn't make them bad wheel candidates, it just means you're locking up capital for 30 days instead of 9. The monthly June 18 expirations on stocks like GOLD (Barrick), GFI (Gold Fields), EGO (Eldorado), and IAG (IAMGOLD) are worth scanning too if you don't mind the longer duration.
 
