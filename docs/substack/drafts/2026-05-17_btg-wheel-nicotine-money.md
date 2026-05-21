@@ -1,219 +1,163 @@
-# I've Made $591 Wheeling a $5 Stock. And It's Not Done Yet.
+# Retail Buys Shares. Institutions Build Positions.
 
-*by Michael Hanko, Managing Partner, The Phund*
+*by Michael Hanko, Momentum Phinance*
 
-Last month I showed you every transaction from my DDD wheel. 113 days, $140.93 in profit, 32% return on a $2 stock. Clean entry, clean exit, zero drama.
+![The Four-Layer Position](institutional_hero.png)
 
-A few of you asked: "Cool, but does this work with real money?"
+Most people don't own a position. They own a bet.
 
-Fair question. DDD was in the Momentum Phund. Subscriber capital. $470 deployed. The whole thing ran through one brokerage on one position and I was basically selling $5 covered calls every two weeks like a kid with a lemonade stand.
+They liked a stock, bought 100 shares in one click, and called it a day. One price, one date, one direction. If it goes up they feel like a genius. If it goes down they're a bag holder posting cope on Reddit. That is not a position. That is a coin flip with a brokerage statement attached.
 
-BTG is my personal money. Same strategy. Different scale. 36 option contracts across two brokerages. 721 shares still held. And one of those accounts pays for my nicotine every week, so don't tell me the wheel doesn't work.
+Institutions never do that. When a real fund "owns" a stock, they own a *structure*. A core. An income layer. A plan to accumulate more. A sleeve of leverage for the upside. Four jobs, four time horizons, one ticker. It looks complicated from the outside. It is actually simpler, because every piece has a job, and none of them need you to be right about next week.
 
-## BTG: Why a Gold Miner?
+Here is how to build one. You do not need a Bloomberg terminal or a nine-figure book. You need one liquid stock with a real options chain and the discipline to stop treating your account like a scratch ticket.
 
-B2Gold (BTG) is a Canadian gold miner trading in the $4 to $5.50 range. It pays a dividend. It has $2 billion in annual revenue. And the $5.00 strike options sell for $0.05 to $0.45 depending on the week.
+## The Tourist Position
 
-Gold has been ripping. Central banks are buying at record pace. Tariff chaos is pushing safe-haven flows. The dollar looks shaky. But I did not buy BTG because I think gold is going to $5,000. I bought BTG because it is the perfect wheel stock: liquid enough to have weekly options, volatile enough to produce premium, and cheap enough that I can accumulate hundreds of shares without needing a six-figure account.
+Let's be honest about what most retail actually does.
 
-I have been wheeling BTG across two brokerages since February 19, 2026. Fidelity Rollover IRA is the main operation. TastyTrade ran a smaller satellite wheel. Same stock, same strikes, same grind.
+You find a stock. You read a thesis, maybe your own, maybe some guy on YouTube's. You buy as many shares as your cash allows, all at once, at whatever the price happens to be that morning. Then you wait.
 
-Here's every dollar.
+That is the whole strategy. Buy, wait, hope.
 
-## The TastyTrade Wheel (CLOSED)
+The problem is not the stock. The problem is the *shape*. A single block of shares bought at a single price has exactly one source of return: the price going up. No income while you hold. No mechanism to lower your cost. No extra juice if you are right. No plan at all if you are wrong. You handed your entire outcome to a number you do not control.
 
-This was the baby version. I started buying BTG shares in early March and built a 113-share position at an average cost of $4.72.
+Institutions get paid four different ways on the same ticker. The tourist gets paid one. That gap has almost nothing to do with stock picking. It is position construction, and position construction is a skill you can copy for free.
 
-Sold 2 covered calls at the $5.00 strike. Collected $32.73 in net premium. Picked up $0.10 in dividends on the March ex-date. Pretty boring.
+## The Four-Layer Position
 
-Then BTG popped above $5 in early May. Sold 13 shares on the open market at $5.18 for $67.32. The remaining 100 shares got called away at $5.00 on the May 8 assignment for $494.96.
+A real institutional-style position has four layers. Each one does a job the others cannot.
 
-**TastyTrade BTG wheel: CLOSED. Net P/L: +$62.06.**
+![The Four-Layer Architecture](institutional_layers.png)
 
-Not a headline-grabber. But that's $62 on a $533 position in about 9 weeks. 11.6% return. Annualized, that's roughly 67%. On a gold miner. With zero leverage. Moving on.
+Think of it like a building. The core is the foundation. The income overlay is the floor you rent out. The accumulation leg is a cheap option to add more floors later. The leverage sleeve is the penthouse view you got for a fraction of the price. Build it from the ground up.
 
-## The Fidelity Rollover IRA (THE MAIN EVENT)
+### Layer 1: The Core
 
-This is where it gets interesting.
+The core is real stock. Actual shares, in size, in a name you would be genuinely fine holding for years.
 
-I started on February 19 with two moves: sold a covered call at the $5.50 strike for $9.48 and a cash-secured put at the $5.00 strike for $9.48. Two contracts, same day, $18.96 in premium before my first share assignment even hit.
+Two rules for the core.
 
-Then I started buying. Aggressively.
+**Build it in tranches, not in one click.** Institutions do not buy 800 shares at 10:31 on a Tuesday. They scale in. Some now, some on a dip, some on confirmation. You will never nail the exact bottom. Scaling in means you never have to.
 
-## Phase 1: Building the Position (Feb 19 to Mar 20)
+**Pick something that pays you to wait.** The core should ideally throw off a dividend. While the other three layers do their work, the core quietly collects rent. A boring dividend payer beats an exciting story stock for this slot every single time.
 
-![Phase 1: The Accumulation](../../articles/btg-wheel-nicotine/btg_phase1_accumulation.png)
+The core is not where you get rich. The core is the thing the other three layers are bolted onto. Boring is the entire point.
 
-The first month was pure accumulation. BTG was trading between $5.50 and $4.00, and every time it dipped I bought more shares. I was not trying to time the bottom. I was averaging into a position I planned to wheel for months.
+### Layer 2: The Income Overlay
 
-The share buying was relentless. 5 shares here, 34 shares there, 45 shares on a big dip day. By March 20, I had bought over 500 shares across dozens of transactions.
+Once you own shares, you can rent them out. You sell covered calls against the core and pocket the premium. That is the income overlay.
 
-Meanwhile, I was selling premium the whole time.
+Here is where retail butchers it. They sell one call, against all their shares, on one expiration date. That is not an overlay. That is a single bet that the stock holds still.
 
-**Feb 19:** Sold 1 Call $5.50 for $9.48. Sold 1 Put $5.00 for $9.48.
+Do it the institutional way instead. **Ladder it.**
 
-**Feb 20:** Sold 1 Call $5.50 for $9.48.
+Sell calls across multiple expiration dates. One contract expiring next week. A couple the week after. One a month out. Now you are harvesting premium continuously, you are never fully exposed to a single date, and every week something expires and gets rewritten at fresh prices. That staggered term structure turns covered calls from a gamble into a paycheck.
 
-**Feb 25:** Sold 1 Put $5.50 for $14.33.
+And **do not cover everything.** If you own 800 shares, sell calls against maybe half of them. The uncapped half stays free to run if the stock rips. Full coverage sells off all your upside for a few bucks of premium. Partial coverage keeps the dream alive while still cashing checks every week.
 
-**Mar 10:** Sold 1 Call $5.50 for $19.33.
+The income overlay has one job: grind your cost basis down, week after week, whether the stock goes up, down, or nowhere at all.
 
-**Mar 13:** Sold 1 Put $5.00 for $19.33.
+### Layer 3: The Accumulation Leg
 
-**Mar 20:** Sold 1 Put $4.50 for $44.33. This was the fattest put premium of the whole run. BTG was pulling back hard and the volatility was paying me.
+Layer three is how institutions get paid to buy the dip before the dip even shows up.
 
-In March, two of my puts got assigned on the same day. 100 shares at $5.00 and 100 shares at $5.50. One week later, another 100 shares got assigned at $4.50.
+You sell a cash-secured put at a strike below the current price. Someone pays you premium for the right to sell you shares down there. Two outcomes, both of them fine.
 
-I did not panic. I wanted those shares. That is the whole point.
+The stock stays up: the put expires worthless, you keep the premium, that is free money for agreeing to a price you liked anyway.
 
-**Running premium total through March: $149.90 on 10 contracts.**
+The stock falls to your strike: you buy shares at a level you already decided was a good entry, and the premium you collected makes your real cost even lower.
 
-## Phase 2: The Grind (Mar 31 to Apr 27)
+That is the accumulation leg. It is a standing order to add to your core at a discount, except the market pays you to place the order. The tourist either panic-buys dips with no plan or freezes. The institution pre-decided the add price and got compensated for the patience.
 
-![Phase 2: The Grind](../../articles/btg-wheel-nicotine/btg_phase2_grind.png)
+### Layer 4: The Leverage Sleeve
 
-Now I had over 700 shares and a wall of covered calls to sell.
+The last layer is upside leverage, and you build it with LEAPS: long-dated call options, a year or more until expiration.
 
-The pattern became mechanical. Sell calls at the $5.00 strike every week or two. Collect $4.73 to $24.33 per contract. If a call expires worthless, sell another one. If a call gets tested, buy it back cheap and resell at a later date.
+A LEAPS call hands you stock-like upside for a fraction of the capital. Because expiration is so far out, the daily time decay is slow, so you are not bleeding premium the way a weekly option bleeds. It is the closest thing to leverage that will not detonate over one bad week.
 
-**Mar 31:** Sold 3 Calls at $5.00. Three separate contracts: $4.73, $9.48, and $9.48. Total: $23.69 in one day.
+Build the sleeve in two pieces.
 
-**Apr 6-8:** Sold 2 more Calls at $5.00. Another $16.11.
+**A near-the-money LEAPS for conviction.** Strike close to the current price, dated 12 to 24 months out. This is your "if the thesis is right, I want more exposure than my cash alone could buy" position.
 
-**Apr 9-10:** Sold 1 Call at $5.50 and 1 at $5.00. Another $33.66.
+**An out-of-the-money LEAPS for convexity.** A cheap, higher-strike, far-dated call. It costs almost nothing and does almost nothing, right up until the stock has a monster move, and then it does everything. A lottery ticket, except this one has a real thesis stapled to it.
 
-**Apr 14-17:** Sold 2 more Calls at $5.00. Another $22.76.
+Keep the sleeve small. It should be. It is the spice, not the meal.
 
-**Apr 20:** Big day. Sold 3 Calls at the $5.00 strike across the same expiration. $24.33, $24.33, and $17.33. That's $65.99 in premium on a single day. The stock was bouncing around $4.80 and I was getting paid to wait.
+## Here's the Truth
 
-**Apr 21:** Sold 1 Call at $5.00 ($14.33) and 1 Put at $5.00 ($23.33). Running both sides of the wheel simultaneously.
+Stack the four layers together and look at what you actually built.
 
-**Apr 27:** Sold 1 Call at $5.00 ($9.48) and 1 Put at $4.50 ($24.33). Another $33.81 in a day.
+A core that pays a dividend. An income overlay that prints premium every week and chips away at your basis. An accumulation leg that gets paid to buy your dips. A leverage sleeve that turns a big move into a life-changing one. Four income streams. Four time horizons. One ticker.
 
-**Running premium total through April: $471.44 on 28 contracts.**
+Here is the part nobody tells you. **You stopped needing to be right about next week.**
 
-During this stretch I also sold 100 shares at $4.85 on April 13 for $485.02. Trimming the position when I had too much exposure, then reloading on dips. Active management, not passive holding.
+The tourist with 100 shares needs the price to go up, and soon, or the position does nothing at all. The four-layer position makes money in almost every scenario. Stock goes nowhere? The overlay and the put still pay you. Stock dips a little? Your basis keeps dropping and the accumulation leg fills at a discount. Stock rips? The uncapped core and the LEAPS go to work. The only scenario that genuinely hurts is a violent, permanent collapse, and you manage that one with position size, not cleverness.
 
-## Phase 3: The Harvest (May 2026)
+That is what "institutional" actually means. Not fancier. Not faster. Not some secret data feed. Just a position shaped so that time, volatility, and patience are all working for you instead of against you.
 
-![Phase 3: The Harvest](../../articles/btg-wheel-nicotine/btg_phase3_harvest.png)
-
-BTG started running. Gold was moving. And my covered calls started getting tested.
-
-**May 4:** Sold 1 Call at $5.00 for $4.73.
-
-**May 6:** Sold 1 Call at $5.00 for $10.43. Same day, bought 104 more shares on a dip at $4.45 average. Reloading for the next wave.
-
-**May 7:** Monster day. Sold 4 contracts in a single session: two at the $5.00 strike ($31.33 and $33.33), one at $5.50 ($9.48), and one more at $5.00 ($29.33). That's $103.47 in premium on one day.
-
-**May 11:** BTG was above $5. Two of my calls got assigned. 200 shares called away at $5.00. Proceeds: $999.97. The wheel doing exactly what it is supposed to do. I let them go, no FOMO.
-
-Same day I sold 1 more Call at $5.50 for $16.33.
-
-**May 12:** Sold 1 Call at $5.00 for $44.33. This was the single largest premium of the entire Fidelity wheel.
-
-**May 15:** Bought 19 more shares at $4.92 average. Reloading after the assignment.
-
-**May 18:** Three more calls and a put expired worthless across Fidelity accounts. Premium retained.
-
-Also on May 18: 100 shares got called away in the Wheely Roth at $4.50. Different account, same stock, same strategy.
-
-**Final premium total: $581.87 on 34 contracts sold.**
+I run exactly this structure on a single $5 gold miner in my own account right now. Core shares. A ladder of short calls stacked across three expirations. A cash-secured put sitting underneath. Three LEAPS stretching all the way out to 2028. One ticker, four layers. It is the calmest position I own and the one that pays me the most reliably. That is not a coincidence.
 
 <!--paywall-->
 
-## The Receipts
+## Building It Yourself: The Order of Operations
 
-![The Scorecard](../../articles/btg-wheel-nicotine/btg_final_scorecard.png)
+Free readers got the architecture. Paid readers get the build order, the sizing rules, and the mistakes that quietly wreck this thing.
 
-I am not going to sugarcoat this. I also bought some options. Four short-term calls and a put for $27.58 total, mostly closing positions that were about to go in-the-money to avoid unwanted assignments on specific lots. Think of it as maintenance. Cost of doing business.
+![The Position Blueprint](institutional_blueprint.png)
 
-**Net wheel premium (sold minus bought, excluding long-term positions): $554.29**
+**Step 1: Size the whole position first. Everything else is a percentage of that number.**
 
-Here are the combined numbers across every account that ran the BTG wheel.
+Decide the full dollar amount you are willing to commit to this ticker. That number is your ceiling, and you do not exceed it. The core shares get roughly 60 to 70 percent. The accumulation leg needs its cash set aside, because a cash-secured put is only honest if the cash is actually there, so reserve about 20 percent for that. The leverage sleeve gets the leftovers, and it should never run past 10 to 15 percent. If every LEAPS in the sleeve went to zero tomorrow, it should annoy you, not hurt you.
 
-**Share Activity (All Accounts Combined)**
+**Step 2: Build the core in three tranches.**
 
-Total shares bought: 1,352
+Split your core budget into thirds. Buy the first third now, so you have skin in the game. Buy the second third on a real pullback. Buy the last third on either a deeper flush or a confirmed move back up. You are not timing the bottom. You are refusing to bet everything on one print.
 
-Total shares sold: 631
+**Step 3: Start the income overlay only after the core exists.**
 
-Net shares still held: 721
+You cannot sell a covered call without shares to cover it. Once the core is on, sell your first calls against no more than half the share count, and stagger the expirations. A common ladder: one contract about a week out, one or two about two weeks out, one about a month out. As each expires, rewrite it further out at a fresh strike. The ladder should always have rungs.
 
-Total capital deployed: $6,589.93
+![Ladder the Expirations](institutional_ladder.png)
 
-Total proceeds from sales: $3,081.95
+**Step 4: Drop the accumulation put underneath.**
 
-**Options Activity**
+Sell one cash-secured put at a strike that is a genuine "yes, I will happily own more here" price, usually a notch below the current price, dated a few weeks to a month out. The cash for assignment is the 20 percent you already reserved. If you get assigned, congratulations, that is the plan working. Those new shares become core, and you start selling calls against them too.
 
-Contracts sold: 36 (34 Fidelity + 2 TastyTrade)
+**Step 5: Add the leverage sleeve last, and add it slow.**
 
-Gross premium received: $614.60
+Buy the near-the-money LEAPS first. Only add the out-of-the-money convexity LEAPS when the sleeve budget allows it. Never finance the sleeve by shrinking the core. The order matters: foundation first, penthouse last.
 
-Short-term options bought back: $27.58
+## The Worked Example
 
-Net wheel premium: $587.02
+Here is the structure on the gold miner I mentioned, so you can see it in the wild instead of in theory.
 
-**Dividends**
+The core is 800 shares. The income overlay is four short calls laddered across three separate expirations, struck at and just above the share price, covering only 400 of the 800 shares, so half the core stays uncapped. The accumulation leg is one cash-secured put sitting a notch below the current price about a month out. The leverage sleeve is three LEAPS: two near-the-money calls dated into 2027 and 2028 for conviction, and one cheaper, higher-strike 2028 call for convexity.
 
-$4.20 (collected on March 19 ex-date across accounts)
+That is it. Eight line items on one ticker, and every single one of them has a defined job. Nothing in that position is a hope. Nothing is a coin flip. The shares pay a dividend, the calls pay premium, the put pays me to wait for a dip, and the LEAPS are coiled for the move I actually believe is coming. Whatever the stock does next week, the position has an answer.
 
-**Total Realized Wheel Income: $591.22**
+## What to Do Monday
 
-## The True Basis Math
+Pick one liquid stock you would be comfortable owning for years. Not your most exciting idea. Your most boring, durable one. The kind of name you would not panic-sell at 9:35 on a red morning.
 
-This is the part that matters. This is why the wheel works.
+Size the full position. Carve it into the layers. Buy your first core tranche. That is the whole assignment for week one. The overlay, the put, and the sleeve come after the core exists, not before.
 
-I bought 1,352 shares of BTG at an average price of $4.87. If I just held those shares and did nothing, my break-even would be $4.87 and I would be hoping gold goes up.
+You are not trying to get rich by Friday. You are building something that pays you in four directions while you sleep. That takes a few weeks to assemble and then it runs more or less on its own.
 
-But I did not just hold. I sold 36 option contracts. I collected $591.22 in premium and dividends. I sold 631 shares for $3,081.95 along the way.
+## The Closer
 
-My True Basis on the remaining 721 shares is **$4.05 per share**.
+I built my life the same way I now build a position. In layers, in order, foundation first.
 
-That is $0.82 below my average purchase price. The wheel ground my cost down by 17% in 89 days.
+In active addiction I wanted the penthouse with no building under it. The result, the feeling, the win, all of it right now, with nothing poured underneath to hold the weight. It does not work in recovery and it does not work in a brokerage account. You pour the foundation. You let it cure. Then, and only then, you build the floors that pay you, and last of all you allow yourself the view.
 
-At BTG's current price of roughly $4.90, my 721 shares are sitting on approximately $616 in unrealized profit. Not because the stock went up dramatically. Because my cost went down dramatically.
+A position, like a sober life, is not a single dramatic bet. It is four boring layers, stacked in the right order, doing their quiet jobs while you stay out of your own way.
 
-BTG could drop to $4.05 and I would still break even. That is 17% below where I started buying. That is the margin of safety the wheel creates.
+Build the foundation. The penthouse comes last. It always comes last.
 
-## The Nicotine Math
-
-Here is the part I actually care about.
-
-One of my accounts generates roughly $30 a week in covered call premium on BTG. That is with about 300 shares and a $5.00 strike call rolling every 7 to 10 days.
-
-$30 a week. That is my nicotine budget. Zyn pouches, to be specific. A gold miner in my IRA is funding a mild vice that I picked up in recovery because it was better than the alternative.
-
-You know what is wild about that? I am not selling shares. I am not touching the position. I am not reducing my gold exposure. I am just renting out the upside for a week at a time and using the income to buy nicotine pouches.
-
-Is it glamorous? No. Does it work? Every single week.
-
-## DDD vs. BTG: The Scale-Up
-
-DDD was the proof of concept. 12 contracts, $140.93, done.
-
-BTG is the production version. 36 contracts, $591.22 and counting. Still running.
-
-DDD was subscriber money in a baby account. BTG is my Rollover IRA. My actual retirement savings being put to work with the same mechanical system.
-
-DDD ran for 113 days and closed. BTG has been running for 89 days and I have 721 shares left to wheel. I am not closing this one. I am going to keep grinding $30 a week until gold either moons or I get bored. Neither seems likely.
-
-The point is this: the strategy does not change when you add a zero. Sell premium. Collect income. Lower your basis. Let the wheel turn. The only thing that changes is how many Zyns it buys you.
-
-## What's Next
-
-The DDD capital ($495) got redeployed. The BTG wheel keeps turning. I have open calls at the $5.00, $5.50, and $5.00 strikes expiring over the next two weeks. If they expire worthless, that is another $30 to $50 in premium. If they get assigned, I pocket the gain and sell puts to reload.
-
-I also have 721 shares that pay a dividend every quarter. So while I am waiting for call premiums, BTG is also just paying me to hold it. A gold miner backed by reserves, producing cash flow, in a macro environment that favors precious metals. And I am wheeling it.
-
-This is not exciting. It is not going to make the front page of Reddit. But it is paying for my nicotine every week and lowering my cost basis every month. And honestly? That is all I need it to do.
-
-Drink water. Sell premium. Call your sponsor. Buy Zyns.
-
-*Not financial advice. I am a felon with a brokerage account, a gold miner, and a nicotine habit. But the math is real and every number in this article came directly from Fidelity and TastyTrade account history exports. Fork the code on GitHub if you don't believe me.*
+*Not financial advice. I am a felon with a brokerage account and a strong opinion about position construction. Build your own, size it so a total loss only annoys you, and never sell a put with cash you do not actually have.*
 
 ---
 
-**Subscribe to Momentum Phinance for the live wheel tracker, weekly premium updates, and the ongoing BTG saga. Half of every paid subscription goes directly into the brokerage account. You are literally funding the machine.**
+**Subscribe to Momentum Phinance for the live position tracker, the weekly premium tally, and every layer of the book as it gets built in real time. Half of every paid subscription goes straight into the brokerage account. You are literally funding the foundation.**
 
-- Michael Hanko
+- Michael Hanko, Managing Partner, The Phund
