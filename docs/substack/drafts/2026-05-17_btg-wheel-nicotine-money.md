@@ -1,6 +1,6 @@
 # Retail Buys Shares. Institutions Build Positions.
 
-*by Michael Hanko, Momentum Phinance*
+*Tags: options, covered calls, LEAPS, cash-secured puts, position sizing, options income, risk management*
 
 ![The Four-Layer Position](institutional_hero.png)
 
