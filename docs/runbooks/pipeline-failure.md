@@ -64,6 +64,7 @@ Each scheduled workflow has visible artifacts:
 | `update_district12.yml` | [docs/district12.html](../../docs/district12.html) |
 | `triage.yml` | [STATUS.md](../../STATUS.md) |
 | `deploy_pages.yml` | <https://mphinance.github.io/mphinance/> |
+| `secret_aliveness.yml` | weekly probe — see workflow summary for ✅/❌ per secret |
 
 The leveraged-screener page has a self-rendered freshness banner — if
 it shows STALE on a weekday, that's your alarm. The dossier workflow's
@@ -74,6 +75,14 @@ preflight step shows TickerTrace reachability in the run summary.
 The `pipeline-failure` label issue stays open until you manually close
 it after a clean run. `gh issue close <num> --comment "Fixed in <PR or
 commit>"`.
+
+## Pre-emptive checks
+
+- **`secret_aliveness.yml`** runs every Sunday 08:00 UTC and probes
+  every external dep behind a configured secret. If something rotted
+  during the week, you'll find out before Monday's dossier hits it.
+  Trigger manually with `gh workflow run "Secret Aliveness Check"` any
+  time you suspect a key or host has drifted.
 
 ## Known fragile points
 
