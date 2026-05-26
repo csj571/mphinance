@@ -1,0 +1,101 @@
+name: Pipeline Failure Notifier
+
+# Triggers when any of the listed workflows finishes with conclusion=failure.
+# Behavior:
+#  1. If the failure was in the action-download / setup phase (a transient
+#     codeload.github.com hiccup), auto-rerun the failed workflow ONCE.
+#     Subsequent failures of the same run won't auto-rerun.
+#  2. Open or update a GitHub Issue tagged 'pipeline-failure' with a short
+#     summary and the run URL. One open issue per workflow — comments on
+#     existing instead of stacking duplicates.
+
+on:
+  workflow_run:
+    workflows:
+      - Daily Alpha Dossier
+      - Ghost Daily (Blog + Suggestions)
+      - Watchlist Deep Dive
+      - Update District 12 Meetings
+      - Triage & Status Update
+      - Deploy to GitHub Pages
+    types: [completed]
+
+permissions:
+  actions: write
+  issues: write
+  contents: read
+
+jobs:
+  notify:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Gather context
+        id: ctx
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+        run: |
+          set -e
+          # Pull the run's job log to detect codeload outage as failure mode
+          LOG_FILE=$(mktemp)
+          gh run view "$RUN_ID" --repo "${{ github.repository }}" --log-failed > "$LOG_FILE" 2>&1 || true
+          if grep -q "codeload.github.com" "$LOG_FILE" && grep -qE "An action could not be found|Failed to download archive" "$LOG_FILE"; then
+            echo "transient=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "transient=false" >> "$GITHUB_OUTPUT"
+          fi
+          # First-line summary of the failure for the issue body
+          FIRST_ERR=$(grep -m1 "##\[error\]" "$LOG_FILE" | sed 's/.*##\[error\]//' || echo "see run log")
+          {
+            echo "first_err<<EOF"
+            echo "$FIRST_ERR"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "rerun_count=${{ github.event.workflow_run.run_attempt }}" >> "$GITHUB_OUTPUT"
+
+      - name: Auto-rerun on transient action-download failure
+        if: ${{ steps.ctx.outputs.transient == 'true' && github.event.workflow_run.run_attempt == 1 }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Detected transient codeload outage — rerunning attempt 1 → 2"
+          gh run rerun ${{ github.event.workflow_run.id }} --repo "${{ github.repository }}" --failed
+
+      - name: Open or update issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW: ${{ github.event.workflow_run.name }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          TRANSIENT: ${{ steps.ctx.outputs.transient }}
+          FIRST_ERR: ${{ steps.ctx.outputs.first_err }}
+        run: |
+          set -e
+          TITLE="[pipeline-failure] $WORKFLOW"
+          BODY=$(cat <<EOF
+          **Workflow:** \`$WORKFLOW\`
+          **Attempt:** $ATTEMPT
+          **Run:** $RUN_URL
+          **Transient (codeload outage)?** $TRANSIENT
+          **First error line:**
+          \`\`\`
+          $FIRST_ERR
+          \`\`\`
+
+          ---
+          If $TRANSIENT is \`true\` this issue will close itself once a subsequent rerun succeeds. If \`false\`, real investigation needed — see [docs/runbooks/pipeline-failure.md](../blob/main/docs/runbooks/pipeline-failure.md).
+          EOF
+          )
+          EXISTING=$(gh issue list --repo "${{ github.repository }}" \
+            --label "pipeline-failure" --state open \
+            --search "$WORKFLOW in:title" --json number --jq '.[0].number' || echo "")
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --repo "${{ github.repository }}" --body "$BODY"
+          else
+            gh issue create --repo "${{ github.repository }}" \
+              --title "$TITLE" \
+              --label "pipeline-failure" \
+              --body "$BODY"
+          fi

@@ -255,6 +255,10 @@ Self-contained HTML widgets pulling from `docs/ticker/{TICKER}/latest.json`.
 4. **`.env` is NOT synced** — each machine has its own
 5. **Port 8100 on Venus** — Docker maps 8000→8100
 6. **Local machine uses externally-managed Python** — use venvs in `/tmp/`
+7. **Workflows that push need `permissions: contents: write`** — default `GITHUB_TOKEN` is read-only on this repo. Symptom: 403 on `git push`. See [docs/runbooks/pipeline-failure.md](docs/runbooks/pipeline-failure.md).
+8. **`TICKERTRACE_API_BASE` is `https://api.tickertrace.pro`** — no `/api` suffix; endpoints already include `/api/v1/...`. The old `api.tickertrace.com` and `api.tickertrace.mphinance.com` hosts are dead / cert-broken.
+9. **`codeload.github.com` 5xx during action download** — transient. `notify_failure.yml` auto-reruns the workflow once on this signature; if it still fails, file an issue.
+10. **Leveraged-screener page shows its own freshness** — if [daily.html](docs/leveraged-screener/daily.html) has a red STALE banner on a weekday, that's your alarm: today's `daily_dossier` run failed silently.
 
 ---
 

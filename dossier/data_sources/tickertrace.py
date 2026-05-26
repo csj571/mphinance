@@ -84,11 +84,19 @@ def fetch_institutional_data() -> dict:
     try:
         payload = get_signals()
     except Exception as e:
+        # Emit a GitHub Actions warning annotation so it surfaces in the
+        # workflow UI (yellow banner) instead of being buried in stdout.
+        # The URL is included so the next debug step is one click.
+        print(
+            f"::warning title=TickerTrace unavailable::"
+            f"_get from {TICKERTRACE_API_BASE} failed after retries: {e}"
+        )
         print(f"  [WARN] TickerTrace unavailable after retries: {e}")
         payload = {}
     if not payload:
         return {
             "as_of_date": "unknown",
+            "unavailable": True,
             "stats": {},
             "top_buying": [],
             "top_selling": [],

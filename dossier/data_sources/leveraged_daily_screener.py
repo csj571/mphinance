@@ -431,6 +431,7 @@ def generate_daily_screener(date_str: str = None, dry_run: bool = False):
 def _render_daily_html(data: dict) -> str:
     """Render the daily screener as a self-contained HTML page."""
     date = data["date"]
+    generated_at = data.get("generated_at", "")
     spy_adx = data["spy_adx"]
     is_trade = data["is_trade_day"]
     no_trade = data["no_trade_message"]
@@ -624,6 +625,8 @@ tr:hover {{ background: rgba(0,212,255,0.03); }}
 
 <div class="container">
 
+  <div id="freshness-banner" data-generated="{generated_at}" style="display:none;margin:0 0 16px;padding:10px 14px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:0.75em;text-align:center;"></div>
+
   <div class="summary-grid">
     <div class="summary-card"><div class="label">Scanned</div><div class="value" style="color:var(--text)">{summary["total_scanned"]}</div></div>
     <div class="summary-card"><div class="label">Grade A</div><div class="value" style="color:#00ff41">{summary["grade_a"]}</div></div>
@@ -671,6 +674,37 @@ tr:hover {{ background: rgba(0,212,255,0.03); }}
   <p>Generated {datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")} · <a href="https://mphinance.com">Momentum Phinance</a></p>
   <p style="margin-top:4px; font-size:0.5em; color:#444">Not financial advice. Past performance ≠ future results.</p>
 </div>
+
+<script>
+// Freshness banner — render server-set generated_at, warn if stale.
+// "Stale" = generated > 25h ago (cron runs Mon–Fri 10:00 UTC; >25h means
+// today's run didn't land, weekends excluded).
+(function() {{
+  var el = document.getElementById('freshness-banner');
+  if (!el) return;
+  var iso = el.getAttribute('data-generated');
+  if (!iso) return;
+  var gen = new Date(iso);
+  if (isNaN(gen.getTime())) return;
+  var ageMs = Date.now() - gen.getTime();
+  var ageH = ageMs / 36e5;
+  var dow = new Date().getUTCDay(); // 0 = Sun, 6 = Sat
+  var weekend = (dow === 0 || dow === 6);
+  if (ageH > 25 && !weekend) {{
+    el.style.display = 'block';
+    el.style.background = 'rgba(229,57,53,0.15)';
+    el.style.border = '1px solid #e53935';
+    el.style.color = '#ff7a76';
+    el.textContent = '⚠️ STALE — last refresh ' + Math.floor(ageH) + 'h ago. Today\\'s pipeline may have failed. Check https://github.com/mphinance/mphinance/issues?q=is:open+label:pipeline-failure';
+  }} else if (ageH > 12) {{
+    el.style.display = 'block';
+    el.style.background = 'rgba(240,180,0,0.10)';
+    el.style.border = '1px solid #f0b400';
+    el.style.color = '#f0b400';
+    el.textContent = '⏱ Last refresh ' + Math.floor(ageH) + 'h ago' + (weekend ? ' (weekend — pipeline does not run)' : '') + '.';
+  }}
+}})();
+</script>
 
 </body>
 </html>'''

@@ -34,6 +34,20 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt feedparser
 
+      - name: Preflight — external API reachability
+        # Best-effort check; failures don't abort the run (the pipeline
+        # degrades gracefully when TickerTrace is down) but the result
+        # is visible in the workflow summary.
+        continue-on-error: true
+        run: |
+          echo "## External dependency preflight" >> "$GITHUB_STEP_SUMMARY"
+          if curl -fsS --max-time 10 https://api.tickertrace.pro/api/v1/stats > /tmp/tt_stats.json; then
+            echo "- TickerTrace: ✅ reachable ($(jq -r '.fundsTracked' /tmp/tt_stats.json) funds tracked)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- TickerTrace: ❌ unreachable — dossier will degrade institutional section" >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning title=TickerTrace preflight failed::api.tickertrace.pro not reachable; institutional data will be empty"
+          fi
+
       - name: Create secrets.env for Substack
         run: |
           echo "SUBSTACK_SID=${{ secrets.SUBSTACK_SID }}" > secrets.env

@@ -29,7 +29,7 @@ DISCLAIMER = (
 )
 
 # ─── API Keys ─────────────────────────────────────────────────────
-TICKERTRACE_API_BASE = os.getenv("TICKERTRACE_API_BASE", "https://api.tickertrace.com/api")
+TICKERTRACE_API_BASE = os.getenv("TICKERTRACE_API_BASE", "https://api.tickertrace.pro")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 AI_MODEL = os.getenv("AI_MODEL", "gemini-2.5-flash")
 
