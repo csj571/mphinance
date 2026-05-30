@@ -4,9 +4,16 @@ import yfinance as yf
 from datetime import datetime, timedelta
 import pandas as pd
 import os
+from pathlib import Path
+
+# Repo-relative asset output dir (override with ASSETS_DIR)
+ASSETS_DIR = os.environ.get(
+    "ASSETS_DIR",
+    str(Path(__file__).resolve().parent.parent / "docs/substack/drafts/assets"),
+)
 
 # Ensure directory exists
-os.makedirs('/home/mph/Antigravity/mphinance/docs/substack/drafts/assets', exist_ok=True)
+os.makedirs(ASSETS_DIR, exist_ok=True)
 
 # Set Bloomberg-style dark theme
 plt.style.use('dark_background')
@@ -41,7 +48,7 @@ ax1.legend(loc='upper left')
 ax1.set_ylabel('Price (USD)')
 
 plt.tight_layout()
-plt.savefig('/home/mph/Antigravity/mphinance/docs/substack/drafts/assets/xrp_price_chart.png', dpi=300)
+plt.savefig(os.path.join(ASSETS_DIR, 'xrp_price_chart.png'), dpi=300)
 plt.close()
 
 # 2. Mock ETF Inflows Chart (April 2026)
@@ -63,7 +70,7 @@ ax2.set_ylabel('Net Inflow ($ Millions)')
 plt.xticks(rotation=45)
 
 plt.tight_layout()
-plt.savefig('/home/mph/Antigravity/mphinance/docs/substack/drafts/assets/xrp_inflow_chart.png', dpi=300)
+plt.savefig(os.path.join(ASSETS_DIR, 'xrp_inflow_chart.png'), dpi=300)
 plt.close()
 
 print("Charts generated successfully.")

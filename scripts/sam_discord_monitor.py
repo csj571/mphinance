@@ -28,26 +28,9 @@ from pathlib import Path
 SUMMARY_DIR = Path("/tmp/discord_summaries")
 SUMMARY_DIR.mkdir(exist_ok=True)
 
-
-def get_secret(key: str) -> str:
-    """Get a secret from environment or VaultGuard (Firestore)."""
-    val = os.environ.get(key)
-    if val:
-        return val
-    try:
-        import firebase_admin
-        from firebase_admin import credentials, firestore
-        if not firebase_admin._apps:
-            sa = Path(__file__).parent.parent / "service_account.json"
-            cred = credentials.Certificate(str(sa))
-            firebase_admin.initialize_app(cred)
-        db = firestore.client()
-        doc = db.collection('secrets').document(key).get()
-        if doc.exists:
-            return doc.to_dict()['value']
-    except Exception as e:
-        print(f"⚠️  VaultGuard error for {key}: {e}")
-    return ""
+# Allow `python3 scripts/sam_discord_monitor.py` to import the repo package.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from gcp.secrets import get_secret
 
 
 BOT_TOKEN = get_secret("DISCORD_BOT_TOKEN")

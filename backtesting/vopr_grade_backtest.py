@@ -13,8 +13,11 @@ from tqdm import tqdm
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-BASE_DIR = "/home/mph/Antigravity/mphinance/backtesting"
-REPORTS_DIR = "/home/mph/Antigravity/mphinance/docs/reports"
+from pathlib import Path
+
+_REPO = Path(__file__).resolve().parent.parent
+BASE_DIR = str(_REPO / "backtesting")
+REPORTS_DIR = str(_REPO / "docs" / "reports")
 RESULTS_DIR = f"{BASE_DIR}/results"
 os.makedirs(RESULTS_DIR, exist_ok=True)
 

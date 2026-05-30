@@ -20,23 +20,8 @@ from pathlib import Path
 
 def _get_webhook() -> str:
     """Get Discord webhook from env or VaultGuard."""
-    val = os.environ.get("WEBHOOK_SAM_MPH")
-    if val:
-        return val
-    try:
-        import firebase_admin
-        from firebase_admin import credentials, firestore
-        if not firebase_admin._apps:
-            sa = Path(__file__).resolve().parent.parent.parent / "service_account.json"
-            cred = credentials.Certificate(str(sa))
-            firebase_admin.initialize_app(cred)
-        db = firestore.client()
-        doc = db.collection('secrets').document('WEBHOOK_SAM_MPH').get()
-        if doc.exists:
-            return doc.to_dict()['value']
-    except Exception:
-        pass
-    return ""
+    from gcp.secrets import get_secret
+    return get_secret("WEBHOOK_SAM_MPH")
 
 
 def post_dossier_to_discord(summary: dict, dry_run: bool = False) -> bool:

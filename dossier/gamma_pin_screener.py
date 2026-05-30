@@ -342,8 +342,14 @@ def analyze_oi_sandwich(chain: list[dict], current_price: float) -> dict | None:
     iv_skew_signal   = "N/A"
 
     try:
+        import os
         import sys
-        vo_pr_path = "/home/mph/Antigravity/VoPR"
+        # VoPR is an optional sibling repo; point at it via VOPR_PATH.
+        # Defaults to a sibling dir of this repo, skipped if absent.
+        vo_pr_path = os.environ.get(
+            "VOPR_PATH",
+            str(Path(__file__).resolve().parents[1].parent / "VoPR"),
+        )
         if vo_pr_path not in sys.path:
             sys.path.append(vo_pr_path)
         from scanner.iv_smoother import smooth_iv_curve
