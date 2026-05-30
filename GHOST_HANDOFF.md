@@ -1,4 +1,18 @@
-# Ghost Handoff — Last Updated 2026-05-05
+# Ghost Handoff — Last Updated 2026-05-30
+
+## 2026-05-30 - Jules-ready: env-first secrets, killed hardcoded key & paths
+- **What got done:** Made the repo runnable on a fresh VM (Google Jules / CI) with operator-supplied API tokens instead of the Firebase VaultGuard service account.
+- **Centralized loader:** New `gcp/secrets.py` -> `get_secret(key)` (env-first, Firebase fallback only if `service_account.json` exists, never raises). This also fixed a pre-existing broken import in `dossier/fetch_revenue.py`. Un-ignored `gcp/secrets.py` in `.gitignore` (it holds zero secret material now).
+- **Refactored Firebase-only spots:** `architect_loop.py`, `dossier/report/discord_notify.py`, `scripts/sam_discord_monitor.py`, `.gemini-architect/architect_prompt.py`, `scripts/architect_agent.py` all go through `get_secret()` now.
+- **Security:** Removed a hardcoded Gemini API key from `.gemini-architect/architect_prompt.py`. **ACTION FOR MICHAEL:** rotate that key in Google AI Studio, committed equals compromised. Git history was NOT scrubbed (declined).
+- **De-hardcoded paths:** Killed all `/home/mph/Antigravity/...` absolute paths (8 files) -> repo-relative `Path(__file__)` anchors, with `VOPR_PATH` / `ASSETS_DIR` env overrides.
+- **Jules onboarding:** Added `setup.sh` (deps + smoke check), `JULES.md` (setup walkthrough), expanded `.env.example` to the full ~15-secret inventory, and an AGENTS.md "Running on Jules / fresh VMs" section.
+- **Verified:** `python -m dossier.generate --no-pdf --dry-run` boots into stage 1 with only `GEMINI_API_KEY` set and no `service_account.json`, never touching Firebase. Network fetches 403'd in this sandbox (host allowlist) and degraded gracefully, expected, works on Jules with net access.
+- **What's left:** Rotate the leaked key. Optionally give `vaultguard/` servers the same `get_secret()` treatment. Consider a CI secret-scan grep guard.
+
+---
+
+# Ghost Handoff — Previously Updated 2026-05-05
 
 ## 2026-05-06 18:45 - District 12 AA Directory Automation
 - **What got done:** Fully automated the District 12 AA meeting directory. Built a Python scraper (`scripts/scrape_district12.py`) that pulls live data from aamilwaukee.com.

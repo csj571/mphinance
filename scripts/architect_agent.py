@@ -8,11 +8,15 @@ This runs in your terminal so you can watch the whole conversation in real time.
 
 import google.generativeai as genai
 import textwrap, time, sys, os
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from gcp.secrets import get_secret
 
 # ─── CONFIG ───────────────────────────────────────────────────────────────────
-API_KEY_PATH = "/tmp/gemini_key.txt"
-ARTICLE_PATH = "/home/mph/Antigravity/mphinance/docs/substack/musings/2026-04-15_emergency-fund-dividend-machine.md"
-VOICE_PATH   = "/home/mph/Antigravity/mphinance/VOICE.md"
+_REPO        = Path(__file__).resolve().parent.parent
+ARTICLE_PATH = str(_REPO / "docs/substack/musings/2026-04-15_emergency-fund-dividend-machine.md")
+VOICE_PATH   = str(_REPO / "VOICE.md")
 MODEL        = "gemini-2.0-flash"
 MAX_TURNS    = 4  # back-and-forth rounds before finalizing
 
@@ -39,14 +43,12 @@ def load_file(path):
         return f.read()
 
 def main():
-    # ── Load Gemini API key ────────────────────────────────────────────────────
-    if not os.path.exists(API_KEY_PATH):
-        print("❌ API key not found at /tmp/gemini_key.txt — run VaultGuard fetch first")
+    # ── Load Gemini API key (env-first via VaultGuard helper) ───────────────────
+    api_key = get_secret("GEMINI_API_KEY")
+    if not api_key:
+        print("❌ GEMINI_API_KEY not set (env var or VaultGuard).")
         sys.exit(1)
-    
-    with open(API_KEY_PATH) as f:
-        api_key = f.read().strip()
-    
+
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(MODEL)
     

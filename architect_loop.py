@@ -2,18 +2,16 @@
 """Lead Writer + Architect Agent feedback loop for the Substack draft."""
 
 import os
+import sys
 import google.genai as genai
 from google.genai import types
-import firebase_admin
-from firebase_admin import credentials, firestore
+from gcp.secrets import get_secret
 
-if not firebase_admin._apps:
-    cred = credentials.Certificate('/home/mph/Antigravity/alpha-momentum/service_account.json')
-    firebase_admin.initialize_app(cred)
-db = firestore.client()
-doc = db.collection('secrets').document('GEMINI_API_KEY').get()
+api_key = get_secret("GEMINI_API_KEY")
+if not api_key:
+    sys.exit("ERROR: GEMINI_API_KEY not set (env var or VaultGuard).")
 
-client = genai.Client(api_key=doc.to_dict()['value'])
+client = genai.Client(api_key=api_key)
 MODEL = "models/gemini-2.5-flash"
 
 import time

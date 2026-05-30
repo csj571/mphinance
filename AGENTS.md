@@ -24,20 +24,33 @@ Read **[VOICE.md](VOICE.md)** for Michael's full writing style guide.
 
 Before asking Michael for API keys, credentials, or tokens — **check VaultGuard FIRST**.
 
+Always go through the centralized loader. It reads env vars first, then falls
+back to Firebase VaultGuard automatically when a service account is present:
+
 ```python
-# VaultGuard lives in Firebase Firestore, collection: "secrets"
-# Access via service account:
-from firebase_admin import credentials, firestore
-cred = credentials.Certificate('/home/mph/Antigravity/alpha-momentum/service_account.json')
-db = firestore.client()
-doc = db.collection('secrets').document('KEY_NAME').get()
-value = doc.to_dict()['value']
+from gcp.secrets import get_secret
+value = get_secret("KEY_NAME")   # env first, VaultGuard (Firestore) fallback
 ```
+
+Do **not** hand-roll `firebase_admin` init or hardcode service-account paths in
+new code — `get_secret()` handles that.
 
 If a token is expired (e.g., OAuth refresh tokens), **note it and tell Michael** — don't silently fall back to other m
 ethods or ask him to manually provide keys that should already be in the vault.
 
 **Available secrets** include: `GEMINI_API_KEY`, `TRADIER_API_KEY`, `STRIPE_SECRET_KEY`, `GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET`, `GOOGLE_DRIVE_REFRESH_TOKEN`, and 25+ more.
+
+### 🏃 Running on Jules / fresh VMs
+
+On Google Jules, CI, or any fresh VM there is **no Firebase service account** —
+secrets come from **environment variables** (set them as Jules secrets). The
+`get_secret()` helper above is env-first, so this Just Works. See
+[`JULES.md`](JULES.md) for setup and [`.env.example`](.env.example) for the full
+secret list. Bootstrap with [`setup.sh`](setup.sh).
+
+**Skip these on Jules** — they assume Michael's machines/network and will fail
+in a sandbox: rsync/SSH deploys to `venus`/`vultr`, Supernote/Google-Drive
+sync, and anything reading `/home/mph/...`. Stick to code + pipeline work.
 
 ---
 

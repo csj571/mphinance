@@ -2,16 +2,23 @@ import json
 import requests
 import sys
 import textwrap
+from pathlib import Path
 
-API_KEY = "AIzaSyCRLrlnBmBqcP8dR6WOQGp3eKA3Hwk10gc"
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from gcp.secrets import get_secret
+
+API_KEY = get_secret("GEMINI_API_KEY")
+if not API_KEY:
+    sys.exit("ERROR: GEMINI_API_KEY not set (env var or VaultGuard).")
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={API_KEY}"
 
-# Load context files
-with open("/home/mph/Antigravity/mphinance/VOICE.md") as f:
+# Load context files (repo-relative)
+REPO = Path(__file__).resolve().parent.parent
+with open(REPO / "VOICE.md") as f:
     voice = f.read()
-with open("/home/mph/Antigravity/mphinance/SUBSTACK.md") as f:
+with open(REPO / "SUBSTACK.md") as f:
     substack = f.read()
-with open("/home/mph/Antigravity/mphinance/docs/articles/letf-scanner-v2/README.md") as f:
+with open(REPO / "docs/articles/letf-scanner-v2/README.md") as f:
     article = f.read()
 
 prompt = textwrap.dedent(f"""
